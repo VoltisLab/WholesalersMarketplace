@@ -25,6 +25,7 @@ class _VendorListScreenState extends State<VendorListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Vendors'),
         backgroundColor: AppColors.surface,

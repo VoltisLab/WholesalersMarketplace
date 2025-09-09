@@ -33,6 +33,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           _buildAppBar(),

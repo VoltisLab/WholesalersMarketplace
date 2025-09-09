@@ -100,27 +100,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
+                      Lottie.asset(
+                        'assets/animations/potato_animation.json',
                         width: 150,
                         height: 150,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Lottie.asset(
-                          'assets/animations/potato_animation.json',
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.contain,
-                          repeat: true,
-                        ),
+                        fit: BoxFit.contain,
+                        repeat: true,
                       ),
                       const SizedBox(height: 24),
                       const Text(

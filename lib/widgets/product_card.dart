@@ -45,20 +45,42 @@ class ProductCard extends StatelessWidget {
             _buildProductImage(),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12.0), // Increased padding for better text spacing
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProductName(),
-                    const SizedBox(height: 6),
-                    _buildVendorName(),
-                    const SizedBox(height: 6),
-                    _buildRating(),
-                    const Spacer(),
-                    _buildPriceRow(),
-                    const SizedBox(height: 10),
-                    _buildAddToCartButton(context),
-                  ],
+                padding: const EdgeInsets.all(12.0),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // PERMANENT OVERFLOW PREVENTION RULE:
+                    // Calculate minimum required height and adjust layout accordingly
+                    final availableHeight = constraints.maxHeight;
+                    final isConstrainedHeight = availableHeight < 120;
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Product name - always visible, constrained to 2 lines max
+                        _buildProductName(),
+                        SizedBox(height: isConstrainedHeight ? 4 : 6),
+                        
+                        // Vendor name - always visible, 1 line max
+                        _buildVendorName(),
+                        SizedBox(height: isConstrainedHeight ? 4 : 6),
+                        
+                        // Rating - always visible, 1 line max
+                        _buildRating(),
+                        
+                        // Flexible spacer that adapts to available space
+                        Expanded(
+                          child: SizedBox(height: isConstrainedHeight ? 4 : 8),
+                        ),
+                        
+                        // Price - always visible, 1 line max
+                        _buildPriceRow(),
+                        SizedBox(height: isConstrainedHeight ? 6 : 10),
+                        
+                        // Cart button - always visible, fixed height
+                        _buildAddToCartButton(context),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -149,9 +171,11 @@ class ProductCard extends StatelessWidget {
         fontWeight: FontWeight.w600,
         fontSize: 14,
         color: AppColors.textPrimary,
+        height: 1.2, // Controlled line height for consistent spacing
       ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
+      softWrap: true,
     );
   }
 
@@ -161,9 +185,11 @@ class ProductCard extends StatelessWidget {
       style: const TextStyle(
         fontSize: 12,
         color: AppColors.textSecondary,
+        height: 1.0, // Tight line height for compact display
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+      softWrap: false,
     );
   }
 

@@ -27,6 +27,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Consumer<EnhancedProductProvider>(
         builder: (context, productProvider, child) {
           final product = productProvider.getProductById(widget.productId);

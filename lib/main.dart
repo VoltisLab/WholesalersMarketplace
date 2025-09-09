@@ -17,6 +17,9 @@ import 'screens/vendor_shop_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/vendor_onboarding_screen.dart';
+import 'screens/messages_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'screens/order_confirmation_screen.dart';
 import 'models/product_model.dart';
 
 void main() {
@@ -40,9 +43,17 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.primary,
-            brightness: Brightness.light,
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+            secondary: AppColors.secondary,
+            onSecondary: AppColors.textPrimary,
+            surface: AppColors.surface,
+            onSurface: AppColors.textPrimary,
+            background: AppColors.background,
+            onBackground: AppColors.textPrimary,
+            error: AppColors.error,
+            onError: Colors.white,
           ),
           textTheme: const TextTheme(
             displayLarge: TextStyle(fontFamily: '.SF Pro Text', fontWeight: FontWeight.w300),
@@ -79,9 +90,44 @@ class MyApp extends StatelessWidget {
           ),
           cardTheme: CardThemeData(
             elevation: 2,
+            color: Colors.white, // Explicitly set to pure white
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+          ),
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Colors.white,
+            selectedItemColor: AppColors.primary,
+            unselectedItemColor: AppColors.textSecondary,
+            type: BottomNavigationBarType.fixed,
+          ),
+          tabBarTheme: const TabBarThemeData(
+            labelColor: Colors.white,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicator: BoxDecoration(
+              color: AppColors.primary,
+            ),
+          ),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
+          chipTheme: ChipThemeData(
+            backgroundColor: Colors.white,
+            selectedColor: AppColors.primary.withOpacity(0.1),
+            labelStyle: const TextStyle(color: AppColors.textPrimary),
+            side: const BorderSide(color: AppColors.divider),
+          ),
+          dialogTheme: const DialogThemeData(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+          ),
+          popupMenuTheme: const PopupMenuThemeData(
+            color: Colors.white,
+            surfaceTintColor: Colors.transparent,
+          ),
+          listTileTheme: const ListTileThemeData(
+            tileColor: Colors.white,
           ),
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
@@ -105,6 +151,9 @@ class MyApp extends StatelessWidget {
           '/sign-in': (context) => const SignInScreen(),
           '/sign-up': (context) => const SignUpScreen(),
           '/vendor-onboarding': (context) => const VendorOnboardingScreen(),
+          '/messages': (context) => const MessagesScreen(),
+          '/checkout': (context) => const CheckoutScreen(),
+          '/order-confirmation': (context) => const OrderConfirmationScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

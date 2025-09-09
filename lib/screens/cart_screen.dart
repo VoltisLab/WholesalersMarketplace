@@ -11,6 +11,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Shopping Cart'),
         backgroundColor: AppColors.surface,
@@ -106,7 +107,7 @@ class CartScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '\$${cartProvider.getVendorTotal(vendorId).toStringAsFixed(2)}',
+                      '£${cartProvider.getVendorTotal(vendorId).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -171,7 +172,7 @@ class CartScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${item.product.finalPrice.toStringAsFixed(2)}',
+                  '£${item.product.finalPrice.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -246,7 +247,7 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
+                  '£${cartProvider.totalAmount.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -259,7 +260,9 @@ class CartScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _showCheckoutDialog(context, cartProvider),
+                onPressed: cartProvider.items.isEmpty 
+                    ? null 
+                    : () => Navigator.pushNamed(context, '/checkout'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -275,61 +278,4 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  void _showCheckoutDialog(BuildContext context, CartProvider cartProvider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Checkout'),
-        content: const Text('This is a demo app. In a real app, this would proceed to payment.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              
-              // Show loading
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const AlertDialog(
-                  content: Row(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(width: 16),
-                      Text('Processing order...'),
-                    ],
-                  ),
-                ),
-              );
-              
-              // Simulate checkout
-              final success = await cartProvider.checkout();
-              
-              Navigator.of(context).pop(); // Close loading dialog
-              
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Order placed successfully!'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to place order. Please try again.'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            },
-            child: const Text('Place Order'),
-          ),
-        ],
-      ),
-    );
-  }
 }

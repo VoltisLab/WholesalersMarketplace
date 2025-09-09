@@ -218,35 +218,82 @@ class EnhancedProductProvider extends ChangeNotifier {
   }
 
   List<String> _getProductImages(String category, int productIndex) {
-    // Using Picsum for working square images (300x300)
-    final imageId1 = (100 + productIndex * 7) % 1000 + 100;
-    final imageId2 = (200 + productIndex * 11) % 1000 + 100;
-    final imageId3 = (300 + productIndex * 13) % 1000 + 100;
-    final imageId4 = (400 + productIndex * 17) % 1000 + 100;
-    final imageId5 = (500 + productIndex * 19) % 1000 + 100;
-    
-    return [
-      'https://picsum.photos/300/300?random=$imageId1',
-      'https://picsum.photos/300/300?random=$imageId2',
-      'https://picsum.photos/300/300?random=$imageId3',
-      'https://picsum.photos/300/300?random=$imageId4',
-      'https://picsum.photos/300/300?random=$imageId5',
+    // Using clothing-specific image sources for piles of clothing
+    final clothingImageSources = [
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=300&fit=crop&crop=center', // Clothing pile
+      'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=300&h=300&fit=crop&crop=center', // Clothes stack
+      'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=300&fit=crop&crop=center', // Folded clothes
+      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&h=300&fit=crop&crop=center', // Clothing display
+      'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300&h=300&fit=crop&crop=center', // Clothes pile
+      'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=300&h=300&fit=crop&crop=center', // Stacked clothing
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=300&h=300&fit=crop&crop=center', // Clothing arrangement
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&h=300&fit=crop&crop=center', // Fashion pile
+      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=300&fit=crop&crop=center', // Clothes collection
+      'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&h=300&fit=crop&crop=center', // Clothing stack
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=300&fit=crop&crop=center', // Fashion items
+      'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=300&h=300&fit=crop&crop=center', // Clothes arrangement
+      'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=300&h=300&fit=crop&crop=center', // Clothing pile
+      'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=300&h=300&fit=crop&crop=center', // Stacked garments
+      'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&h=300&fit=crop&crop=center', // Clothing collection
     ];
+    
+    // Select 5 different images for each product
+    final baseIndex = (productIndex * 5) % clothingImageSources.length;
+    final selectedImages = <String>[];
+    
+    for (int i = 0; i < 5; i++) {
+      final imageIndex = (baseIndex + i) % clothingImageSources.length;
+      selectedImages.add(clothingImageSources[imageIndex]);
+    }
+    
+    return selectedImages;
   }
 
   Map<String, dynamic> _getProductDataForCategory(String category, int productIndex) {
     final productTemplates = {
       'Fashion': [
-        {'name': 'Designer Dress', 'description': 'Elegant dress for special occasions', 'basePrice': 149.0, 'subcategory': 'Dresses', 'tags': ['dress', 'elegant', 'fashion']},
-        {'name': 'Leather Jacket', 'description': 'Premium leather jacket with modern style', 'basePrice': 249.0, 'subcategory': 'Outerwear', 'tags': ['jacket', 'leather', 'style']},
-        {'name': 'Designer Handbag', 'description': 'Luxury handbag with premium materials', 'basePrice': 199.0, 'subcategory': 'Bags', 'tags': ['handbag', 'luxury', 'accessories']},
-        {'name': 'Running Shoes', 'description': 'Comfortable athletic shoes for running', 'basePrice': 129.0, 'subcategory': 'Shoes', 'tags': ['shoes', 'running', 'athletic']},
-        {'name': 'Silk Scarf', 'description': 'Premium silk scarf with unique patterns', 'basePrice': 79.0, 'subcategory': 'Accessories', 'tags': ['scarf', 'silk', 'accessories']},
-        {'name': 'Cotton T-Shirt', 'description': 'Comfortable cotton t-shirt for everyday wear', 'basePrice': 29.0, 'subcategory': 'Tops', 'tags': ['tshirt', 'cotton', 'casual']},
-        {'name': 'Denim Jeans', 'description': 'Classic denim jeans with perfect fit', 'basePrice': 89.0, 'subcategory': 'Bottoms', 'tags': ['jeans', 'denim', 'casual']},
-        {'name': 'Evening Gown', 'description': 'Stunning evening gown for formal events', 'basePrice': 299.0, 'subcategory': 'Formal', 'tags': ['gown', 'formal', 'elegant']},
-        {'name': 'Casual Sneakers', 'description': 'Comfortable sneakers for daily wear', 'basePrice': 79.0, 'subcategory': 'Footwear', 'tags': ['sneakers', 'casual', 'comfort']},
-        {'name': 'Winter Coat', 'description': 'Warm winter coat for cold weather', 'basePrice': 199.0, 'subcategory': 'Outerwear', 'tags': ['coat', 'winter', 'warm']},
+        {'name': 'The North Face Denali Fleece Jackets', 'description': 'Classic outdoor fleece jacket with superior warmth', 'basePrice': 149.0, 'subcategory': 'Outerwear', 'tags': ['fleece', 'outdoor', 'north face']},
+        {'name': 'Y2K Leather Bomber Jackets', 'description': 'Vintage-inspired leather bomber with Y2K aesthetic', 'basePrice': 249.0, 'subcategory': 'Outerwear', 'tags': ['leather', 'bomber', 'y2k']},
+        {'name': 'Patagonia Retro-X Fleece', 'description': 'Iconic fleece pullover with retro styling', 'basePrice': 199.0, 'subcategory': 'Outerwear', 'tags': ['patagonia', 'fleece', 'retro']},
+        {'name': 'Ralph Lauren Harrington Jackets (Upcycled)', 'description': 'Sustainable upcycled Harrington jacket', 'basePrice': 179.0, 'subcategory': 'Outerwear', 'tags': ['ralph lauren', 'upcycled', 'sustainable']},
+        {'name': 'Carhartt Work Jackets', 'description': 'Durable workwear jacket built to last', 'basePrice': 129.0, 'subcategory': 'Workwear', 'tags': ['carhartt', 'workwear', 'durable']},
+        {'name': 'Nike Windbreakers', 'description': 'Lightweight windbreaker for active lifestyle', 'basePrice': 89.0, 'subcategory': 'Activewear', 'tags': ['nike', 'windbreaker', 'athletic']},
+        {'name': 'Adidas 90s Track Jackets', 'description': 'Retro track jacket with classic 90s styling', 'basePrice': 99.0, 'subcategory': 'Activewear', 'tags': ['adidas', '90s', 'track jacket']},
+        {'name': 'Tommy Hilfiger Sailing Jackets', 'description': 'Nautical-inspired sailing jacket', 'basePrice': 159.0, 'subcategory': 'Outerwear', 'tags': ['tommy hilfiger', 'sailing', 'nautical']},
+        {'name': 'Vintage Varsity Jackets (Wool/Leather Mix)', 'description': 'Classic varsity jacket with wool body and leather sleeves', 'basePrice': 189.0, 'subcategory': 'Vintage', 'tags': ['varsity', 'vintage', 'wool leather']},
+        {'name': 'Columbia Sportswear Fleece Jackets', 'description': 'Technical fleece for outdoor adventures', 'basePrice': 119.0, 'subcategory': 'Outdoor', 'tags': ['columbia', 'fleece', 'outdoor']},
+        {'name': 'Polo Ralph Lauren Heavyweight Sweaters', 'description': 'Premium heavyweight knit sweater', 'basePrice': 149.0, 'subcategory': 'Knitwear', 'tags': ['polo', 'sweater', 'heavyweight']},
+        {'name': 'Ralph Lauren 1/4 Zip Sweaters', 'description': 'Classic quarter-zip pullover sweater', 'basePrice': 129.0, 'subcategory': 'Knitwear', 'tags': ['ralph lauren', 'quarter zip', 'sweater']},
+        {'name': 'Lacoste Knitted Sweaters', 'description': 'French elegance in knitted form', 'basePrice': 139.0, 'subcategory': 'Knitwear', 'tags': ['lacoste', 'knitted', 'french']},
+        {'name': 'Patagonia Snap-T Pullovers', 'description': 'Iconic fleece pullover with snap closure', 'basePrice': 119.0, 'subcategory': 'Fleece', 'tags': ['patagonia', 'snap-t', 'pullover']},
+        {'name': 'Nike Tech Fleece Hoodies', 'description': 'Innovative tech fleece for modern comfort', 'basePrice': 109.0, 'subcategory': 'Hoodies', 'tags': ['nike', 'tech fleece', 'hoodie']},
+        {'name': 'Champion Reverse Weave Hoodies', 'description': 'Classic heavyweight reverse weave construction', 'basePrice': 89.0, 'subcategory': 'Hoodies', 'tags': ['champion', 'reverse weave', 'hoodie']},
+        {'name': 'Adidas 90s Sweatshirts', 'description': 'Retro sweatshirt with vintage 90s appeal', 'basePrice': 79.0, 'subcategory': 'Sweatshirts', 'tags': ['adidas', '90s', 'sweatshirt']},
+        {'name': 'Harley Davidson Sweatshirts', 'description': 'Iconic motorcycle brand sweatshirt', 'basePrice': 99.0, 'subcategory': 'Sweatshirts', 'tags': ['harley davidson', 'motorcycle', 'sweatshirt']},
+        {'name': 'Carhartt Hoodies', 'description': 'Workwear-inspired heavyweight hoodie', 'basePrice': 89.0, 'subcategory': 'Hoodies', 'tags': ['carhartt', 'workwear', 'hoodie']},
+        {'name': 'Stüssy Streetwear Hoodies', 'description': 'Streetwear essential with signature styling', 'basePrice': 119.0, 'subcategory': 'Streetwear', 'tags': ['stussy', 'streetwear', 'hoodie']},
+        {'name': 'Vintage Harley Davidson Graphic Tees', 'description': 'Classic motorcycle graphics on vintage tee', 'basePrice': 49.0, 'subcategory': 'T-Shirts', 'tags': ['harley davidson', 'vintage', 'graphic tee']},
+        {'name': 'Y2K Band T-Shirts (Linkin Park, Green Day, etc.)', 'description': 'Nostalgic band tees from the Y2K era', 'basePrice': 39.0, 'subcategory': 'T-Shirts', 'tags': ['y2k', 'band tee', 'vintage']},
+        {'name': 'Nike Dri-Fit T-Shirts', 'description': 'Moisture-wicking athletic performance tee', 'basePrice': 29.0, 'subcategory': 'Athletic', 'tags': ['nike', 'dri-fit', 'athletic']},
+        {'name': 'Adidas Logo Tees', 'description': 'Classic three stripes logo tee', 'basePrice': 25.0, 'subcategory': 'T-Shirts', 'tags': ['adidas', 'logo', 'tee']},
+        {'name': 'Polo Ralph Lauren Polo Shirts', 'description': 'Timeless polo shirt with iconic pony logo', 'basePrice': 69.0, 'subcategory': 'Polo Shirts', 'tags': ['polo', 'ralph lauren', 'classic']},
+        {'name': 'Burberry Nova Check Shirts', 'description': 'Luxury shirt with signature check pattern', 'basePrice': 199.0, 'subcategory': 'Dress Shirts', 'tags': ['burberry', 'nova check', 'luxury']},
+        {'name': 'Carhartt Workwear Tees', 'description': 'Heavy-duty work tee built for durability', 'basePrice': 35.0, 'subcategory': 'Workwear', 'tags': ['carhartt', 'workwear', 'durable']},
+        {'name': 'Levi\'s Graphic T-Shirts', 'description': 'Classic denim brand graphic tee', 'basePrice': 32.0, 'subcategory': 'T-Shirts', 'tags': ['levis', 'graphic', 'denim']},
+        {'name': 'Hard Rock Café Tees (City Editions)', 'description': 'Collectible city-specific Hard Rock tees', 'basePrice': 29.0, 'subcategory': 'T-Shirts', 'tags': ['hard rock', 'city edition', 'collectible']},
+        {'name': 'Sports Jerseys (NBA/NFL/Vintage Football)', 'description': 'Authentic and vintage sports jerseys', 'basePrice': 89.0, 'subcategory': 'Jerseys', 'tags': ['sports', 'jersey', 'vintage']},
+        {'name': 'Levi\'s 501 Jeans (Light & Dark Wash)', 'description': 'Original straight fit jeans in classic washes', 'basePrice': 89.0, 'subcategory': 'Jeans', 'tags': ['levis', '501', 'denim']},
+        {'name': 'Carhartt Double Knee Work Pants', 'description': 'Reinforced work pants with double knee', 'basePrice': 79.0, 'subcategory': 'Workwear', 'tags': ['carhartt', 'work pants', 'double knee']},
+        {'name': 'Dickies 874 Work Pants', 'description': 'Classic straight leg work pants', 'basePrice': 59.0, 'subcategory': 'Workwear', 'tags': ['dickies', 'work pants', '874']},
+        {'name': 'Wrangler Cowboy Cut Jeans', 'description': 'Western-style jeans with authentic fit', 'basePrice': 69.0, 'subcategory': 'Jeans', 'tags': ['wrangler', 'cowboy cut', 'western']},
+        {'name': 'Vintage Cargo Pants (Y2K Military Style)', 'description': 'Military-inspired cargo pants with Y2K styling', 'basePrice': 79.0, 'subcategory': 'Cargo Pants', 'tags': ['cargo', 'y2k', 'military']},
+        {'name': 'Nike Track Pants', 'description': 'Athletic track pants with side stripe', 'basePrice': 59.0, 'subcategory': 'Athletic', 'tags': ['nike', 'track pants', 'athletic']},
+        {'name': 'Adidas Tearaway Pants (Popper Pants)', 'description': 'Iconic tearaway pants with side poppers', 'basePrice': 69.0, 'subcategory': 'Athletic', 'tags': ['adidas', 'tearaway', 'popper pants']},
+        {'name': 'Jordan Basketball Shorts', 'description': 'Premium basketball shorts with Jumpman logo', 'basePrice': 49.0, 'subcategory': 'Shorts', 'tags': ['jordan', 'basketball', 'shorts']},
+        {'name': 'Vintage Workwear Overalls', 'description': 'Classic workwear overalls with vintage appeal', 'basePrice': 99.0, 'subcategory': 'Overalls', 'tags': ['overalls', 'workwear', 'vintage']},
+        {'name': 'Levi\'s Denim Jackets', 'description': 'Timeless denim jacket in classic blue', 'basePrice': 89.0, 'subcategory': 'Denim Jackets', 'tags': ['levis', 'denim jacket', 'classic']},
+        {'name': 'Stone Island Jackets', 'description': 'Technical outerwear with innovative materials', 'basePrice': 399.0, 'subcategory': 'Technical Wear', 'tags': ['stone island', 'technical', 'premium']},
+        {'name': 'Supreme Hoodies', 'description': 'Streetwear essential with box logo', 'basePrice': 159.0, 'subcategory': 'Streetwear', 'tags': ['supreme', 'box logo', 'streetwear']},
       ],
     };
 

@@ -40,6 +40,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
     final authProvider = context.watch<AuthProvider>();
     
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -62,7 +63,13 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSearchBar(),
+              const SizedBox(height: 16),
+              _buildSearchTags(),
+              const SizedBox(height: 24),
               _buildWelcomeSection(),
+              const SizedBox(height: 24),
+              _buildSliderBanner(),
               const SizedBox(height: 24),
               _buildTrendingProducts(),
               const SizedBox(height: 24),
@@ -89,17 +96,26 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           backgroundColor: AppColors.surface,
           elevation: 0,
           title: const Text(
-            'Arc Vest',
+            'Wholesalers',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              onPressed: () {
+                Navigator.pushNamed(context, '/messages');
+              },
+            ),
             badges.Badge(
               badgeContent: Text(
                 cartProvider.itemCount.toString(),
                 style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+              badgeStyle: const badges.BadgeStyle(
+                badgeColor: AppColors.primary,
               ),
               showBadge: cartProvider.itemCount > 0,
               child: IconButton(
@@ -127,31 +143,18 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.trending_up, color: AppColors.secondary),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Trending Now',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+              child: Text(
+                'Trending Now',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               height: 380,
               child: ListView.builder(
@@ -253,26 +256,13 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.verified, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Featured Collections',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+              child: const Text(
+                'Featured Collections',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -500,31 +490,18 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.category, color: AppColors.info),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Shop by Category',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+              child: Text(
+                'Shop by Category',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               height: 120,
               child: ListView.builder(
@@ -548,26 +525,54 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                         );
                       },
                       borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                      child: Column(
+                      child: Stack(
                         children: [
                           Container(
-                            width: 70,
-                            height: 70,
+                            width: double.infinity,
+                            height: double.infinity,
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  color.withOpacity(0.8),
+                                  color.withOpacity(0.6),
+                                ],
+                              ),
                             ),
-                            child: Icon(icon, color: color, size: 32),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                              child: CachedNetworkImage(
+                                imageUrl: _getCategoryClothingImage(category),
+                                fit: BoxFit.cover,
+                                colorBlendMode: BlendMode.overlay,
+                                color: color.withOpacity(0.4),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            category,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
+                          Positioned(
+                            bottom: 12,
+                            left: 8,
+                            right: 8,
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(0, 1),
+                                    blurRadius: 2,
+                                    color: Colors.black26,
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -590,28 +595,15 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.fiber_new, color: AppColors.success),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Recently Added',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+              child: Text(
+                'Recently Added',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -646,28 +638,15 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.local_fire_department, color: AppColors.warning),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Popular This Week',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+              child: Text(
+                'Popular This Week',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -704,6 +683,26 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
       AppColors.error,
     ];
     return colors[index % colors.length];
+  }
+
+  String _getCategoryClothingImage(String category) {
+    // Category-specific clothing pile images
+    switch (category) {
+      case 'Dresses':
+        return 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&h=300&fit=crop&crop=center';
+      case 'Outerwear':
+        return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=300&fit=crop&crop=center';
+      case 'Bags':
+        return 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop&crop=center';
+      case 'Shoes':
+        return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop&crop=center';
+      case 'Accessories':
+        return 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&h=300&fit=crop&crop=center';
+      case 'Tops':
+        return 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=300&h=300&fit=crop&crop=center';
+      default:
+        return 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=300&fit=crop&crop=center';
+    }
   }
 
   IconData _getCategoryIcon(String category) {
@@ -770,6 +769,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                   cartProvider.itemCount.toString(),
                   style: const TextStyle(color: Colors.white, fontSize: 10),
                 ),
+                badgeStyle: const badges.BadgeStyle(
+                  badgeColor: AppColors.primary,
+                ),
                 showBadge: cartProvider.itemCount > 0,
                 child: const Icon(Icons.shopping_cart_rounded),
               );
@@ -784,6 +786,162 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           label: 'Account',
         ),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+        ),
+        child: TextField(
+          decoration: InputDecoration(
+            hintText: 'Search products, brands, categories...',
+            hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
+            prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/search');
+          },
+          readOnly: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchTags() {
+    final suggestedTags = [
+      'Streetwear', 'Vintage', 'Y2K', 'Workwear', 'Athletic', 'Denim', 'Fleece', 'Hoodies'
+    ];
+
+    return SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+        itemCount: suggestedTags.length,
+        itemBuilder: (context, index) {
+          final tag = suggestedTags[index];
+          return Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () {
+                Navigator.pushNamed(context, '/search');
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    tag,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSliderBanner() {
+    return Consumer2<EnhancedProductProvider, VendorProvider>(
+      builder: (context, productProvider, vendorProvider, child) {
+        final bannerItems = <Map<String, dynamic>>[];
+        
+        // Add 3 featured products
+        final featuredProducts = productProvider.products.where((p) => p.isFeatured).take(3).toList();
+        for (final product in featuredProducts) {
+          bannerItems.add({
+            'type': 'product',
+            'title': product.name,
+            'subtitle': 'From ${product.vendor.name}',
+            'image': product.images.first,
+            'data': product,
+          });
+        }
+        
+        // Add 2 featured vendors
+        final featuredVendors = vendorProvider.vendors.where((v) => v.isVerified).take(2).toList();
+        for (final vendor in featuredVendors) {
+          bannerItems.add({
+            'type': 'vendor',
+            'title': vendor.name,
+            'subtitle': '${vendor.categories.join(', ')} Specialist',
+            'image': vendor.logo,
+            'data': vendor,
+          });
+        }
+
+        return SizedBox(
+          height: 220, // Increased height similar to welcome banner
+          child: PageView.builder(
+            itemCount: bannerItems.length,
+            itemBuilder: (context, index) {
+              final item = bannerItems[index];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withOpacity(0.8),
+                      AppColors.primary.withOpacity(0.6),
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Background image
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: item['type'] == 'product' 
+                              ? item['image'] 
+                              : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop&crop=center', // HD clothing pile for vendor banners
+                          fit: BoxFit.cover,
+                          colorBlendMode: BlendMode.overlay,
+                          color: Colors.black.withOpacity(0.3),
+                          placeholder: (context, url) => Container(
+                            color: AppColors.primary.withOpacity(0.1),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.primary.withOpacity(0.2),
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Content overlay - no text as requested
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

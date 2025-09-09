@@ -146,7 +146,7 @@ class VendorDashboardScreen extends StatelessWidget {
     final stats = [
       {
         'title': 'Total Sales',
-        'value': '\$12,450',
+        'value': '£12,450',
         'icon': Icons.attach_money,
         'color': AppColors.success,
         'change': '+12.5%',
@@ -361,21 +361,21 @@ class VendorDashboardScreen extends StatelessWidget {
       {
         'id': '#12345',
         'customer': 'John Doe',
-        'amount': '\$89.99',
+        'amount': '£89.99',
         'status': 'Pending',
         'time': '2 hours ago',
       },
       {
         'id': '#12344',
         'customer': 'Jane Smith',
-        'amount': '\$156.50',
+        'amount': '£156.50',
         'status': 'Shipped',
         'time': '5 hours ago',
       },
       {
         'id': '#12343',
         'customer': 'Mike Johnson',
-        'amount': '\$45.00',
+        'amount': '£45.00',
         'status': 'Delivered',
         'time': '1 day ago',
       },

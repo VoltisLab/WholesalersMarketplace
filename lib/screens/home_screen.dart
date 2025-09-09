@@ -83,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final authProvider = context.watch<AuthProvider>();
     
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMapHomeTab() {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Full-screen map
@@ -179,6 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         badgeContent: Text(
                           cartProvider.itemCount.toString(),
                           style: const TextStyle(color: Colors.white, fontSize: 10),
+                        ),
+                        badgeStyle: const badges.BadgeStyle(
+                          badgeColor: AppColors.primary,
                         ),
                         showBadge: cartProvider.itemCount > 0,
                         child: IconButton(
@@ -540,6 +545,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 badgeContent: Text(
                   cartProvider.itemCount.toString(),
                   style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+                badgeStyle: const badges.BadgeStyle(
+                  badgeColor: AppColors.primary,
                 ),
                 showBadge: cartProvider.itemCount > 0,
                 child: const Icon(Icons.shopping_cart_outlined),
