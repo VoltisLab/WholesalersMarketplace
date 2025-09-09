@@ -10,6 +10,7 @@ import '../providers/auth_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../widgets/vendor_card.dart';
 import '../models/product_model.dart';
+import '../services/image_search_service.dart';
 import 'enhanced_vendor_list_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
@@ -203,6 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                border: Border.all(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -216,16 +218,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search vendors near you...',
                   prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _showVendorList ? Icons.map : Icons.list,
-                      color: AppColors.primary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _showVendorList = !_showVendorList;
-                      });
-                    },
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
+                        onPressed: _handleImageSearch,
+                        tooltip: 'Search by image',
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _showVendorList ? Icons.map : Icons.list,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showVendorList = !_showVendorList;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -415,8 +427,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate to vendor details
+                      Navigator.pushNamed(
+                        context,
+                        '/vendor-shop',
+                        arguments: _selectedVendor,
+                      );
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('View Store'),
                   ),
                 ),
@@ -424,8 +444,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      // Navigate to vendor products
+                      // Set the selected vendor in product provider and navigate to search
+                      Navigator.pushNamed(context, '/search');
                     },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                    ),
                     child: const Text('Browse Products'),
                   ),
                 ),
@@ -564,5 +589,65 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _handleImageSearch() async {
+    try {
+      final imageSearchService = ImageSearchService();
+      
+      // Show image source selection dialog
+      final imageFile = await imageSearchService.showImageSourceDialog(context);
+      if (imageFile == null) return;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Analyzing image...'),
+            ],
+          ),
+        ),
+      );
+
+      // Process the image
+      final result = await imageSearchService.processImageForSearch(imageFile);
+      
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show results and handle search
+      if (mounted) {
+        imageSearchService.showImageSearchResults(
+          context,
+          result,
+          () {
+            if (result.success && result.searchTerms.isNotEmpty) {
+              // Set search query and navigate to search screen
+              _searchController.text = result.searchTerms.first;
+              Navigator.pushNamed(context, '/search');
+            }
+          },
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.pop(context);
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

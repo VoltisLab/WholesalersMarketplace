@@ -24,6 +24,11 @@ import 'screens/order_confirmation_screen.dart';
 import 'screens/enhanced_search_screen.dart';
 import 'screens/modern_profile_screen.dart';
 import 'screens/enhanced_vendor_list_screen.dart';
+import 'screens/live_chat_screen.dart';
+import 'screens/email_support_screen.dart';
+import 'screens/faq_screen.dart';
+import 'screens/bug_report_screen.dart';
+import 'screens/send_feedback_screen.dart';
 import 'models/product_model.dart';
 
 void main() {
@@ -160,6 +165,11 @@ class MyApp extends StatelessWidget {
           '/checkout': (context) => const CheckoutScreen(),
           '/order-confirmation': (context) => const OrderConfirmationScreen(),
           '/search': (context) => const EnhancedSearchScreen(),
+          '/live-chat': (context) => const LiveChatScreen(),
+          '/email-support': (context) => const EmailSupportScreen(),
+          '/faq': (context) => const FAQScreen(),
+          '/bug-report': (context) => const BugReportScreen(),
+          '/send-feedback': (context) => const SendFeedbackScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

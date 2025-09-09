@@ -198,10 +198,9 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
 
   Widget _buildRecentSearches() {
     final recentSearches = [
-      'Electronics',
       'Fashion',
-      'iPhone',
-      'Headphones',
+      'Vintage Leather',
+      'Band T-Shirts',
       'Shoes',
     ];
 

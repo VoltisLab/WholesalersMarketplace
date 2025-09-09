@@ -6,6 +6,7 @@ import '../constants/app_constants.dart';
 import '../providers/vendor_provider.dart';
 import '../widgets/vendor_card.dart';
 import '../models/product_model.dart';
+import '../services/image_search_service.dart';
 import '../utils/country_emoji.dart';
 
 enum ViewType { grid, list, compact, thumbnail }
@@ -481,7 +482,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+            border: Border.all(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
           ),
           child: TextField(
             controller: _searchController,
@@ -489,8 +490,16 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
               hintText: 'Search suppliers, locations, categories...',
               hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
               prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
+                    onPressed: _handleImageSearch,
+                    tooltip: 'Search by image',
+                  ),
+                  if (_searchQuery.isNotEmpty)
+                    IconButton(
                       icon: const Icon(Icons.clear, color: AppColors.textSecondary),
                       onPressed: () {
                         _searchController.clear();
@@ -498,8 +507,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                           _searchQuery = '';
                         });
                       },
-                    )
-                  : null,
+                    ),
+                ],
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
@@ -1018,7 +1028,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 0.9,
+        childAspectRatio: 0.75, // Increased height (was 0.9)
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
@@ -1058,9 +1068,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
         ),
         child: Column(
           children: [
-            // Large Thumbnail
+            // Profile Photo
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -1093,59 +1103,59 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                 ),
               ),
             ),
-            // Vendor Info
+            // Shop Name
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Text(
+                vendor.name,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Description (Rating + Country)
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Flexible(
-                      child: Text(
-                        vendor.name,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.star,
-                          size: 10,
+                          size: 12,
                           color: Colors.amber[600],
                         ),
-                        const SizedBox(width: 1),
-                        Flexible(
-                          child: Text(
-                            vendor.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
-                            ),
+                        const SizedBox(width: 2),
+                        Text(
+                          vendor.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
-                    Flexible(
-                      child: Text(
-                        CountryEmoji.getCountryWithFlag(vendor.address.country),
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: AppColors.textSecondary.withOpacity(0.8),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      CountryEmoji.getCountryWithFlag(vendor.address.country),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: AppColors.textSecondary.withOpacity(0.8),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -1199,6 +1209,68 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                vendor.rating >= 4.5;
       default:
         return false;
+    }
+  }
+
+  Future<void> _handleImageSearch() async {
+    try {
+      final imageSearchService = ImageSearchService();
+      
+      // Show image source selection dialog
+      final imageFile = await imageSearchService.showImageSourceDialog(context);
+      if (imageFile == null) return;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Analyzing image...'),
+            ],
+          ),
+        ),
+      );
+
+      // Process the image
+      final result = await imageSearchService.processImageForSearch(imageFile);
+      
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show results and handle search
+      if (mounted) {
+        imageSearchService.showImageSearchResults(
+          context,
+          result,
+          () {
+            if (result.success && result.searchTerms.isNotEmpty) {
+              // Set search query
+              _searchController.text = result.searchTerms.join(' ');
+              setState(() {
+                _searchQuery = result.searchTerms.join(' ');
+              });
+            }
+          },
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.pop(context);
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

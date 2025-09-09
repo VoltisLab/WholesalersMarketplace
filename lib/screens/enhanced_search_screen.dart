@@ -6,6 +6,7 @@ import '../providers/enhanced_product_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../widgets/product_card.dart';
 import '../widgets/vendor_card.dart';
+import '../services/image_search_service.dart';
 
 class EnhancedSearchScreen extends StatefulWidget {
   const EnhancedSearchScreen({super.key});
@@ -178,15 +179,24 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           hintText: 'Search products, brands, categories...',
           hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
           prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
+                onPressed: _handleImageSearch,
+                tooltip: 'Search by image',
+              ),
+              if (_searchQuery.isNotEmpty)
+                IconButton(
                   icon: const Icon(Icons.clear, color: AppColors.textSecondary),
                   onPressed: () {
                     _searchController.clear();
                     _onSearchChanged('');
                   },
-                )
-              : null,
+                ),
+            ],
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
@@ -455,55 +465,81 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           return _buildNoResults();
         }
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.paddingMedium),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (products.isNotEmpty) ...[
-                Text(
-                  'Products (${products.length})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+        return CustomScrollView(
+          slivers: [
+            if (products.isNotEmpty) ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.paddingMedium,
+                  AppConstants.paddingMedium,
+                  AppConstants.paddingMedium,
+                  12,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Products (${products.length})',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.55,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
-                  itemCount: products.take(4).length,
-                  itemBuilder: (context, index) => ProductCard(
-                    product: products[index],
-                    onTap: () {},
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => ProductCard(
+                      product: products[index],
+                      onTap: () {},
+                    ),
+                    childCount: products.take(4).length,
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-              if (vendors.isNotEmpty) ...[
-                Text(
-                  'Suppliers (${vendors.length})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ...vendors.take(3).map((vendor) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: VendorCard(vendor: vendor),
-                )),
-              ],
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
             ],
-          ),
+            if (vendors.isNotEmpty) ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.paddingMedium,
+                  0,
+                  AppConstants.paddingMedium,
+                  12,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Suppliers (${vendors.length})',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: VendorCard(vendor: vendors[index]),
+                    ),
+                    childCount: vendors.take(3).length,
+                  ),
+                ),
+              ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: AppConstants.paddingMedium)),
+          ],
         );
       },
     );
@@ -520,19 +556,27 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           return _buildNoResults();
         }
 
-        return GridView.builder(
-          padding: const EdgeInsets.all(AppConstants.paddingMedium),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.55,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: products.length,
-          itemBuilder: (context, index) => ProductCard(
-            product: products[index],
-            onTap: () {},
-          ),
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(AppConstants.paddingMedium),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.55,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => ProductCard(
+                    product: products[index],
+                    onTap: () {},
+                  ),
+                  childCount: products.length,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -549,13 +593,21 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           return _buildNoResults();
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(AppConstants.paddingMedium),
-          itemCount: vendors.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: VendorCard(vendor: vendors[index]),
-          ),
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(AppConstants.paddingMedium),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: VendorCard(vendor: vendors[index]),
+                  ),
+                  childCount: vendors.length,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -623,5 +675,65 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
         ],
       ),
     );
+  }
+
+  Future<void> _handleImageSearch() async {
+    try {
+      final imageSearchService = ImageSearchService();
+      
+      // Show image source selection dialog
+      final imageFile = await imageSearchService.showImageSourceDialog(context);
+      if (imageFile == null) return;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Analyzing image...'),
+            ],
+          ),
+        ),
+      );
+
+      // Process the image
+      final result = await imageSearchService.processImageForSearch(imageFile);
+      
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show results and handle search
+      if (mounted) {
+        imageSearchService.showImageSearchResults(
+          context,
+          result,
+          () {
+            if (result.success && result.searchTerms.isNotEmpty) {
+              // Set search query and trigger search
+              _searchController.text = result.searchTerms.join(' ');
+              _onSearchChanged(result.searchTerms.join(' '));
+            }
+          },
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.pop(context);
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

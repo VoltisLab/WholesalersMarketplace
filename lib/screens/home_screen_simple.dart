@@ -155,7 +155,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SizedBox(
               height: 380,
               child: ListView.builder(
@@ -264,7 +264,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SizedBox(
               height: 280, // Increased height for gallery design
               child: ListView.builder(
@@ -504,9 +504,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SizedBox(
-              height: 120,
+              height: 100,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
@@ -739,8 +739,8 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         return Icons.watch_rounded;
       case 'Tops':
         return Icons.checkroom_rounded;
-      case 'Electronics':
-        return Icons.phone_android_rounded;
+      case 'Vintage':
+        return Icons.history_rounded;
       case 'Fashion':
         return Icons.shopping_bag_rounded;
       case 'Home':

@@ -61,7 +61,7 @@ class VendorProvider extends ChangeNotifier {
 
   List<VendorModel> _generateMockVendors() {
     final List<Map<String, dynamic>> vendorData = [
-      {'name': 'Retro Revival Electronics', 'category': 'Electronics', 'country': 'China', 'rating': 4.8, 'reviews': 1250},
+      {'name': 'Retro Revival Fashion', 'category': 'Fashion', 'country': 'China', 'rating': 4.8, 'reviews': 1250},
       {'name': 'Vintage Threads & Co', 'category': 'Fashion', 'country': 'India', 'rating': 4.6, 'reviews': 890},
       {'name': 'The Old Curiosity Shop', 'category': 'Home', 'country': 'Germany', 'rating': 4.4, 'reviews': 567},
       {'name': 'Second Chance Sports', 'category': 'Sports', 'country': 'Pakistan', 'rating': 4.7, 'reviews': 423},
@@ -78,15 +78,15 @@ class VendorProvider extends ChangeNotifier {
       {'name': 'Apothecary & Wellness', 'category': 'Health', 'country': 'Netherlands', 'rating': 4.6, 'reviews': 678},
       {'name': 'Little Lamb\'s Legacy', 'category': 'Baby', 'country': 'Sweden', 'rating': 4.7, 'reviews': 456},
       {'name': 'Adventure Seekers Gear', 'category': 'Outdoor', 'country': 'Norway', 'rating': 4.8, 'reviews': 789},
-      {'name': 'Retro Gaming Arcade', 'category': 'Gaming', 'country': 'South Korea', 'rating': 4.5, 'reviews': 543},
+      {'name': 'Retro Streetwear Seoul', 'category': 'Fashion', 'country': 'South Korea', 'rating': 4.5, 'reviews': 543},
       {'name': 'The Artist\'s Quarter', 'category': 'Art', 'country': 'Mexico', 'rating': 4.3, 'reviews': 321},
       {'name': 'Wanderlust Vintage', 'category': 'Travel', 'country': 'Argentina', 'rating': 4.6, 'reviews': 654},
       {'name': 'Bygone Era Antiques', 'category': 'Vintage', 'country': 'Belgium', 'rating': 4.4, 'reviews': 432},
-      {'name': 'Circuit City Vintage', 'category': 'Electronics', 'country': 'Switzerland', 'rating': 4.7, 'reviews': 876},
+      {'name': 'Swiss Vintage Couture', 'category': 'Fashion', 'country': 'Switzerland', 'rating': 4.7, 'reviews': 876},
       {'name': 'Mod & Vintage Fashion', 'category': 'Fashion', 'country': 'Austria', 'rating': 4.8, 'reviews': 765},
       {'name': 'Heritage Home & Garden', 'category': 'Garden', 'country': 'Denmark', 'rating': 4.5, 'reviews': 543},
       {'name': 'Old School Fitness', 'category': 'Fitness', 'country': 'Finland', 'rating': 4.6, 'reviews': 678},
-      {'name': 'Global Tech Solutions', 'category': 'Electronics', 'country': 'Singapore', 'rating': 4.7, 'reviews': 892},
+      {'name': 'Global Vintage Collective', 'category': 'Vintage', 'country': 'Singapore', 'rating': 4.7, 'reviews': 892},
       {'name': 'Fashion Forward', 'category': 'Fashion', 'country': 'Turkey', 'rating': 4.5, 'reviews': 567},
       {'name': 'Home Sweet Home', 'category': 'Home', 'country': 'Poland', 'rating': 4.3, 'reviews': 434},
       {'name': 'Sports Central', 'category': 'Sports', 'country': 'Czech Republic', 'rating': 4.6, 'reviews': 678},
@@ -103,11 +103,11 @@ class VendorProvider extends ChangeNotifier {
       {'name': 'Health Hub', 'category': 'Health', 'country': 'Estonia', 'rating': 4.6, 'reviews': 456},
       {'name': 'Baby Boutique', 'category': 'Baby', 'country': 'Latvia', 'rating': 4.5, 'reviews': 345},
       {'name': 'Outdoor Outfitters', 'category': 'Outdoor', 'country': 'Lithuania', 'rating': 4.7, 'reviews': 567},
-      {'name': 'Gaming Galaxy', 'category': 'Gaming', 'country': 'Iceland', 'rating': 4.6, 'reviews': 389},
+      {'name': 'Nordic Fashion House', 'category': 'Fashion', 'country': 'Iceland', 'rating': 4.6, 'reviews': 389},
       {'name': 'Art Avenue', 'category': 'Art', 'country': 'Luxembourg', 'rating': 4.3, 'reviews': 234},
       {'name': 'Travel Treasures', 'category': 'Travel', 'country': 'Malta', 'rating': 4.5, 'reviews': 345},
       {'name': 'Vintage Vibes', 'category': 'Vintage', 'country': 'Cyprus', 'rating': 4.4, 'reviews': 278},
-      {'name': 'Tech Titans', 'category': 'Electronics', 'country': 'Israel', 'rating': 4.8, 'reviews': 789},
+      {'name': 'Timeless Textiles', 'category': 'Fashion', 'country': 'Israel', 'rating': 4.8, 'reviews': 789},
       {'name': 'Style Station', 'category': 'Fashion', 'country': 'South Africa', 'rating': 4.6, 'reviews': 567},
       {'name': 'Home Harmony', 'category': 'Home', 'country': 'Egypt', 'rating': 4.2, 'reviews': 434},
       {'name': 'Sports Spectrum', 'category': 'Sports', 'country': 'Morocco', 'rating': 4.5, 'reviews': 456},
@@ -124,11 +124,11 @@ class VendorProvider extends ChangeNotifier {
       {'name': 'Wellness World', 'category': 'Health', 'country': 'Nigeria', 'rating': 4.6, 'reviews': 678},
       {'name': 'Tiny Tots', 'category': 'Baby', 'country': 'Senegal', 'rating': 4.5, 'reviews': 389},
       {'name': 'Adventure Awaits', 'category': 'Outdoor', 'country': 'Mali', 'rating': 4.7, 'reviews': 456},
-      {'name': 'Game Zone', 'category': 'Gaming', 'country': 'Burkina Faso', 'rating': 4.3, 'reviews': 234},
+      {'name': 'Artisan Apparel Zone', 'category': 'Fashion', 'country': 'Burkina Faso', 'rating': 4.3, 'reviews': 234},
       {'name': 'Artistic Expressions', 'category': 'Art', 'country': 'Niger', 'rating': 4.4, 'reviews': 345},
       {'name': 'Journey Junction', 'category': 'Travel', 'country': 'Chad', 'rating': 4.2, 'reviews': 278},
       {'name': 'Retro Relics', 'category': 'Vintage', 'country': 'Cameroon', 'rating': 4.5, 'reviews': 389},
-      {'name': 'Digital Dreams', 'category': 'Electronics', 'country': 'Thailand', 'rating': 4.7, 'reviews': 567},
+      {'name': 'Dreamy Vintage Finds', 'category': 'Vintage', 'country': 'Thailand', 'rating': 4.7, 'reviews': 567},
       {'name': 'Fashion Fusion', 'category': 'Fashion', 'country': 'Vietnam', 'rating': 4.6, 'reviews': 456},
       {'name': 'Cozy Corners', 'category': 'Home', 'country': 'Philippines', 'rating': 4.3, 'reviews': 345},
       {'name': 'Athletic Arena', 'category': 'Sports', 'country': 'Indonesia', 'rating': 4.5, 'reviews': 678},
@@ -145,11 +145,11 @@ class VendorProvider extends ChangeNotifier {
       {'name': 'Vitality Vault', 'category': 'Health', 'country': 'Uzbekistan', 'rating': 4.6, 'reviews': 389},
       {'name': 'Little Luxuries', 'category': 'Baby', 'country': 'Kazakhstan', 'rating': 4.5, 'reviews': 456},
       {'name': 'Wild Wonders', 'category': 'Outdoor', 'country': 'Kyrgyzstan', 'rating': 4.8, 'reviews': 567},
-      {'name': 'Player\'s Paradise', 'category': 'Gaming', 'country': 'Tajikistan', 'rating': 4.3, 'reviews': 234},
+      {'name': 'Paradise Vintage', 'category': 'Vintage', 'country': 'Tajikistan', 'rating': 4.3, 'reviews': 234},
       {'name': 'Canvas Creations', 'category': 'Art', 'country': 'Turkmenistan', 'rating': 4.4, 'reviews': 345},
       {'name': 'Wanderer\'s Way', 'category': 'Travel', 'country': 'Azerbaijan', 'rating': 4.6, 'reviews': 456},
       {'name': 'Nostalgia Nook', 'category': 'Vintage', 'country': 'Armenia', 'rating': 4.2, 'reviews': 278},
-      {'name': 'Innovation Inc', 'category': 'Electronics', 'country': 'Georgia', 'rating': 4.7, 'reviews': 389},
+      {'name': 'Heritage Fashion House', 'category': 'Fashion', 'country': 'Georgia', 'rating': 4.7, 'reviews': 389},
       {'name': 'Trendy Threads', 'category': 'Fashion', 'country': 'Moldova', 'rating': 4.5, 'reviews': 345},
       {'name': 'Comfort Castle', 'category': 'Home', 'country': 'Belarus', 'rating': 4.3, 'reviews': 456},
       {'name': 'Victory Venue', 'category': 'Sports', 'country': 'Ukraine', 'rating': 4.6, 'reviews': 567},
@@ -166,7 +166,7 @@ class VendorProvider extends ChangeNotifier {
       {'name': 'Health Haven', 'category': 'Health', 'country': 'Ecuador', 'rating': 4.6, 'reviews': 389},
       {'name': 'Bundle of Joy', 'category': 'Baby', 'country': 'Bolivia', 'rating': 4.5, 'reviews': 234},
       {'name': 'Explorer\'s Edge', 'category': 'Outdoor', 'country': 'Paraguay', 'rating': 4.8, 'reviews': 345},
-      {'name': 'Gaming Grounds', 'category': 'Gaming', 'country': 'Uruguay', 'rating': 4.3, 'reviews': 456},
+      {'name': 'Vintage Grounds', 'category': 'Vintage', 'country': 'Uruguay', 'rating': 4.3, 'reviews': 456},
       {'name': 'Creative Canvas', 'category': 'Art', 'country': 'Guyana', 'rating': 4.4, 'reviews': 278},
       {'name': 'Voyage Vault', 'category': 'Travel', 'country': 'Suriname', 'rating': 4.6, 'reviews': 389},
       {'name': 'Timeless Treasures', 'category': 'Vintage', 'country': 'French Guiana', 'rating': 4.2, 'reviews': 234},
@@ -190,8 +190,8 @@ class VendorProvider extends ChangeNotifier {
           state: _getStateFromCountry(data['country']),
           zipCode: _getPostcodeFromCountry(data['country'], index),
           country: data['country'] ?? 'China',
-          latitude: 37.7749 + (index * 0.1) - 2.5,
-          longitude: -122.4194 + (index * 0.1) - 2.5,
+          latitude: _getCountryLatitude(data['country'], index),
+          longitude: _getCountryLongitude(data['country'], index),
         ),
         rating: data['rating'].toDouble(),
         reviewCount: data['reviews'],
@@ -315,5 +315,93 @@ class VendorProvider extends ChangeNotifier {
     };
     final baseCode = baseCodes[country] ?? '00000';
     return '$baseCode${(index + 1).toString().padLeft(1, '0')}';
+  }
+
+  double _getCountryLatitude(String? country, int index) {
+    final countryCoordinates = {
+      'China': [39.9042, 116.4074], 'India': [28.7041, 77.1025], 'Germany': [52.5200, 13.4050],
+      'Pakistan': [33.6844, 73.0479], 'Russia': [55.7558, 37.6176], 'United States': [38.9072, -77.0369],
+      'Japan': [35.6762, 139.6503], 'United Kingdom': [51.5074, -0.1278], 'France': [48.8566, 2.3522],
+      'Italy': [41.9028, 12.4964], 'Brazil': [-15.8267, -47.9218], 'Canada': [45.4215, -75.6972],
+      'Australia': [-35.2809, 149.1300], 'Spain': [40.4168, -3.7038], 'Netherlands': [52.3676, 4.9041],
+      'Sweden': [59.3293, 18.0686], 'Norway': [59.9139, 10.7522], 'South Korea': [37.5665, 126.9780],
+      'Mexico': [19.4326, -99.1332], 'Argentina': [-34.6118, -58.3960], 'Belgium': [50.8503, 4.3517],
+      'Switzerland': [46.9481, 7.4474], 'Austria': [48.2082, 16.3738], 'Denmark': [55.6761, 12.5683],
+      'Finland': [60.1699, 24.9384], 'Singapore': [1.3521, 103.8198], 'Turkey': [39.9334, 32.8597],
+      'Poland': [52.2297, 21.0122], 'Czech Republic': [50.0755, 14.4378], 'Greece': [37.9755, 23.7348],
+      'Portugal': [38.7223, -9.1393], 'Hungary': [47.4979, 19.0402], 'Romania': [44.4268, 26.1025],
+      'Bulgaria': [42.6977, 23.3219], 'Croatia': [45.8150, 15.9819], 'Slovenia': [46.0569, 14.5058],
+      'Slovakia': [48.1486, 17.1077], 'Estonia': [59.4370, 24.7536], 'Latvia': [56.9496, 24.1052],
+      'Lithuania': [54.6872, 25.2797], 'Iceland': [64.1466, -21.9426], 'Luxembourg': [49.6116, 6.1319],
+      'Malta': [35.8997, 14.5146], 'Cyprus': [35.1856, 33.3823], 'Israel': [31.7683, 35.2137],
+      'South Africa': [-25.7479, 28.2293], 'Egypt': [30.0444, 31.2357], 'Morocco': [34.0209, -6.8416],
+      'Tunisia': [36.8065, 10.1815], 'Algeria': [36.7538, 3.0588], 'Libya': [32.8872, 13.1913],
+      'Sudan': [15.5007, 32.5599], 'Ethiopia': [9.1450, 40.4897], 'Kenya': [-1.2921, 36.8219],
+      'Uganda': [0.3476, 32.5825], 'Tanzania': [-6.7924, 39.2083], 'Rwanda': [-1.9441, 30.0619],
+      'Ghana': [5.6037, -0.1870], 'Nigeria': [9.0765, 7.3986], 'Senegal': [14.7167, -17.4677],
+      'Mali': [12.6392, -8.0029], 'Burkina Faso': [12.2383, -1.5616], 'Niger': [13.5116, 2.1254],
+      'Chad': [12.1348, 15.0557], 'Cameroon': [3.8480, 11.5021], 'Thailand': [13.7563, 100.5018],
+      'Vietnam': [21.0285, 105.8542], 'Philippines': [14.5995, 120.9842], 'Indonesia': [-6.2088, 106.8456],
+      'Malaysia': [3.1390, 101.6869], 'Bangladesh': [23.8103, 90.4125], 'Myanmar': [19.7633, 96.0785],
+      'Sri Lanka': [6.9271, 79.8612], 'Nepal': [27.7172, 85.3240], 'Bhutan': [27.4728, 89.6390],
+      'Afghanistan': [34.5553, 69.2075], 'Uzbekistan': [41.2995, 69.2401], 'Kazakhstan': [51.1694, 71.4491],
+      'Kyrgyzstan': [42.8746, 74.5698], 'Tajikistan': [38.8610, 71.2761], 'Turkmenistan': [37.9601, 58.3261],
+      'Azerbaijan': [40.4093, 49.8671], 'Armenia': [40.0691, 44.5147], 'Georgia': [41.7151, 44.8271],
+      'Moldova': [47.0105, 28.8638], 'Belarus': [53.9006, 27.5590], 'Ukraine': [50.4501, 30.5234],
+      'Serbia': [44.7866, 20.4489], 'Montenegro': [42.7087, 19.3744], 'Bosnia and Herzegovina': [43.8563, 18.4131],
+      'North Macedonia': [41.9973, 21.4280], 'Albania': [41.1533, 19.6172], 'Kosovo': [42.6026, 21.1655],
+      'Colombia': [4.7110, -74.0721], 'Venezuela': [10.4806, -66.9036], 'Ecuador': [-0.1807, -78.4678],
+      'Bolivia': [-16.2902, -63.5887], 'Paraguay': [-25.2637, -57.5759], 'Uruguay': [-34.9011, -56.1645],
+      'Guyana': [6.8013, -58.1551], 'Suriname': [5.8520, -55.2038], 'French Guiana': [3.9339, -53.1258],
+    };
+    
+    final coords = countryCoordinates[country] ?? [37.7749, -122.4194]; // Default to San Francisco
+    // Add small random variation to avoid exact overlap
+    final latVariation = (index % 7 - 3) * 0.01; // -0.03 to +0.03 degrees
+    return coords[0] + latVariation;
+  }
+
+  double _getCountryLongitude(String? country, int index) {
+    final countryCoordinates = {
+      'China': [39.9042, 116.4074], 'India': [28.7041, 77.1025], 'Germany': [52.5200, 13.4050],
+      'Pakistan': [33.6844, 73.0479], 'Russia': [55.7558, 37.6176], 'United States': [38.9072, -77.0369],
+      'Japan': [35.6762, 139.6503], 'United Kingdom': [51.5074, -0.1278], 'France': [48.8566, 2.3522],
+      'Italy': [41.9028, 12.4964], 'Brazil': [-15.8267, -47.9218], 'Canada': [45.4215, -75.6972],
+      'Australia': [-35.2809, 149.1300], 'Spain': [40.4168, -3.7038], 'Netherlands': [52.3676, 4.9041],
+      'Sweden': [59.3293, 18.0686], 'Norway': [59.9139, 10.7522], 'South Korea': [37.5665, 126.9780],
+      'Mexico': [19.4326, -99.1332], 'Argentina': [-34.6118, -58.3960], 'Belgium': [50.8503, 4.3517],
+      'Switzerland': [46.9481, 7.4474], 'Austria': [48.2082, 16.3738], 'Denmark': [55.6761, 12.5683],
+      'Finland': [60.1699, 24.9384], 'Singapore': [1.3521, 103.8198], 'Turkey': [39.9334, 32.8597],
+      'Poland': [52.2297, 21.0122], 'Czech Republic': [50.0755, 14.4378], 'Greece': [37.9755, 23.7348],
+      'Portugal': [38.7223, -9.1393], 'Hungary': [47.4979, 19.0402], 'Romania': [44.4268, 26.1025],
+      'Bulgaria': [42.6977, 23.3219], 'Croatia': [45.8150, 15.9819], 'Slovenia': [46.0569, 14.5058],
+      'Slovakia': [48.1486, 17.1077], 'Estonia': [59.4370, 24.7536], 'Latvia': [56.9496, 24.1052],
+      'Lithuania': [54.6872, 25.2797], 'Iceland': [64.1466, -21.9426], 'Luxembourg': [49.6116, 6.1319],
+      'Malta': [35.8997, 14.5146], 'Cyprus': [35.1856, 33.3823], 'Israel': [31.7683, 35.2137],
+      'South Africa': [-25.7479, 28.2293], 'Egypt': [30.0444, 31.2357], 'Morocco': [34.0209, -6.8416],
+      'Tunisia': [36.8065, 10.1815], 'Algeria': [36.7538, 3.0588], 'Libya': [32.8872, 13.1913],
+      'Sudan': [15.5007, 32.5599], 'Ethiopia': [9.1450, 40.4897], 'Kenya': [-1.2921, 36.8219],
+      'Uganda': [0.3476, 32.5825], 'Tanzania': [-6.7924, 39.2083], 'Rwanda': [-1.9441, 30.0619],
+      'Ghana': [5.6037, -0.1870], 'Nigeria': [9.0765, 7.3986], 'Senegal': [14.7167, -17.4677],
+      'Mali': [12.6392, -8.0029], 'Burkina Faso': [12.2383, -1.5616], 'Niger': [13.5116, 2.1254],
+      'Chad': [12.1348, 15.0557], 'Cameroon': [3.8480, 11.5021], 'Thailand': [13.7563, 100.5018],
+      'Vietnam': [21.0285, 105.8542], 'Philippines': [14.5995, 120.9842], 'Indonesia': [-6.2088, 106.8456],
+      'Malaysia': [3.1390, 101.6869], 'Bangladesh': [23.8103, 90.4125], 'Myanmar': [19.7633, 96.0785],
+      'Sri Lanka': [6.9271, 79.8612], 'Nepal': [27.7172, 85.3240], 'Bhutan': [27.4728, 89.6390],
+      'Afghanistan': [34.5553, 69.2075], 'Uzbekistan': [41.2995, 69.2401], 'Kazakhstan': [51.1694, 71.4491],
+      'Kyrgyzstan': [42.8746, 74.5698], 'Tajikistan': [38.8610, 71.2761], 'Turkmenistan': [37.9601, 58.3261],
+      'Azerbaijan': [40.4093, 49.8671], 'Armenia': [40.0691, 44.5147], 'Georgia': [41.7151, 44.8271],
+      'Moldova': [47.0105, 28.8638], 'Belarus': [53.9006, 27.5590], 'Ukraine': [50.4501, 30.5234],
+      'Serbia': [44.7866, 20.4489], 'Montenegro': [42.7087, 19.3744], 'Bosnia and Herzegovina': [43.8563, 18.4131],
+      'North Macedonia': [41.9973, 21.4280], 'Albania': [41.1533, 19.6172], 'Kosovo': [42.6026, 21.1655],
+      'Colombia': [4.7110, -74.0721], 'Venezuela': [10.4806, -66.9036], 'Ecuador': [-0.1807, -78.4678],
+      'Bolivia': [-16.2902, -63.5887], 'Paraguay': [-25.2637, -57.5759], 'Uruguay': [-34.9011, -56.1645],
+      'Guyana': [6.8013, -58.1551], 'Suriname': [5.8520, -55.2038], 'French Guiana': [3.9339, -53.1258],
+    };
+    
+    final coords = countryCoordinates[country] ?? [37.7749, -122.4194]; // Default to San Francisco
+    // Add small random variation to avoid exact overlap
+    final lngVariation = (index % 5 - 2) * 0.01; // -0.02 to +0.02 degrees
+    return coords[1] + lngVariation;
   }
 }
