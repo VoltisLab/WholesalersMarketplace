@@ -56,54 +56,60 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
       pinned: true,
       backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          widget.vendor.name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
-              ],
-            ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 40),
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Banner background image
+            Image.network(
+              'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop&crop=center',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
+                    ],
                   ),
-                  child: ClipOval(
-                    child: Image.network(
-                      widget.vendor.logo,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.white,
-                        child: const Icon(
-                          Icons.store,
-                          color: AppColors.primary,
-                          size: 40,
-                        ),
+                ),
+              ),
+            ),
+            // 50% black overlay
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ),
+            // Profile photo in bottom left corner
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: ClipOval(
+                  child: Image.network(
+                    widget.vendor.logo,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.white,
+                      child: const Icon(
+                        Icons.store,
+                        color: AppColors.primary,
+                        size: 30,
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

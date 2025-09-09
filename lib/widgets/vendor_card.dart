@@ -87,6 +87,10 @@ class VendorCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+        side: BorderSide(
+          color: AppColors.divider.withOpacity(0.3),
+          width: 0.5,
+        ),
       ),
       child: InkWell(
         onTap: onTap,

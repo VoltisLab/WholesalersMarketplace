@@ -307,6 +307,10 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.divider.withOpacity(0.3),
+            width: 0.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
