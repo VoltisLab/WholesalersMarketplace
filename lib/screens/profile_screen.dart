@@ -26,13 +26,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline_rounded),
             onPressed: () {
-              // Navigate to messages
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Messages feature coming soon!'),
-                  backgroundColor: AppColors.info,
-                ),
-              );
+              Navigator.pushNamed(context, '/messages');
             },
           ),
           const SizedBox(width: 8),
@@ -695,6 +689,11 @@ class ProfileScreen extends StatelessWidget {
       children: menuItems.map((item) {
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: ListTile(
             leading: Icon(
               item['icon'] as IconData,

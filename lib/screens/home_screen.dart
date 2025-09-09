@@ -165,27 +165,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Consumer<CartProvider>(
                   builder: (context, cartProvider, child) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    return badges.Badge(
+                      badgeContent: Text(
+                        cartProvider.itemCount.toString(),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
-                      child: badges.Badge(
-                        badgeContent: Text(
-                          cartProvider.itemCount.toString(),
-                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                      badgeStyle: const badges.BadgeStyle(
+                        badgeColor: Colors.red,
+                      ),
+                      showBadge: cartProvider.itemCount > 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        badgeStyle: const badges.BadgeStyle(
-                          badgeColor: Colors.red,
-                        ),
-                        showBadge: cartProvider.itemCount > 0,
                         child: IconButton(
                           icon: const Icon(Icons.shopping_cart_outlined),
                           onPressed: () => setState(() => _currentIndex = 2),

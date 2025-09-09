@@ -122,10 +122,10 @@ class EnhancedProductProvider extends ChangeNotifier {
       address: AddressModel(
         id: vendorIndex.toString(),
         street: '${100 + vendorIndex * 10} ${vendorData['category']} Street',
-        city: vendorData['city'],
-        state: _getCountyFromCity(vendorData['city']),
-        zipCode: _getPostcodeFromCity(vendorData['city'], vendorIndex),
-        country: 'United Kingdom',
+        city: _getCapitalCity(vendorData['country']),
+        state: _getStateFromCountry(vendorData['country']),
+        zipCode: _getPostcodeFromCountry(vendorData['country'], vendorIndex),
+        country: vendorData['country'] ?? 'China',
       ),
       rating: vendorData['rating'].toDouble(),
       reviewCount: vendorData['reviews'],
@@ -162,16 +162,16 @@ class EnhancedProductProvider extends ChangeNotifier {
 
   Map<String, dynamic> _getVendorData(int index) {
     final vendorData = [
-      {'name': 'Retro Revival Electronics', 'category': 'Electronics', 'city': 'London', 'rating': 4.8, 'reviews': 1250},
-      {'name': 'Vintage Threads & Co', 'category': 'Fashion', 'city': 'Brighton', 'rating': 4.6, 'reviews': 890},
-      {'name': 'The Old Curiosity Shop', 'category': 'Home', 'city': 'Bath', 'rating': 4.4, 'reviews': 567},
-      {'name': 'Second Chance Sports', 'category': 'Sports', 'city': 'Manchester', 'rating': 4.7, 'reviews': 423},
-      {'name': 'Dusty Pages Bookshop', 'category': 'Books', 'city': 'Oxford', 'rating': 4.5, 'reviews': 789},
-      {'name': 'Timeless Beauty Finds', 'category': 'Beauty', 'city': 'Edinburgh', 'rating': 4.9, 'reviews': 1100},
-      {'name': 'Classic Car Parts Co', 'category': 'Automotive', 'city': 'Birmingham', 'rating': 4.3, 'reviews': 654},
-      {'name': 'Paws & Claws Vintage', 'category': 'Pets', 'city': 'Liverpool', 'rating': 4.7, 'reviews': 432},
-      {'name': 'Vinyl & Vintage Music', 'category': 'Music', 'city': 'Bristol', 'rating': 4.6, 'reviews': 876},
-      {'name': 'Grandma\'s Kitchen Finds', 'category': 'Kitchen', 'city': 'York', 'rating': 4.5, 'reviews': 543},
+      {'name': 'Retro Revival Electronics', 'category': 'Electronics', 'country': 'China', 'rating': 4.8, 'reviews': 1250},
+      {'name': 'Vintage Threads & Co', 'category': 'Fashion', 'country': 'India', 'rating': 4.6, 'reviews': 890},
+      {'name': 'The Old Curiosity Shop', 'category': 'Home', 'country': 'Germany', 'rating': 4.4, 'reviews': 567},
+      {'name': 'Second Chance Sports', 'category': 'Sports', 'country': 'Pakistan', 'rating': 4.7, 'reviews': 423},
+      {'name': 'Dusty Pages Bookshop', 'category': 'Books', 'country': 'Russia', 'rating': 4.5, 'reviews': 789},
+      {'name': 'Timeless Beauty Finds', 'category': 'Beauty', 'country': 'United States', 'rating': 4.9, 'reviews': 1100},
+      {'name': 'Classic Car Parts Co', 'category': 'Automotive', 'country': 'Japan', 'rating': 4.3, 'reviews': 654},
+      {'name': 'Paws & Claws Vintage', 'category': 'Pets', 'country': 'United Kingdom', 'rating': 4.7, 'reviews': 432},
+      {'name': 'Vinyl & Vintage Music', 'category': 'Music', 'country': 'France', 'rating': 4.6, 'reviews': 876},
+      {'name': 'Grandma\'s Kitchen Finds', 'category': 'Kitchen', 'country': 'Italy', 'rating': 4.5, 'reviews': 543},
       {'name': 'Yesteryear Toy Chest', 'category': 'Toys', 'city': 'Canterbury', 'rating': 4.8, 'reviews': 765},
       {'name': 'Mad Men Office Supply', 'category': 'Office', 'city': 'Cambridge', 'rating': 4.2, 'reviews': 321},
       {'name': 'Heirloom Jewelry Box', 'category': 'Jewelry', 'city': 'Windsor', 'rating': 4.9, 'reviews': 987},
@@ -362,5 +362,39 @@ class EnhancedProductProvider extends ChangeNotifier {
     final parts = basePostcode.split(' ');
     final number = (int.tryParse(parts[1].substring(0, 1)) ?? 1) + (index % 9);
     return '${parts[0]} ${number}${parts[1].substring(1)}';
+  }
+
+  String _getCapitalCity(String? country) {
+    final capitals = {
+      'China': 'Beijing', 'India': 'New Delhi', 'Germany': 'Berlin', 'Pakistan': 'Islamabad',
+      'Russia': 'Moscow', 'United States': 'Washington D.C.', 'Japan': 'Tokyo', 'United Kingdom': 'London',
+      'France': 'Paris', 'Italy': 'Rome', 'Brazil': 'Brasília', 'Canada': 'Ottawa',
+      'Australia': 'Canberra', 'Spain': 'Madrid', 'Netherlands': 'Amsterdam', 'Sweden': 'Stockholm',
+      'Norway': 'Oslo', 'South Korea': 'Seoul', 'Mexico': 'Mexico City', 'Argentina': 'Buenos Aires',
+    };
+    return capitals[country] ?? 'Unknown City';
+  }
+
+  String _getStateFromCountry(String? country) {
+    final states = {
+      'China': 'Beijing Municipality', 'India': 'Delhi', 'Germany': 'Berlin', 'Pakistan': 'Islamabad Capital Territory',
+      'Russia': 'Moscow Oblast', 'United States': 'District of Columbia', 'Japan': 'Tokyo Metropolis', 'United Kingdom': 'England',
+      'France': 'Île-de-France', 'Italy': 'Lazio', 'Brazil': 'Federal District', 'Canada': 'Ontario',
+      'Australia': 'Australian Capital Territory', 'Spain': 'Community of Madrid', 'Netherlands': 'North Holland', 'Sweden': 'Stockholm County',
+      'Norway': 'Oslo', 'South Korea': 'Seoul', 'Mexico': 'Mexico City', 'Argentina': 'Buenos Aires',
+    };
+    return states[country] ?? 'Unknown State';
+  }
+
+  String _getPostcodeFromCountry(String? country, int index) {
+    final baseCodes = {
+      'China': '100000', 'India': '110001', 'Germany': '10115', 'Pakistan': '44000',
+      'Russia': '101000', 'United States': '20001', 'Japan': '100-0001', 'United Kingdom': 'SW1A 1AA',
+      'France': '75001', 'Italy': '00118', 'Brazil': '70040-010', 'Canada': 'K1A 0A6',
+      'Australia': '2600', 'Spain': '28001', 'Netherlands': '1011', 'Sweden': '10011',
+      'Norway': '0001', 'South Korea': '04524', 'Mexico': '06000', 'Argentina': 'C1001',
+    };
+    final baseCode = baseCodes[country] ?? '00000';
+    return '$baseCode${(index + 1).toString().padLeft(1, '0')}';
   }
 }

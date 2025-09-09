@@ -18,7 +18,8 @@ class EnhancedVendorListScreen extends StatefulWidget {
   State<EnhancedVendorListScreen> createState() => _EnhancedVendorListScreenState();
 }
 
-class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
+class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   ViewType _currentViewType = ViewType.grid;
@@ -216,7 +217,13 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      transitionAnimationController: AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+      ),
+      builder: (context) => AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -289,7 +296,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
           Navigator.pop(context);
         },
         borderRadius: BorderRadius.circular(8),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -324,7 +333,13 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      transitionAnimationController: AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+      ),
+      builder: (context) => AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -405,7 +420,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
               width: 40,
               height: 40,
               decoration: BoxDecoration(
@@ -532,7 +549,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
           });
         },
         borderRadius: BorderRadius.circular(8),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -630,17 +649,48 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
           );
         }
 
-        switch (_currentViewType) {
-          case ViewType.grid:
-            return _buildGridView(vendors);
-          case ViewType.list:
-            return _buildListView(vendors);
-          case ViewType.compact:
-            return _buildCompactView(vendors);
-          case ViewType.thumbnail:
-            return _buildThumbnailView(vendors);
-        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: child,
+            );
+          },
+          child: _buildViewContent(vendors),
+        );
       },
+    );
+  }
+
+  Widget _buildViewContent(List<VendorModel> vendors) {
+    Widget content;
+    
+    switch (_currentViewType) {
+      case ViewType.grid:
+        content = _buildGridView(vendors);
+        break;
+      case ViewType.list:
+        content = _buildListView(vendors);
+        break;
+      case ViewType.compact:
+        content = _buildCompactView(vendors);
+        break;
+      case ViewType.thumbnail:
+        content = _buildThumbnailView(vendors);
+        break;
+    }
+    
+    // Add a unique key based on view type to ensure AnimatedSwitcher works
+    return KeyedSubtree(
+      key: ValueKey(_currentViewType),
+      child: content,
     );
   }
 
@@ -1047,48 +1097,55 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      vendor.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        vendor.name,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.star,
-                          size: 12,
+                          size: 10,
                           color: Colors.amber[600],
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          vendor.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                        const SizedBox(width: 1),
+                        Flexible(
+                          child: Text(
+                            vendor.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      CountryEmoji.getCountryWithFlag(vendor.address.country),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textSecondary.withOpacity(0.8),
+                    Flexible(
+                      child: Text(
+                        CountryEmoji.getCountryWithFlag(vendor.address.country),
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: AppColors.textSecondary.withOpacity(0.8),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

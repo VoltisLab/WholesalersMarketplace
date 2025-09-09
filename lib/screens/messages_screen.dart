@@ -5,6 +5,8 @@ import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/vendor_provider.dart';
 
+enum MessageFilter { all, unread, read, online }
+
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
 
@@ -14,6 +16,7 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   final TextEditingController _messageController = TextEditingController();
+  MessageFilter _currentFilter = MessageFilter.all;
   final List<Map<String, dynamic>> _messages = [
     {
       'id': '1',
@@ -109,6 +112,47 @@ class _MessagesScreenState extends State<MessagesScreen> {
     super.dispose();
   }
 
+  List<Map<String, dynamic>> get _filteredConversations {
+    switch (_currentFilter) {
+      case MessageFilter.unread:
+        return _conversations.where((c) => c['unreadCount'] > 0).toList();
+      case MessageFilter.read:
+        return _conversations.where((c) => c['unreadCount'] == 0).toList();
+      case MessageFilter.online:
+        return _conversations.where((c) => c['isOnline'] == true).toList();
+      case MessageFilter.all:
+      default:
+        return _conversations;
+    }
+  }
+
+  String _getFilterDisplayName(MessageFilter filter) {
+    switch (filter) {
+      case MessageFilter.all:
+        return 'All';
+      case MessageFilter.unread:
+        return 'Unread';
+      case MessageFilter.read:
+        return 'Read';
+      case MessageFilter.online:
+        return 'Online';
+    }
+  }
+
+  int _getFilterCount(MessageFilter filter) {
+    switch (filter) {
+      case MessageFilter.unread:
+        return _conversations.where((c) => c['unreadCount'] > 0).length;
+      case MessageFilter.read:
+        return _conversations.where((c) => c['unreadCount'] == 0).length;
+      case MessageFilter.online:
+        return _conversations.where((c) => c['isOnline'] == true).length;
+      case MessageFilter.all:
+      default:
+        return _conversations.length;
+    }
+  }
+
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
@@ -135,7 +179,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ? _buildConversationsAppBar()
           : _buildChatAppBar(),
       body: _selectedConversationId == null
-          ? _buildConversationsList()
+          ? Column(
+              children: [
+                _buildFilterTabs(),
+                Expanded(child: _buildConversationsList()),
+              ],
+            )
           : _buildChatView(),
     );
   }
@@ -277,12 +326,85 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
+  Widget _buildFilterTabs() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: MessageFilter.values.map((filter) {
+            final isSelected = _currentFilter == filter;
+            final count = _getFilterCount(filter);
+            
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilterChip(
+                selected: isSelected,
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _getFilterDisplayName(filter),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                    if (count > 0) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? Colors.white.withOpacity(0.2)
+                              : AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          count.toString(),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      _currentFilter = filter;
+                    });
+                  }
+                },
+                selectedColor: AppColors.primary,
+                backgroundColor: AppColors.surface,
+                side: BorderSide(
+                  color: isSelected ? AppColors.primary : AppColors.divider.withOpacity(0.3),
+                ),
+                showCheckmark: false,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildConversationsList() {
+    final filteredConversations = _filteredConversations;
+    
+    if (filteredConversations.isEmpty) {
+      return _buildEmptyState();
+    }
+    
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _conversations.length,
+      itemCount: filteredConversations.length,
       itemBuilder: (context, index) {
-        final conversation = _conversations[index];
+        final conversation = filteredConversations[index];
         return InkWell(
           onTap: () {
             setState(() {
@@ -392,6 +514,64 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    String message;
+    IconData icon;
+    
+    switch (_currentFilter) {
+      case MessageFilter.unread:
+        message = 'No unread messages';
+        icon = Icons.mark_email_read;
+        break;
+      case MessageFilter.read:
+        message = 'No read messages';
+        icon = Icons.drafts;
+        break;
+      case MessageFilter.online:
+        message = 'No vendors online';
+        icon = Icons.wifi_off;
+        break;
+      case MessageFilter.all:
+      default:
+        message = 'No conversations yet';
+        icon = Icons.chat_bubble_outline;
+        break;
+    }
+    
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: AppColors.textSecondary.withOpacity(0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _currentFilter == MessageFilter.all
+                ? 'Start browsing products to connect with vendors'
+                : 'Try switching to a different filter',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
