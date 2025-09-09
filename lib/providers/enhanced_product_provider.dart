@@ -118,14 +118,14 @@ class EnhancedProductProvider extends ChangeNotifier {
       description: 'Premium ${vendorData['category'].toLowerCase()} products and services.',
       logo: 'https://picsum.photos/80/80?random=${vendorIndex + 500}',
       email: '${vendorData['name'].toLowerCase().replaceAll(' ', '').replaceAll('&', '')}@example.com',
-      phone: '+1 (555) ${(100 + vendorIndex).toString().padLeft(3, '0')}-${(1000 + vendorIndex * 7).toString().padLeft(4, '0')}',
+      phone: '+44 ${(1000 + vendorIndex * 7).toString().padLeft(4, '0')} ${(100000 + vendorIndex * 123).toString().padLeft(6, '0')}',
       address: AddressModel(
         id: vendorIndex.toString(),
         street: '${100 + vendorIndex * 10} ${vendorData['category']} Street',
         city: vendorData['city'],
-        state: 'CA',
-        zipCode: '${10000 + vendorIndex * 100}',
-        country: 'USA',
+        state: _getCountyFromCity(vendorData['city']),
+        zipCode: _getPostcodeFromCity(vendorData['city'], vendorIndex),
+        country: 'United Kingdom',
       ),
       rating: vendorData['rating'].toDouble(),
       reviewCount: vendorData['reviews'],
@@ -314,5 +314,53 @@ class EnhancedProductProvider extends ChangeNotifier {
       'subcategory': template['subcategory'],
       'tags': template['tags'],
     };
+  }
+
+  String _getCountyFromCity(String city) {
+    final cityCounties = {
+      'London': 'Greater London', 'Brighton': 'East Sussex', 'Bath': 'Somerset', 
+      'Manchester': 'Greater Manchester', 'Oxford': 'Oxfordshire', 'Edinburgh': 'Midlothian',
+      'Birmingham': 'West Midlands', 'Liverpool': 'Merseyside', 'Bristol': 'Gloucestershire',
+      'York': 'North Yorkshire', 'Canterbury': 'Kent', 'Cambridge': 'Cambridgeshire',
+      'Windsor': 'Berkshire', 'Stratford': 'Warwickshire', 'Harrogate': 'North Yorkshire',
+      'Bournemouth': 'Dorset', 'Lake District': 'Cumbria', 'Newcastle': 'Tyne and Wear',
+      'St Ives': 'Cornwall', 'Dover': 'Kent', 'Cotswolds': 'Gloucestershire',
+      'Sheffield': 'South Yorkshire', 'Nottingham': 'Nottinghamshire', 'Chester': 'Cheshire',
+      'Leicester': 'Leicestershire', 'Salisbury': 'Wiltshire', 'Cheltenham': 'Gloucestershire',
+      'Coventry': 'West Midlands', 'Plymouth': 'Devon', 'Portsmouth': 'Hampshire',
+      'Southampton': 'Hampshire', 'Exeter': 'Devon', 'Winchester': 'Hampshire',
+      'Glastonbury': 'Somerset', 'Warwick': 'Warwickshire', 'Chichester': 'West Sussex',
+      'Peak District': 'Derbyshire', 'Derby': 'Derbyshire', 'Hastings': 'East Sussex',
+      'Rye': 'East Sussex', 'Guildford': 'Surrey', 'Margate': 'Kent', 'Kew': 'Greater London',
+      'Blackpool': 'Lancashire', 'Hay-on-Wye': 'Powys', 'Eastbourne': 'East Sussex',
+      'Goodwood': 'West Sussex', 'Crufts': 'West Midlands',
+    };
+    return cityCounties[city] ?? 'England';
+  }
+
+  String _getPostcodeFromCity(String city, int index) {
+    final cityPostcodes = {
+      'London': 'SW1A 1AA', 'Brighton': 'BN1 1AA', 'Bath': 'BA1 1AA',
+      'Manchester': 'M1 1AA', 'Oxford': 'OX1 1AA', 'Edinburgh': 'EH1 1AA',
+      'Birmingham': 'B1 1AA', 'Liverpool': 'L1 1AA', 'Bristol': 'BS1 1AA',
+      'York': 'YO1 1AA', 'Canterbury': 'CT1 1AA', 'Cambridge': 'CB1 1AA',
+      'Windsor': 'SL4 1AA', 'Stratford': 'CV37 1AA', 'Harrogate': 'HG1 1AA',
+      'Bournemouth': 'BH1 1AA', 'Lake District': 'LA22 1AA', 'Newcastle': 'NE1 1AA',
+      'St Ives': 'TR26 1AA', 'Dover': 'CT16 1AA', 'Cotswolds': 'GL54 1AA',
+      'Sheffield': 'S1 1AA', 'Nottingham': 'NG1 1AA', 'Chester': 'CH1 1AA',
+      'Leicester': 'LE1 1AA', 'Salisbury': 'SP1 1AA', 'Cheltenham': 'GL50 1AA',
+      'Coventry': 'CV1 1AA', 'Plymouth': 'PL1 1AA', 'Portsmouth': 'PO1 1AA',
+      'Southampton': 'SO14 1AA', 'Exeter': 'EX1 1AA', 'Winchester': 'SO23 1AA',
+      'Glastonbury': 'BA6 1AA', 'Warwick': 'CV34 1AA', 'Chichester': 'PO19 1AA',
+      'Peak District': 'SK17 1AA', 'Derby': 'DE1 1AA', 'Hastings': 'TN34 1AA',
+      'Rye': 'TN31 1AA', 'Guildford': 'GU1 1AA', 'Margate': 'CT9 1AA',
+      'Kew': 'TW9 1AA', 'Blackpool': 'FY1 1AA', 'Hay-on-Wye': 'HR3 1AA',
+      'Eastbourne': 'BN21 1AA', 'Goodwood': 'PO18 1AA', 'Crufts': 'B40 1AA',
+    };
+    final basePostcode = cityPostcodes[city] ?? 'EN1 1AA';
+    // Vary the postcode slightly based on index
+    final parts = basePostcode.split(' ');
+    final number = (int.tryParse(parts[1].substring(0, 1)) ?? 1) + (index % 9);
+    return '${parts[0]} ${number}${parts[1].substring(1)}';
   }
 }

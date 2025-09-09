@@ -70,8 +70,6 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               const SizedBox(height: 24),
               _buildWelcomeSection(),
               const SizedBox(height: 24),
-              _buildMapsBanner(),
-              const SizedBox(height: 24),
               _buildSliderBanner(),
               const SizedBox(height: 24),
               _buildTrendingProducts(),
@@ -79,9 +77,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               _buildFeaturedVendors(),
               const SizedBox(height: 24),
               _buildCategoryShowcase(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               _buildRecentlyAdded(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               _buildPopularProducts(),
               const SizedBox(height: 100),
             ],
@@ -118,7 +116,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               badgeStyle: const badges.BadgeStyle(
-                badgeColor: AppColors.primary,
+                badgeColor: Colors.red,
               ),
               showBadge: cartProvider.itemCount > 0,
               child: IconButton(
@@ -792,7 +790,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                   style: const TextStyle(color: Colors.white, fontSize: 10),
                 ),
                 badgeStyle: const badges.BadgeStyle(
-                  badgeColor: AppColors.primary,
+                  badgeColor: Colors.red,
                 ),
                 showBadge: cartProvider.itemCount > 0,
                 child: const Icon(Icons.shopping_cart_rounded),
@@ -882,128 +880,6 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
     );
   }
 
-  Widget _buildMapsBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-      height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background pattern
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                backgroundBlendMode: BlendMode.overlay,
-              ),
-              child: CustomPaint(
-                painter: MapPatternPainter(),
-              ),
-            ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.location_on,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Explore Nearby',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Find suppliers and vendors on the interactive map',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            PageTransitions.slideFromRight(const HomeScreen()),
-                          );
-                        },
-                        icon: const Icon(Icons.map, size: 18),
-                        label: const Text('Open Map'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.explore,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSliderBanner() {
     return Consumer2<EnhancedProductProvider, VendorProvider>(
@@ -1091,46 +967,3 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   }
 }
 
-class MapPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    // Draw grid pattern
-    const gridSize = 20.0;
-    
-    // Vertical lines
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-    
-    // Horizontal lines
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
-    }
-
-    // Draw some map-like elements
-    final fillPaint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
-      ..style = PaintingStyle.fill;
-
-    // Draw some circles to represent locations
-    canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.4), 8, fillPaint);
-    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.6), 6, fillPaint);
-    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.3), 5, fillPaint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}

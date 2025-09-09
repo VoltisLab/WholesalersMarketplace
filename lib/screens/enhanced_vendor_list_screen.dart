@@ -46,7 +46,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
-          _buildViewTypeSelector(),
+          _buildViewButton(),
           _buildSortButton(),
           const SizedBox(width: 8),
         ],
@@ -191,119 +191,268 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
     }
   }
 
+  Widget _buildViewButton() {
+    return IconButton(
+      icon: Icon(
+        _getViewTypeIcon(_currentViewType),
+        color: AppColors.textPrimary,
+      ),
+      onPressed: () => _showViewBottomSheet(context),
+    );
+  }
+
   Widget _buildSortButton() {
-    return PopupMenuButton<SortType>(
+    return IconButton(
       icon: const Icon(
         Icons.sort,
         color: AppColors.textPrimary,
       ),
-      onSelected: (SortType sortType) {
+      onPressed: () => _showSortBottomSheet(context),
+    );
+  }
+
+  void _showViewBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Title
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    'View Options',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // View toggle using current design
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    _buildModalViewToggleButton(ViewType.grid, Icons.grid_view, 'Grid'),
+                    _buildModalViewToggleButton(ViewType.list, Icons.view_list, 'List'),
+                    _buildModalViewToggleButton(ViewType.compact, Icons.view_compact, 'Compact'),
+                    _buildModalViewToggleButton(ViewType.thumbnail, Icons.photo_size_select_actual, 'Thumbnail'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalViewToggleButton(ViewType viewType, IconData icon, String label) {
+    final isSelected = _currentViewType == viewType;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _currentViewType = viewType;
+          });
+          Navigator.pop(context);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSortBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Title
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Sort By',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Sort options
+            _buildSortOption(
+              SortType.alphabetical,
+              Icons.sort_by_alpha,
+              'Alphabetical',
+              'A to Z order',
+            ),
+            _buildSortOption(
+              SortType.rating,
+              Icons.star_outline,
+              'Highest Rated',
+              'Best rated suppliers first',
+            ),
+            _buildSortOption(
+              SortType.newest,
+              Icons.access_time,
+              'Newest First',
+              'Recently added suppliers',
+            ),
+            _buildSortOption(
+              SortType.location,
+              Icons.location_on_outlined,
+              'By Location',
+              'Grouped by location',
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortOption(SortType sortType, IconData icon, String title, String subtitle) {
+    final isSelected = _currentSortType == sortType;
+    
+    return InkWell(
+      onTap: () {
         setState(() {
           _currentSortType = sortType;
         });
+        Navigator.pop(context);
       },
-      itemBuilder: (BuildContext context) => [
-        PopupMenuItem<SortType>(
-          value: SortType.alphabetical,
-          child: Row(
-            children: [
-              Icon(
-                Icons.sort_by_alpha,
-                color: _currentSortType == SortType.alphabetical 
-                    ? AppColors.primary 
-                    : AppColors.textSecondary,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? AppColors.primary.withOpacity(0.1) 
+                    : AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 12),
-              Text(
-                'Alphabetical',
-                style: TextStyle(
-                  color: _currentSortType == SortType.alphabetical 
-                      ? AppColors.primary 
-                      : AppColors.textPrimary,
-                  fontWeight: _currentSortType == SortType.alphabetical 
-                      ? FontWeight.w600 
-                      : FontWeight.normal,
-                ),
+              child: Icon(
+                icon,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                size: 20,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 20,
+              ),
+          ],
         ),
-        PopupMenuItem<SortType>(
-          value: SortType.rating,
-          child: Row(
-            children: [
-              Icon(
-                Icons.star_outline,
-                color: _currentSortType == SortType.rating 
-                    ? AppColors.primary 
-                    : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Highest Rated',
-                style: TextStyle(
-                  color: _currentSortType == SortType.rating 
-                      ? AppColors.primary 
-                      : AppColors.textPrimary,
-                  fontWeight: _currentSortType == SortType.rating 
-                      ? FontWeight.w600 
-                      : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem<SortType>(
-          value: SortType.newest,
-          child: Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                color: _currentSortType == SortType.newest 
-                    ? AppColors.primary 
-                    : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Newest First',
-                style: TextStyle(
-                  color: _currentSortType == SortType.newest 
-                      ? AppColors.primary 
-                      : AppColors.textPrimary,
-                  fontWeight: _currentSortType == SortType.newest 
-                      ? FontWeight.w600 
-                      : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem<SortType>(
-          value: SortType.location,
-          child: Row(
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                color: _currentSortType == SortType.location 
-                    ? AppColors.primary 
-                    : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'By Location',
-                style: TextStyle(
-                  color: _currentSortType == SortType.location 
-                      ? AppColors.primary 
-                      : AppColors.textPrimary,
-                  fontWeight: _currentSortType == SortType.location 
-                      ? FontWeight.w600 
-                      : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -346,6 +495,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen> {
         ),
         const SizedBox(height: 8),
         _buildSearchTags(),
+        const SizedBox(height: 16),
         _buildViewToggleBar(),
         const SizedBox(height: 16),
       ],

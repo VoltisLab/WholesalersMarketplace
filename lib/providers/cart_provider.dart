@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/product_model.dart';
 
 class CartItem {
@@ -31,11 +32,18 @@ class CartProvider extends ChangeNotifier {
       _items.add(CartItem(product: product, quantity: quantity));
     }
     
+    // Haptic feedback for adding to cart
+    HapticFeedback.mediumImpact();
+    
     notifyListeners();
   }
   
   void removeItem(String productId) {
     _items.removeWhere((item) => item.product.id == productId);
+    
+    // Haptic feedback for removing from cart
+    HapticFeedback.heavyImpact();
+    
     notifyListeners();
   }
   
@@ -45,8 +53,12 @@ class CartProvider extends ChangeNotifier {
     if (index >= 0) {
       if (quantity <= 0) {
         _items.removeAt(index);
+        // Haptic feedback for removing item
+        HapticFeedback.heavyImpact();
       } else {
         _items[index].quantity = quantity;
+        // Haptic feedback for quantity change
+        HapticFeedback.lightImpact();
       }
       notifyListeners();
     }
@@ -57,6 +69,10 @@ class CartProvider extends ChangeNotifier {
     
     if (index >= 0) {
       _items[index].quantity++;
+      
+      // Haptic feedback for increasing quantity
+      HapticFeedback.lightImpact();
+      
       notifyListeners();
     }
   }
@@ -67,8 +83,12 @@ class CartProvider extends ChangeNotifier {
     if (index >= 0) {
       if (_items[index].quantity > 1) {
         _items[index].quantity--;
+        // Haptic feedback for decreasing quantity
+        HapticFeedback.lightImpact();
       } else {
         _items.removeAt(index);
+        // Haptic feedback for removing item completely
+        HapticFeedback.heavyImpact();
       }
       notifyListeners();
     }

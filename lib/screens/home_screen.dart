@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: const TextStyle(color: Colors.white, fontSize: 10),
                         ),
                         badgeStyle: const badges.BadgeStyle(
-                          badgeColor: AppColors.primary,
+                          badgeColor: Colors.red,
                         ),
                         showBadge: cartProvider.itemCount > 0,
                         child: IconButton(
@@ -547,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 10),
                 ),
                 badgeStyle: const badges.BadgeStyle(
-                  badgeColor: AppColors.primary,
+                  badgeColor: Colors.red,
                 ),
                 showBadge: cartProvider.itemCount > 0,
                 child: const Icon(Icons.shopping_cart_outlined),

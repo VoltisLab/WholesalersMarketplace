@@ -123,14 +123,14 @@ class VendorProvider extends ChangeNotifier {
         description: 'Premium ${data['category'].toLowerCase()} products and services. Quality guaranteed with excellent customer service.',
         logo: 'https://picsum.photos/80/80?random=${index + 500}',
         email: '${data['name'].toLowerCase().replaceAll(' ', '').replaceAll('&', '')}@example.com',
-        phone: '+1 (555) ${(100 + index).toString().padLeft(3, '0')}-${(1000 + index * 7).toString().padLeft(4, '0')}',
+        phone: '+44 ${(1000 + index * 7).toString().padLeft(4, '0')} ${(100000 + index * 123).toString().padLeft(6, '0')}',
         address: AddressModel(
           id: vendorId,
           street: '${100 + index * 10} ${data['category']} Street',
           city: data['city'],
-          state: _getStateFromCity(data['city']),
-          zipCode: '${10000 + index * 100}',
-          country: 'USA',
+          state: _getCountyFromCity(data['city']),
+          zipCode: _getPostcodeFromCity(data['city'], index),
+          country: 'United Kingdom',
           latitude: 37.7749 + (index * 0.1) - 2.5,
           longitude: -122.4194 + (index * 0.1) - 2.5,
         ),
@@ -143,21 +143,51 @@ class VendorProvider extends ChangeNotifier {
     });
   }
 
-  String _getStateFromCity(String city) {
-    final cityStates = {
-      'San Francisco': 'CA', 'New York': 'NY', 'Austin': 'TX', 'Denver': 'CO',
-      'Boston': 'MA', 'Los Angeles': 'CA', 'Detroit': 'MI', 'Miami': 'FL',
-      'Nashville': 'TN', 'Chicago': 'IL', 'Orlando': 'FL', 'Seattle': 'WA',
-      'Las Vegas': 'NV', 'Portland': 'OR', 'Phoenix': 'AZ', 'Atlanta': 'GA',
-      'Colorado Springs': 'CO', 'San Jose': 'CA', 'Santa Fe': 'NM', 'San Diego': 'CA',
-      'Charleston': 'SC', 'Palo Alto': 'CA', 'Beverly Hills': 'CA', 'Miami Beach': 'FL',
-      'Cambridge': 'MA', 'Hollywood': 'CA', 'Indianapolis': 'IN', 'Tampa': 'FL',
-      'Memphis': 'TN', 'New Orleans': 'LA', 'Disney World': 'FL', 'Dallas': 'TX',
-      'Asheville': 'NC', 'Scottsdale': 'AZ', 'Savannah': 'GA', 'Boulder': 'CO',
-      'Taos': 'NM', 'Honolulu': 'HI', 'Silicon Valley': 'CA', 'Milan District': 'NY',
-      'Napa Valley': 'CA', 'Venice Beach': 'CA', 'Harvard Square': 'MA', 'Rodeo Drive': 'CA',
-      'Daytona': 'FL', 'Key West': 'FL',
+  String _getCountyFromCity(String city) {
+    final cityCounties = {
+      'London': 'Greater London', 'Brighton': 'East Sussex', 'Bath': 'Somerset', 
+      'Manchester': 'Greater Manchester', 'Oxford': 'Oxfordshire', 'Edinburgh': 'Midlothian',
+      'Birmingham': 'West Midlands', 'Liverpool': 'Merseyside', 'Bristol': 'Gloucestershire',
+      'York': 'North Yorkshire', 'Canterbury': 'Kent', 'Cambridge': 'Cambridgeshire',
+      'Windsor': 'Berkshire', 'Stratford': 'Warwickshire', 'Harrogate': 'North Yorkshire',
+      'Bournemouth': 'Dorset', 'Lake District': 'Cumbria', 'Newcastle': 'Tyne and Wear',
+      'St Ives': 'Cornwall', 'Dover': 'Kent', 'Cotswolds': 'Gloucestershire',
+      'Sheffield': 'South Yorkshire', 'Nottingham': 'Nottinghamshire', 'Chester': 'Cheshire',
+      'Leicester': 'Leicestershire', 'Salisbury': 'Wiltshire', 'Cheltenham': 'Gloucestershire',
+      'Coventry': 'West Midlands', 'Plymouth': 'Devon', 'Portsmouth': 'Hampshire',
+      'Southampton': 'Hampshire', 'Exeter': 'Devon', 'Winchester': 'Hampshire',
+      'Glastonbury': 'Somerset', 'Warwick': 'Warwickshire', 'Chichester': 'West Sussex',
+      'Peak District': 'Derbyshire', 'Derby': 'Derbyshire', 'Hastings': 'East Sussex',
+      'Rye': 'East Sussex', 'Guildford': 'Surrey', 'Margate': 'Kent', 'Kew': 'Greater London',
+      'Blackpool': 'Lancashire', 'Hay-on-Wye': 'Powys', 'Eastbourne': 'East Sussex',
+      'Goodwood': 'West Sussex', 'Crufts': 'West Midlands',
     };
-    return cityStates[city] ?? 'CA';
+    return cityCounties[city] ?? 'England';
+  }
+
+  String _getPostcodeFromCity(String city, int index) {
+    final cityPostcodes = {
+      'London': 'SW1A 1AA', 'Brighton': 'BN1 1AA', 'Bath': 'BA1 1AA',
+      'Manchester': 'M1 1AA', 'Oxford': 'OX1 1AA', 'Edinburgh': 'EH1 1AA',
+      'Birmingham': 'B1 1AA', 'Liverpool': 'L1 1AA', 'Bristol': 'BS1 1AA',
+      'York': 'YO1 1AA', 'Canterbury': 'CT1 1AA', 'Cambridge': 'CB1 1AA',
+      'Windsor': 'SL4 1AA', 'Stratford': 'CV37 1AA', 'Harrogate': 'HG1 1AA',
+      'Bournemouth': 'BH1 1AA', 'Lake District': 'LA22 1AA', 'Newcastle': 'NE1 1AA',
+      'St Ives': 'TR26 1AA', 'Dover': 'CT16 1AA', 'Cotswolds': 'GL54 1AA',
+      'Sheffield': 'S1 1AA', 'Nottingham': 'NG1 1AA', 'Chester': 'CH1 1AA',
+      'Leicester': 'LE1 1AA', 'Salisbury': 'SP1 1AA', 'Cheltenham': 'GL50 1AA',
+      'Coventry': 'CV1 1AA', 'Plymouth': 'PL1 1AA', 'Portsmouth': 'PO1 1AA',
+      'Southampton': 'SO14 1AA', 'Exeter': 'EX1 1AA', 'Winchester': 'SO23 1AA',
+      'Glastonbury': 'BA6 1AA', 'Warwick': 'CV34 1AA', 'Chichester': 'PO19 1AA',
+      'Peak District': 'SK17 1AA', 'Derby': 'DE1 1AA', 'Hastings': 'TN34 1AA',
+      'Rye': 'TN31 1AA', 'Guildford': 'GU1 1AA', 'Margate': 'CT9 1AA',
+      'Kew': 'TW9 1AA', 'Blackpool': 'FY1 1AA', 'Hay-on-Wye': 'HR3 1AA',
+      'Eastbourne': 'BN21 1AA', 'Goodwood': 'PO18 1AA', 'Crufts': 'B40 1AA',
+    };
+    final basePostcode = cityPostcodes[city] ?? 'EN1 1AA';
+    // Vary the postcode slightly based on index
+    final parts = basePostcode.split(' ');
+    final number = (int.tryParse(parts[1].substring(0, 1)) ?? 1) + (index % 9);
+    return '${parts[0]} ${number}${parts[1].substring(1)}';
   }
 }
