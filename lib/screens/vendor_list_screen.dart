@@ -63,7 +63,15 @@ class _VendorListScreenState extends State<VendorListScreen> {
               : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide(color: AppColors.divider.withOpacity(0.3)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            borderSide: BorderSide(color: AppColors.divider.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            borderSide: BorderSide(color: AppColors.divider.withOpacity(0.3)),
           ),
           filled: true,
           fillColor: AppColors.background,

@@ -6,6 +6,8 @@ import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../models/product_model.dart';
 import '../providers/cart_provider.dart';
+import '../providers/wishlist_provider.dart';
+import '../services/share_service.dart';
 import '../screens/product_detail_screen.dart';
 import '../utils/page_transitions.dart';
 
@@ -143,6 +145,18 @@ class ProductCard extends StatelessWidget {
               ),
             ),
           ),
+        // Action buttons
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Column(
+            children: [
+              _buildWishlistButton(),
+              const SizedBox(height: 4),
+              _buildShareButton(),
+            ],
+          ),
+        ),
         if (!product.inStock)
           Positioned.fill(
             child: Container(
@@ -254,6 +268,81 @@ class ProductCard extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildWishlistButton() {
+    return Consumer<WishlistProvider>(
+      builder: (context, wishlistProvider, child) {
+        final isInWishlist = wishlistProvider.isInWishlist(product.id);
+        
+        return GestureDetector(
+          onTap: () {
+            wishlistProvider.toggleWishlist(product);
+            
+            // Show feedback
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  isInWishlist 
+                    ? 'Removed from wishlist' 
+                    : 'Added to wishlist',
+                ),
+                duration: const Duration(seconds: 1),
+                backgroundColor: isInWishlist 
+                  ? AppColors.textSecondary 
+                  : AppColors.primary,
+              ),
+            );
+          },
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              isInWishlist ? Icons.favorite : Icons.favorite_border,
+              size: 18,
+              color: isInWishlist ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareButton() {
+    return GestureDetector(
+      onTap: () => ShareService.shareProduct(product),
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.9),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.share,
+          size: 16,
+          color: AppColors.textSecondary,
+        ),
+      ),
     );
   }
 

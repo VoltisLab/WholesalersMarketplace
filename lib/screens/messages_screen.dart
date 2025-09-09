@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../providers/vendor_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -182,54 +184,75 @@ class _MessagesScreenState extends State<MessagesScreen> {
           });
         },
       ),
-      title: Row(
-        children: [
-          Stack(
+      title: InkWell(
+        onTap: () {
+          // Navigate to vendor profile
+          _openVendorProfile(conversation);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: CachedNetworkImageProvider(conversation['avatar']),
-              ),
-              if (conversation['isOnline'])
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.surface, width: 2),
-                    ),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: CachedNetworkImageProvider(conversation['avatar']),
                   ),
+                  if (conversation['isOnline'])
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.surface, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            conversation['name'],
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      conversation['isOnline'] ? 'Online' : 'Last seen recently',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  conversation['name'],
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  conversation['isOnline'] ? 'Online' : 'Last seen recently',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
       actions: [
         IconButton(
@@ -518,5 +541,18 @@ class _MessagesScreenState extends State<MessagesScreen> {
     } else {
       return 'now';
     }
+  }
+
+  void _openVendorProfile(Map<String, dynamic> conversation) {
+    // Find the vendor from the conversation data
+    // For demo purposes, we'll use the first vendor from the provider
+    final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
+    final vendor = vendorProvider.vendors.first; // In a real app, match by conversation ID
+    
+    Navigator.pushNamed(
+      context,
+      '/vendor-shop',
+      arguments: vendor,
+    );
   }
 }

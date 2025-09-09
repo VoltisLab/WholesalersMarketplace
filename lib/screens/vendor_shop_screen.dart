@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../constants/app_colors.dart';
+import '../utils/country_emoji.dart';
 import '../constants/app_constants.dart';
 import '../models/product_model.dart';
 import '../providers/enhanced_product_provider.dart';
@@ -55,6 +56,13 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primary,
+      title: Text(
+        widget.vendor.name,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -129,20 +137,20 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          widget.vendor.name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
                         if (widget.vendor.isVerified) ...[
-                          const SizedBox(width: 8),
                           const Icon(
                             Icons.verified,
                             color: AppColors.primary,
                             size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Verified Vendor',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
                       ],
@@ -189,7 +197,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          widget.vendor.address.city,
+                          '${widget.vendor.address.city}, ${CountryEmoji.getCountryWithFlag(widget.vendor.address.country)}',
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,

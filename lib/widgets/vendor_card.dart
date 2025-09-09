@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../constants/app_colors.dart';
+import '../utils/country_emoji.dart';
 import '../constants/app_constants.dart';
 import '../models/product_model.dart';
+import '../services/share_service.dart';
 
 class VendorCard extends StatelessWidget {
   final VendorModel vendor;
@@ -155,6 +157,22 @@ class VendorCard extends StatelessWidget {
                                 size: 16,
                                 color: AppColors.primary,
                               ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => ShareService.shareVendor(vendor),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(
+                                  Icons.share,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -186,11 +204,13 @@ class VendorCard extends StatelessWidget {
                           const SizedBox(height: 4),
                         ],
                         Text(
-                          vendor.address.city,
+                          '${vendor.address.city}, ${CountryEmoji.getCountryWithFlag(vendor.address.country)}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

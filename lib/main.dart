@@ -6,6 +6,7 @@ import 'providers/auth_provider.dart';
 import 'providers/enhanced_product_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/vendor_provider.dart';
+import 'providers/wishlist_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen_simple.dart';
 import 'screens/vendor_list_screen.dart';
@@ -20,6 +21,9 @@ import 'screens/auth/vendor_onboarding_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/order_confirmation_screen.dart';
+import 'screens/enhanced_search_screen.dart';
+import 'screens/modern_profile_screen.dart';
+import 'screens/enhanced_vendor_list_screen.dart';
 import 'models/product_model.dart';
 
 void main() {
@@ -37,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EnhancedProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => VendorProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
       ],
       child: MaterialApp(
         title: 'Arc Vest Marketplace',
@@ -144,9 +149,9 @@ class MyApp extends StatelessWidget {
         home: const SplashScreen(),
         routes: {
           '/home': (context) => const HomeScreenSimple(),
-          '/vendors': (context) => const VendorListScreen(),
+          '/vendors': (context) => const EnhancedVendorListScreen(),
           '/cart': (context) => const CartScreen(),
-          '/profile': (context) => const ProfileScreen(),
+          '/profile': (context) => const ModernProfileScreen(),
           '/vendor-dashboard': (context) => const VendorDashboardScreen(),
           '/sign-in': (context) => const SignInScreen(),
           '/sign-up': (context) => const SignUpScreen(),
@@ -154,6 +159,7 @@ class MyApp extends StatelessWidget {
           '/messages': (context) => const MessagesScreen(),
           '/checkout': (context) => const CheckoutScreen(),
           '/order-confirmation': (context) => const OrderConfirmationScreen(),
+          '/search': (context) => const EnhancedSearchScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

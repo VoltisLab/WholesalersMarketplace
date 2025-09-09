@@ -12,11 +12,12 @@ import '../widgets/vendor_card.dart';
 import '../widgets/product_card.dart';
 import '../models/product_model.dart';
 import '../utils/page_transitions.dart';
-import 'vendor_list_screen.dart';
+import 'enhanced_vendor_list_screen.dart';
 import 'search_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'vendor_dashboard_screen.dart';
+import 'home_screen.dart';
 
 class HomeScreenSimple extends StatefulWidget {
   const HomeScreenSimple({super.key});
@@ -46,7 +47,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         children: [
           _buildFeedTab(),
           const SearchScreen(),
-          const VendorListScreen(),
+          const EnhancedVendorListScreen(),
           const CartScreen(),
           authProvider.isVendor ? const VendorDashboardScreen() : const ProfileScreen(),
         ],
@@ -68,6 +69,8 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               _buildSearchTags(),
               const SizedBox(height: 24),
               _buildWelcomeSection(),
+              const SizedBox(height: 24),
+              _buildMapsBanner(),
               const SizedBox(height: 24),
               _buildSliderBanner(),
               const SizedBox(height: 24),
@@ -211,7 +214,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      PageTransitions.slideFromRight(const VendorListScreen()),
+                      PageTransitions.slideFromBottom(const EnhancedVendorListScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -230,11 +233,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 child: IconButton(
                   icon: const Icon(Icons.map, color: Colors.white),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Map view requires Google Maps API key'),
-                        backgroundColor: AppColors.info,
-                      ),
+                    Navigator.push(
+                      context,
+                      PageTransitions.slideFromRight(const HomeScreen()),
                     );
                   },
                 ),
@@ -545,13 +546,30 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                                 ],
                               ),
                             ),
-                            child: ClipRRect(
+                            child:                             ClipRRect(
                               borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                              child: CachedNetworkImage(
-                                imageUrl: _getCategoryClothingImage(category),
-                                fit: BoxFit.cover,
-                                colorBlendMode: BlendMode.overlay,
-                                color: color.withOpacity(0.4),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  CachedNetworkImage(
+                                    imageUrl: _getCategoryClothingImage(category),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  // Enhanced overlay for better text readability
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.3),
+                                          Colors.black.withOpacity(0.6),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -864,6 +882,129 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
     );
   }
 
+  Widget _buildMapsBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+      height: 160,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.8),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background pattern
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                backgroundBlendMode: BlendMode.overlay,
+              ),
+              child: CustomPaint(
+                painter: MapPatternPainter(),
+              ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Explore Nearby',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Find suppliers and vendors on the interactive map',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            PageTransitions.slideFromRight(const HomeScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.map, size: 18),
+                        label: const Text('Open Map'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.explore,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSliderBanner() {
     return Consumer2<EnhancedProductProvider, VendorProvider>(
       builder: (context, productProvider, vendorProvider, child) {
@@ -948,4 +1089,48 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
       },
     );
   }
+}
+
+class MapPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // Draw grid pattern
+    const gridSize = 20.0;
+    
+    // Vertical lines
+    for (double x = 0; x < size.width; x += gridSize) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        paint,
+      );
+    }
+    
+    // Horizontal lines
+    for (double y = 0; y < size.height; y += gridSize) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        paint,
+      );
+    }
+
+    // Draw some map-like elements
+    final fillPaint = Paint()
+      ..color = Colors.white.withOpacity(0.05)
+      ..style = PaintingStyle.fill;
+
+    // Draw some circles to represent locations
+    canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.4), 8, fillPaint);
+    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.6), 6, fillPaint);
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.3), 5, fillPaint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

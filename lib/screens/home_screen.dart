@@ -10,7 +10,7 @@ import '../providers/auth_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../widgets/vendor_card.dart';
 import '../models/product_model.dart';
-import 'vendor_list_screen.dart';
+import 'enhanced_vendor_list_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'vendor_dashboard_screen.dart';
@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           _buildMapHomeTab(),
-          const VendorListScreen(),
+          const EnhancedVendorListScreen(),
           const CartScreen(),
           authProvider.isVendor ? const VendorDashboardScreen() : const ProfileScreen(),
         ],

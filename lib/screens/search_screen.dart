@@ -82,7 +82,15 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
               : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            borderSide: BorderSide(color: AppColors.primary, width: 2.0),
           ),
           filled: true,
           fillColor: AppColors.background,
@@ -99,9 +107,14 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+      height: 48,
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+        border: Border.all(
+          color: AppColors.textSecondary.withOpacity(0.3),
+          width: 2.0, // Increased border thickness x2
+        ),
       ),
       child: TabBar(
         controller: _tabController,
@@ -111,10 +124,35 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
         ),
         labelColor: Colors.white,
         unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
         tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Products'),
-          Tab(text: 'Suppliers'),
+          Tab(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('All'),
+            ),
+          ),
+          Tab(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Products'),
+            ),
+          ),
+          Tab(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Suppliers'),
+            ),
+          ),
         ],
       ),
     );

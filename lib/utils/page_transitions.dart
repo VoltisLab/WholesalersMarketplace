@@ -24,24 +24,31 @@ class PageTransitions {
     );
   }
 
-  // Slide transition from bottom
+  // Slide transition from bottom with fade
   static Route<T> slideFromBottom<T extends Object?>(Widget page) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionDuration: const Duration(milliseconds: 350),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
+      transitionDuration: const Duration(milliseconds: 400),
+      reverseTransitionDuration: const Duration(milliseconds: 350),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
         const curve = Curves.easeOutCubic;
 
-        var tween = Tween(begin: begin, end: end).chain(
+        var slideTween = Tween(begin: begin, end: end).chain(
           CurveTween(curve: curve),
+        );
+        
+        var fadeTween = Tween(begin: 0.0, end: 1.0).chain(
+          CurveTween(curve: Curves.easeOut),
         );
 
         return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
+          position: animation.drive(slideTween),
+          child: FadeTransition(
+            opacity: animation.drive(fadeTween),
+            child: child,
+          ),
         );
       },
     );
