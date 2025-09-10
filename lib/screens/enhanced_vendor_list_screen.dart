@@ -487,7 +487,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search suppliers... 📷 Image search',
+              hintText: 'Search suppliers...',
               hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
               prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
               suffixIcon: Row(
@@ -1053,9 +1053,9 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 0.75, // Increased height (was 0.9)
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+        childAspectRatio: 0.8, // Improved aspect ratio to prevent overflow
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
       itemCount: vendors.length,
       itemBuilder: (context, index) {

@@ -18,8 +18,17 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
   String _searchQuery = '';
+  
+  void scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
   
   @override
   void initState() {
@@ -30,6 +39,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -69,7 +79,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search products... 📷 Image search',
+          hintText: 'Search products...',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
@@ -196,6 +206,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
     }
     
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,9 +404,9 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              childAspectRatio: 0.6,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {

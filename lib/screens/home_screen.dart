@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   child: const Text(
-                    'Arc Vest',
+                    'Wholesalers B2B',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search vendors... 📷 Image search',
+                  hintText: 'Search vendors...',
                   prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,

@@ -33,7 +33,7 @@ class CardInfo {
 }
 
 class CardUtils {
-  static const Map<CardType, CardInfo> _cardInfo = {
+  static final Map<CardType, CardInfo> _cardInfo = {
     CardType.visa: CardInfo(
       type: CardType.visa,
       name: 'Visa',

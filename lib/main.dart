@@ -22,8 +22,17 @@ import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/vendor_onboarding_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/checkout_screen.dart';
-import 'screens/order_confirmation_screen.dart';
 import 'screens/enhanced_search_screen.dart';
+import 'screens/order_confirmation_screen.dart';
+import 'screens/personal_info_screen.dart';
+import 'screens/sales_analytics_screen.dart';
+import 'screens/inventory_management_screen.dart';
+import 'screens/help_center_screen.dart';
+import 'screens/contact_us_screen.dart';
+import 'screens/addresses_screen.dart';
+import 'screens/wishlist_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/modern_profile_screen.dart';
 import 'screens/enhanced_vendor_list_screen.dart';
 import 'screens/live_chat_screen.dart';
@@ -179,13 +188,23 @@ class MyApp extends StatelessWidget {
           '/vendor-onboarding': (context) => const VendorOnboardingScreen(),
           '/messages': (context) => const MessagesScreen(),
           '/checkout': (context) => const CheckoutScreen(),
-          '/order-confirmation': (context) => const OrderConfirmationScreen(),
           '/search': (context) => const EnhancedSearchScreen(),
+          '/order-success': (context) => const OrderSuccessScreen(),
+          '/order-confirmation': (context) => const OrderSuccessScreen(),
+          '/maps': (context) => const HomeScreen(),
           '/live-chat': (context) => const LiveChatScreen(),
           '/email-support': (context) => const EmailSupportScreen(),
           '/faq': (context) => const FAQScreen(),
           '/bug-report': (context) => const BugReportScreen(),
           '/send-feedback': (context) => const SendFeedbackScreen(),
+          '/personal-info': (context) => const PersonalInfoScreen(),
+          '/sales-analytics': (context) => const SalesAnalyticsScreen(),
+          '/inventory-management': (context) => const InventoryManagementScreen(),
+          '/help-center': (context) => const HelpCenterScreen(),
+          '/contact-us': (context) => const ContactUsScreen(),
+          '/addresses': (context) => const AddressesScreen(),
+          '/wishlist': (context) => const WishlistScreen(),
+          '/orders': (context) => const OrdersScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

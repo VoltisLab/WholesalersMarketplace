@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 
@@ -107,7 +108,10 @@ class HelpSupportScreen extends StatelessWidget {
           Icons.chevron_right_rounded,
           color: AppColors.textHint,
         ),
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
       ),
     );
   }

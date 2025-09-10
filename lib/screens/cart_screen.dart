@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/cart_provider.dart';
+import '../providers/wishlist_provider.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -84,36 +86,55 @@ class CartScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vendor header
-              Container(
-                padding: const EdgeInsets.all(AppConstants.paddingMedium),
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(AppConstants.radiusLarge),
-                  ),
+              // Vendor header (clickable)
+              InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.pushNamed(
+                    context,
+                    '/vendor-shop',
+                    arguments: vendor,
+                  );
+                },
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppConstants.radiusLarge),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.store, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        vendor.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                child: Container(
+                  padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                  decoration: const BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(AppConstants.radiusLarge),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.store, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          vendor.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      '£${cartProvider.getVendorTotal(vendorId).toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                      Text(
+                        '£${cartProvider.getVendorTotal(vendorId).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               
@@ -127,9 +148,19 @@ class CartScreen extends StatelessWidget {
   }
 
   Widget _buildCartItem(BuildContext context, CartItem item, CartProvider cartProvider) {
-    return Padding(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
-      child: Row(
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.pushNamed(
+          context,
+          '/product-detail',
+          arguments: item.product.id,
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.paddingMedium),
+        child: Row(
         children: [
           // Product image
           ClipRRect(
@@ -220,6 +251,7 @@ class CartScreen extends StatelessWidget {
             onPressed: () => cartProvider.removeItem(item.product.id),
           ),
         ],
+        ),
       ),
     );
   }

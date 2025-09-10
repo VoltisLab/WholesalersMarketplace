@@ -138,10 +138,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (mounted) {
         context.read<CartProvider>().clearCart();
         
-        // Navigate to order confirmation
+        // Navigate to order success screen
         Navigator.pushReplacementNamed(
           context,
-          '/order-confirmation',
+          '/order-success',
           arguments: {
             'orderId': 'WM${DateTime.now().millisecondsSinceEpoch}',
             'total': _calculateTotal(),
@@ -656,7 +656,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () async {
                       final cartProvider = context.read<CartProvider>();
-                      final total = cartProvider.totalPrice + 
+                      final total = cartProvider.totalAmount + 
                           _shippingMethods.firstWhere((m) => m['id'] == _selectedShippingMethod)['price'];
                       
                       final result = await Navigator.push(

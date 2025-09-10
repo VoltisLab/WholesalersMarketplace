@@ -9,14 +9,15 @@ import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../providers/enhanced_product_provider.dart';
-import '../widgets/vendor_card.dart';
 import '../widgets/product_card.dart';
 import '../models/product_model.dart';
 import '../utils/page_transitions.dart';
+import 'enhanced_search_screen.dart';
 import 'enhanced_vendor_list_screen.dart';
 import 'search_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
+import 'modern_profile_screen.dart';
 import 'vendor_dashboard_screen.dart';
 import 'home_screen.dart';
 
@@ -30,10 +31,13 @@ class HomeScreenSimple extends StatefulWidget {
 class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _feedScrollController = ScrollController();
+  
 
   @override
   void dispose() {
     _searchController.dispose();
+    _feedScrollController.dispose();
     super.dispose();
   }
 
@@ -47,10 +51,10 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         index: _currentIndex,
         children: [
           _buildFeedTab(),
-          const SearchScreen(),
+          const EnhancedSearchScreen(),
           const EnhancedVendorListScreen(),
           const CartScreen(),
-          authProvider.isVendor ? const VendorDashboardScreen() : const ProfileScreen(),
+          authProvider.isVendor ? const VendorDashboardScreen() : const ModernProfileScreen(),
         ],
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -59,6 +63,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
 
   Widget _buildFeedTab() {
     return CustomScrollView(
+      controller: _feedScrollController,
       slivers: [
         _buildAppBar(),
         SliverToBoxAdapter(
@@ -172,7 +177,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Welcome to Arc Vest',
+            'Welcome to Wholesalers B2B',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -214,11 +219,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 child: IconButton(
                   icon: const Icon(Icons.map, color: Colors.white),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      PageTransitions.slideFromRight(const HomeScreen()),
-                    );
+                    Navigator.pushNamed(context, '/maps');
                   },
+                  tooltip: 'View Maps',
                 ),
               ),
             ],
@@ -392,34 +395,38 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 1,
-                          crossAxisSpacing: 4,
-                          mainAxisSpacing: 4,
+                          childAspectRatio: 1.0,
+                          crossAxisSpacing: 3,
+                          mainAxisSpacing: 3,
                         ),
                         itemCount: 4,
                         itemBuilder: (context, index) {
                           if (index < products.length) {
                             final product = products[index];
                             return Container(
+                              constraints: const BoxConstraints(
+                                minHeight: 60,
+                                maxHeight: 80,
+                              ),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: AppColors.divider.withOpacity(0.3)),
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(6),
                                 child: CachedNetworkImage(
                                   imageUrl: product.images.first,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
                                     color: AppColors.divider.withOpacity(0.3),
                                     child: const Center(
-                                      child: Icon(Icons.image, size: 20, color: AppColors.textSecondary),
+                                      child: Icon(Icons.image, size: 16, color: AppColors.textSecondary),
                                     ),
                                   ),
                                   errorWidget: (context, url, error) => Container(
                                     color: AppColors.divider.withOpacity(0.3),
                                     child: const Center(
-                                      child: Icon(Icons.broken_image, size: 20, color: AppColors.textSecondary),
+                                      child: Icon(Icons.broken_image, size: 16, color: AppColors.textSecondary),
                                     ),
                                   ),
                                 ),
@@ -428,9 +435,13 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                           } else {
                             // Empty placeholder
                             return Container(
+                              constraints: const BoxConstraints(
+                                minHeight: 60,
+                                maxHeight: 80,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.divider.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: AppColors.divider.withOpacity(0.3)),
                               ),
                             );
@@ -497,7 +508,6 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final color = _getCategoryColor(index);
-                  final icon = _getCategoryIcon(category);
                   
                   return Container(
                     width: 100,
@@ -617,8 +627,8 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.55,
-                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 12,
                   mainAxisSpacing: 16,
                 ),
                 itemCount: recentProducts.length,
@@ -660,8 +670,8 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.55,
-                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 12,
                   mainAxisSpacing: 16,
                 ),
                 itemCount: popularProducts.length,
@@ -739,6 +749,21 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
     }
   }
 
+  void _scrollToTop(int index) {
+    // If tapping the same tab, scroll to top
+    if (index == _currentIndex) {
+      switch (index) {
+        case 0: // Feed
+          _feedScrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+          break;
+      }
+    }
+  }
+
   Widget _buildBottomNavigationBar() {
     final authProvider = context.watch<AuthProvider>();
     
@@ -746,6 +771,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
       currentIndex: _currentIndex,
       onTap: (index) {
         HapticFeedback.selectionClick();
+        _scrollToTop(index);
         setState(() => _currentIndex = index);
       },
       type: BottomNavigationBarType.fixed,
@@ -801,24 +827,66 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.divider.withOpacity(0.3)),
-        ),
-        child: TextField(
-          decoration: InputDecoration(
-            hintText: 'Search products, brands, categories...',
-            hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
-            prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.pushNamed(context, '/search');
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 56, // Fixed height to prevent expansion
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
           ),
-          onTap: () {
-            Navigator.pushNamed(context, '/search');
-          },
-          readOnly: true,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(Icons.search, color: AppColors.textSecondary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Search products...',
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                    onPressed: () {
+                      // Handle image search
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Image search coming soon!'),
+                          backgroundColor: AppColors.info,
+                        ),
+                      );
+                    },
+                    tooltip: 'Search by image',
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

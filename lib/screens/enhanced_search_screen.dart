@@ -19,10 +19,19 @@ class EnhancedSearchScreen extends StatefulWidget {
 class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
   String _searchQuery = '';
   List<String> _filteredSuggestions = [];
   bool _showSuggestions = false;
+  
+  void scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
   
   // Product names for autocomplete (from your provided list)
   final List<String> _productSuggestions = [
@@ -92,6 +101,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _scrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -176,16 +186,24 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
+        border: Border.all(
+          color: _searchFocusNode.hasFocus 
+              ? AppColors.textPrimary 
+              : AppColors.textSecondary.withOpacity(0.4), 
+          width: 2.0
+        ),
       ),
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search products... 📷 Image search',
+          hintText: 'Search products...',
           hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
           prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -220,7 +238,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
                 ),
             ],
           ),
-          border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
@@ -375,7 +392,11 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
 
   Widget _buildSearchTags() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+      margin: const EdgeInsets.only(
+        left: AppConstants.paddingMedium,
+        right: AppConstants.paddingMedium,
+        bottom: AppConstants.paddingMedium,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -514,9 +535,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.55,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.6,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => ProductCard(
@@ -701,62 +722,12 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   }
 
   Future<void> _handleImageSearch() async {
-    try {
-      final imageSearchService = ImageSearchService();
-      
-      // Show image source selection dialog
-      final imageFile = await imageSearchService.showImageSourceDialog(context);
-      if (imageFile == null) return;
-
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Analyzing image...'),
-            ],
-          ),
-        ),
-      );
-
-      // Process the image
-      final result = await imageSearchService.processImageForSearch(imageFile);
-      
-      // Close loading dialog
-      if (mounted) Navigator.pop(context);
-
-      // Show results and handle search
-      if (mounted) {
-        imageSearchService.showImageSearchResults(
-          context,
-          result,
-          () {
-            if (result.success && result.searchTerms.isNotEmpty) {
-              // Set search query and trigger search
-              _searchController.text = result.searchTerms.join(' ');
-              _onSearchChanged(result.searchTerms.join(' '));
-            }
-          },
-        );
-      }
-    } catch (e) {
-      // Close loading dialog if open
-      if (mounted) Navigator.pop(context);
-      
-      // Show error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    // Simple placeholder for now
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Image search coming soon!'),
+        backgroundColor: AppColors.info,
+      ),
+    );
   }
 }

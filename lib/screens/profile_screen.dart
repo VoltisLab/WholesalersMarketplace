@@ -625,7 +625,7 @@ class ProfileScreen extends StatelessWidget {
         'onTap': () async {
           final result = await Navigator.push(
             context,
-            PageTransitions.slideFromRight(const EditPhoneScreen(
+            PageTransitions.slideFromRight(EditPhoneScreen(
               currentPhone: '+1234567890', // TODO: Get from user data
               currentCountryCode: CountryCodes.countries.first, // TODO: Get from user data
             )),

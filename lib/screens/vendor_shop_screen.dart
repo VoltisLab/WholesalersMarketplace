@@ -374,9 +374,9 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.55,
-              crossAxisSpacing: AppConstants.paddingMedium,
-              mainAxisSpacing: AppConstants.paddingMedium,
+              childAspectRatio: 0.6,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {

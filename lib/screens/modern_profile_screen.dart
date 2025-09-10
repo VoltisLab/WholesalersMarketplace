@@ -31,14 +31,14 @@ class ModernProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      _buildQuickActions(),
+                      _buildQuickActions(context),
                       const SizedBox(height: 24),
                       _buildMenuSection('Account', [
                         _buildMenuItem(
                           icon: Icons.person_outline,
                           title: 'Personal Information',
                           subtitle: 'Update your details',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/personal-info'),
                         ),
                         _buildMenuItem(
                           icon: Icons.phone_outlined,
@@ -47,7 +47,7 @@ class ModernProfileScreen extends StatelessWidget {
                           onTap: () async {
                             final result = await Navigator.push(
                               context,
-                              PageTransitions.slideFromRight(const EditPhoneScreen(
+                              PageTransitions.slideFromRight(EditPhoneScreen(
                                 currentPhone: '+1234567890', // TODO: Get from user data
                                 currentCountryCode: CountryCodes.countries.first, // TODO: Get from user data
                               )),
@@ -68,19 +68,25 @@ class ModernProfileScreen extends StatelessWidget {
                           icon: Icons.shopping_bag_outlined,
                           title: 'Order History',
                           subtitle: 'Track your orders',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/orders'),
                         ),
                         _buildMenuItem(
                           icon: Icons.favorite_border,
                           title: 'Wishlist',
                           subtitle: 'Saved items',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/wishlist'),
                         ),
                         _buildMenuItem(
                           icon: Icons.location_on_outlined,
                           title: 'Addresses',
                           subtitle: 'Manage delivery addresses',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/addresses'),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.swap_horiz,
+                          title: 'Account Type',
+                          subtitle: 'Switch to Vendor/Reseller/Customer',
+                          onTap: () => _showAccountTypeSwitcher(context),
                         ),
                       ]),
                       const SizedBox(height: 24),
@@ -96,13 +102,13 @@ class ModernProfileScreen extends StatelessWidget {
                           icon: Icons.analytics_outlined,
                           title: 'Sales Analytics',
                           subtitle: 'View performance metrics',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/sales-analytics'),
                         ),
                         _buildMenuItem(
                           icon: Icons.inventory_2_outlined,
                           title: 'Inventory Management',
                           subtitle: 'Manage your products',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/inventory-management'),
                         ),
                       ]),
                       const SizedBox(height: 24),
@@ -111,13 +117,13 @@ class ModernProfileScreen extends StatelessWidget {
                           icon: Icons.help_outline,
                           title: 'Help Center',
                           subtitle: 'Get support and answers',
-                          onTap: () => _showComingSoon(context),
+                          onTap: () => Navigator.pushNamed(context, '/help-center'),
                         ),
                         _buildMenuItem(
                           icon: Icons.chat_bubble_outline,
                           title: 'Contact Us',
                           subtitle: 'Reach our support team',
-                          onTap: () => Navigator.pushNamed(context, '/messages'),
+                          onTap: () => Navigator.pushNamed(context, '/contact-us'),
                           hasArrow: true,
                         ),
                         _buildMenuItem(
@@ -155,16 +161,7 @@ class ModernProfileScreen extends StatelessWidget {
       backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
-              ],
-            ),
-          ),
+          color: AppColors.primary,
           child: SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -214,7 +211,40 @@ class ModernProfileScreen extends StatelessWidget {
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
+                const SizedBox(height: 12),
+                // Account Type Indicator
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getAccountTypeIcon(user?.userType ?? user?['userType'] ?? 'customer'),
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _getAccountTypeLabel(user?.userType ?? user?['userType'] ?? 'customer'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 8),
+                // Edit Profile Button
                 GestureDetector(
                   onTap: () => _showEditProfileOptions(context, user),
                   child: Container(
@@ -227,19 +257,19 @@ class ModernProfileScreen extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          (user?.userType ?? user?['userType'] ?? 'customer').toString().toUpperCase(),
-                          style: const TextStyle(
+                          'EDIT PROFILE',
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(
+                        SizedBox(width: 4),
+                        Icon(
                           Icons.edit,
                           size: 12,
                           color: Colors.white,
@@ -256,7 +286,7 @@ class ModernProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -273,22 +303,22 @@ class ModernProfileScreen extends StatelessWidget {
           _buildQuickAction(
             icon: Icons.shopping_cart_outlined,
             label: 'Cart',
-            onTap: () {},
+            onTap: () => Navigator.pushNamed(context, '/cart'),
           ),
           _buildQuickAction(
             icon: Icons.favorite_border,
             label: 'Wishlist',
-            onTap: () {},
+            onTap: () => Navigator.pushNamed(context, '/wishlist'),
           ),
           _buildQuickAction(
             icon: Icons.receipt_long_outlined,
             label: 'Orders',
-            onTap: () {},
+            onTap: () => Navigator.pushNamed(context, '/orders'),
           ),
           _buildQuickAction(
             icon: Icons.support_agent_outlined,
             label: 'Support',
-            onTap: () {},
+            onTap: () => Navigator.pushNamed(context, '/help-center'),
           ),
         ],
       ),
@@ -956,7 +986,7 @@ class ModernProfileScreen extends StatelessWidget {
               subtitle: const Text('Buy products from vendors'),
               onTap: () {
                 Navigator.pop(context);
-                _switchAccountType(context, 'customer');
+                _switchAccountType(context, 'customer', 'Customer');
               },
             ),
             ListTile(
@@ -965,7 +995,7 @@ class ModernProfileScreen extends StatelessWidget {
               subtitle: const Text('Sell products to customers'),
               onTap: () {
                 Navigator.pop(context);
-                _switchAccountType(context, 'vendor');
+                _switchAccountType(context, 'vendor', 'Vendor');
               },
             ),
           ],
@@ -980,15 +1010,6 @@ class ModernProfileScreen extends StatelessWidget {
     );
   }
 
-  void _switchAccountType(BuildContext context, String newType) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Switched to ${newType.toUpperCase()} account!'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-    // TODO: Update user type in provider
-  }
 
   void _showComingSoon(BuildContext context, [String? feature]) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -997,6 +1018,267 @@ class ModernProfileScreen extends StatelessWidget {
         backgroundColor: AppColors.info,
       ),
     );
+  }
+
+  void _showAccountTypeSwitcher(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Title
+              const Text(
+                'Switch Account Type',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Choose the account type that best fits your needs',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              // Account type options
+              _buildAccountTypeOption(
+                context: context,
+                icon: Icons.person,
+                title: 'Customer',
+                subtitle: 'Browse and buy products from vendors',
+                color: AppColors.primary,
+                accountType: 'customer',
+              ),
+              const SizedBox(height: 12),
+              _buildAccountTypeOption(
+                context: context,
+                icon: Icons.store,
+                title: 'Vendor',
+                subtitle: 'Sell your own products to customers',
+                color: Colors.green,
+                accountType: 'vendor',
+              ),
+              const SizedBox(height: 12),
+              _buildAccountTypeOption(
+                context: context,
+                icon: Icons.business_center,
+                title: 'Reseller',
+                subtitle: 'Buy wholesale and resell products',
+                color: Colors.orange,
+                accountType: 'reseller',
+              ),
+              const SizedBox(height: 24),
+              
+              // Cancel button
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountTypeOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required String accountType,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        _switchAccountType(context, accountType, title);
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _switchAccountType(BuildContext context, String accountType, String typeName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Switch to $typeName'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              accountType == 'customer' ? Icons.person :
+              accountType == 'vendor' ? Icons.store : Icons.business_center,
+              size: 48,
+              color: accountType == 'customer' ? AppColors.primary :
+                     accountType == 'vendor' ? Colors.green : Colors.orange,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Are you sure you want to switch to a $typeName account?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              accountType == 'customer' 
+                  ? 'You\'ll have access to shopping features and order tracking.'
+                  : accountType == 'vendor'
+                      ? 'You\'ll gain access to vendor dashboard, sales analytics, and inventory management.'
+                      : 'You\'ll have access to wholesale pricing and bulk order features.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implement actual account type switching logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Switched to $typeName account!'),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accountType == 'customer' ? AppColors.primary :
+                             accountType == 'vendor' ? Colors.green : Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Switch to $typeName'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getAccountTypeIcon(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'vendor':
+        return Icons.store;
+      case 'reseller':
+        return Icons.business_center;
+      case 'customer':
+      default:
+        return Icons.person;
+    }
+  }
+
+  String _getAccountTypeLabel(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'vendor':
+        return 'Vendor Account';
+      case 'reseller':
+        return 'Reseller Account';
+      case 'customer':
+      default:
+        return 'Customer Account';
+    }
   }
 
   void _showAboutDialog(BuildContext context) {

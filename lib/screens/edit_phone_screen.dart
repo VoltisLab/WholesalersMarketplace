@@ -99,182 +99,207 @@ class _EditPhoneScreenState extends State<EditPhoneScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.paddingLarge),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header section
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Row(
+        child: Column(
+          children: [
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppConstants.paddingLarge),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Header section
                       Container(
-                        width: 50,
-                        height: 50,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.2),
-                          shape: BoxShape.circle,
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.phone_android,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              'Update Phone Number',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.phone_android,
+                                color: AppColors.primary,
+                                size: 24,
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'We\'ll send a verification code to your new number',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Update Phone Number',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'We\'ll send a verification code to your new number',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
 
-                const SizedBox(height: 32),
+                      const SizedBox(height: 32),
 
-                // Current phone number (if exists)
-                if (widget.currentPhone != null) ...[
-                  const Text(
-                    'Current Phone Number',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.divider.withOpacity(0.5),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          widget.currentCountryCode?.flag ?? '🇺🇸',
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '${widget.currentCountryCode?.dialCode ?? '+1'} ${widget.currentPhone}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // New phone number field
-                PhoneNumberField(
-                  phoneController: _phoneController,
-                  selectedCountry: _selectedCountry,
-                  onCountryChanged: (country) {
-                    setState(() => _selectedCountry = country);
-                  },
-                  label: widget.currentPhone != null ? 'New Phone Number' : 'Phone Number',
-                  hint: 'Enter your phone number',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    if (value.length < 6) {
-                      return 'Please enter a valid phone number';
-                    }
-                    // Check if it's the same as current number
-                    if (widget.currentPhone != null && 
-                        value == widget.currentPhone && 
-                        _selectedCountry.code == widget.currentCountryCode?.code) {
-                      return 'Please enter a different phone number';
-                    }
-                    return null;
-                  },
-                ),
-
-                const Spacer(),
-
-                // Security note
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.info.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.security,
-                        color: AppColors.info,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Your phone number is used for account security and important notifications.',
+                      // Current phone number (if exists)
+                      if (widget.currentPhone != null) ...[
+                        const Text(
+                          'Current Phone Number',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.info,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.divider.withOpacity(0.5),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                widget.currentCountryCode?.flag ?? '🇺🇸',
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${widget.currentCountryCode?.dialCode ?? '+1'} ${widget.currentPhone}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // New phone number field
+                      PhoneNumberField(
+                        phoneController: _phoneController,
+                        selectedCountry: _selectedCountry,
+                        onCountryChanged: (country) {
+                          setState(() => _selectedCountry = country);
+                        },
+                        label: widget.currentPhone != null ? 'New Phone Number' : 'Phone Number',
+                        hint: 'Enter your phone number',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          if (value.length < 6) {
+                            return 'Please enter a valid phone number';
+                          }
+                          // Check if it's the same as current number
+                          if (widget.currentPhone != null && 
+                              value == widget.currentPhone && 
+                              _selectedCountry.code == widget.currentCountryCode?.code) {
+                            return 'Please enter a different phone number';
+                          }
+                          return null;
+                        },
                       ),
+
+                      const SizedBox(height: 32),
+
+                      // Security note
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.info.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.security,
+                              color: AppColors.info,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Your phone number is used for account security and important notifications.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.info,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Add some bottom padding to ensure content doesn't get hidden behind floating button
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Update button
-                PlatformWidgets.primaryButton(
-                  text: widget.currentPhone != null 
-                      ? 'Update Phone Number' 
-                      : 'Add Phone Number',
-                  onPressed: _isLoading ? null : _updatePhoneNumber,
-                  isLoading: _isLoading,
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // Floating save button container
+            SafeArea(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppConstants.paddingLarge),
+                  child: PlatformWidgets.primaryButton(
+                    text: widget.currentPhone != null 
+                        ? 'Update Phone Number' 
+                        : 'Add Phone Number',
+                    onPressed: _isLoading ? null : _updatePhoneNumber,
+                    isLoading: _isLoading,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
