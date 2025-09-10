@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../utils/page_transitions.dart';
+import 'smart_payment_screen.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({super.key});
@@ -16,44 +18,97 @@ class PaymentMethodsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Add payment method feature coming soon!'),
-                  backgroundColor: AppColors.info,
-                ),
+              Navigator.push(
+                context,
+                PageTransitions.slideFromRight(const SmartPaymentScreen()),
               );
             },
+            tooltip: 'Add Payment Method',
           ),
         ],
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.payment_outlined,
-              size: 80,
-              color: AppColors.textHint,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No payment methods added',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppConstants.paddingLarge),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.payment_outlined,
+                  size: 60,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Add your cards or payment methods for easy checkout',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textHint,
+              const SizedBox(height: 24),
+              const Text(
+                'No payment methods added',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 12),
+              const Text(
+                'Add your cards or payment methods for quick and secure checkout',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      PageTransitions.slideFromRight(const SmartPaymentScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Payment Method'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.security,
+                    size: 16,
+                    color: AppColors.success,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Secure & encrypted payments',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

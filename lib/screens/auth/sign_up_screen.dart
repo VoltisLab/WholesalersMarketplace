@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/country_code_picker.dart';
+import '../../data/country_codes.dart';
+import '../phone_verification_screen.dart';
 import 'vendor_onboarding_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -16,8 +19,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  CountryCode _selectedCountry = CountryCodes.countries.first;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -28,6 +33,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -48,39 +54,61 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     setState(() => _isLoading = true);
 
-    try {
-      final authProvider = context.read<AuthProvider>();
-      await authProvider.signUp(
-        _nameController.text,
-        _emailController.text,
-        _passwordController.text,
-        isVendor: _isVendor,
+    // First, navigate to phone verification
+    setState(() => _isLoading = false);
+    
+    final verificationResult = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhoneVerificationScreen(
+          phoneNumber: _phoneController.text,
+          countryCode: _selectedCountry,
+          onVerificationComplete: () async {
+            try {
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.signUp(
+                _nameController.text,
+                _emailController.text,
+                _passwordController.text,
+                isVendor: _isVendor,
+              );
+              
+              if (mounted) {
+                if (_isVendor) {
+                  // Navigate to vendor onboarding
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const VendorOnboardingScreen(),
+                    ),
+                  );
+                } else {
+                  // Navigate to home
+                  Navigator.of(context).pushReplacementNamed('/home');
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Sign up failed: ${e.toString()}'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ),
+    );
+
+    // If verification was cancelled, don't proceed
+    if (verificationResult != true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Phone verification is required to complete registration'),
+          backgroundColor: AppColors.warning,
+        ),
       );
-      
-      if (mounted) {
-        if (_isVendor) {
-          // Navigate to vendor onboarding
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const VendorOnboardingScreen(),
-            ),
-          );
-        } else {
-          // Navigate to home
-          Navigator.of(context).pushReplacementNamed('/home');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sign up failed: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -238,6 +266,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     }
                     if (value.length < 2) {
                       return 'Name must be at least 2 characters';
+                    }
+                    return null;
+                  },
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Phone Number Field
+                PhoneNumberField(
+                  phoneController: _phoneController,
+                  selectedCountry: _selectedCountry,
+                  onCountryChanged: (country) {
+                    setState(() => _selectedCountry = country);
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    if (value.length < 6) {
+                      return 'Please enter a valid phone number';
                     }
                     return null;
                   },

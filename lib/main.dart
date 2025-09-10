@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
 import 'constants/app_colors.dart';
 import 'providers/auth_provider.dart';
 import 'providers/enhanced_product_provider.dart';
@@ -29,6 +31,8 @@ import 'screens/email_support_screen.dart';
 import 'screens/faq_screen.dart';
 import 'screens/bug_report_screen.dart';
 import 'screens/send_feedback_screen.dart';
+import 'screens/phone_verification_screen.dart';
+import 'screens/smart_payment_screen.dart';
 import 'models/product_model.dart';
 
 void main() {
@@ -82,20 +86,32 @@ class MyApp extends StatelessWidget {
             labelMedium: TextStyle(fontFamily: '.SF Pro Text', fontWeight: FontWeight.w500),
             labelSmall: TextStyle(fontFamily: '.SF Pro Text', fontWeight: FontWeight.w500),
           ),
-          appBarTheme: const AppBarTheme(
+          appBarTheme: AppBarTheme(
             backgroundColor: AppColors.surface,
             foregroundColor: AppColors.textPrimary,
             elevation: 0,
-            centerTitle: true,
+            surfaceTintColor: Colors.transparent,
+            centerTitle: Platform.isIOS,
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.dark,
+            ),
+            titleTextStyle: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
+              elevation: Platform.isIOS ? 0 : 2,
+              shadowColor: Platform.isIOS ? Colors.transparent : Colors.black26,
             ),
           ),
           cardTheme: CardThemeData(

@@ -10,7 +10,9 @@ import 'addresses_screen.dart';
 import 'payment_methods_screen.dart';
 import 'notifications_screen.dart';
 import 'help_support_screen.dart';
+import 'edit_phone_screen.dart';
 import '../services/share_service.dart';
+import '../data/country_codes.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -614,6 +616,30 @@ class ProfileScreen extends StatelessWidget {
             context,
             PageTransitions.slideFromRight(const WishlistScreen()),
           );
+        },
+      },
+      {
+        'icon': Icons.phone_outlined,
+        'title': 'Phone Number',
+        'subtitle': 'Update your phone number',
+        'onTap': () async {
+          final result = await Navigator.push(
+            context,
+            PageTransitions.slideFromRight(const EditPhoneScreen(
+              currentPhone: '+1234567890', // TODO: Get from user data
+              currentCountryCode: CountryCodes.countries.first, // TODO: Get from user data
+            )),
+          );
+          
+          if (result != null) {
+            // Phone number was updated
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Phone number updated successfully!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
         },
       },
       {

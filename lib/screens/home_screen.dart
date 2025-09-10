@@ -138,9 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(AppConstants.paddingMedium),
         child: Column(
           children: [
-            // App title and cart
+            // App title
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -164,37 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                Consumer<CartProvider>(
-                  builder: (context, cartProvider, child) {
-                    return badges.Badge(
-                      badgeContent: Text(
-                        cartProvider.itemCount.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                      badgeStyle: const badges.BadgeStyle(
-                        badgeColor: Colors.red,
-                      ),
-                      showBadge: cartProvider.itemCount > 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.shopping_cart_outlined),
-                          onPressed: () => setState(() => _currentIndex = 2),
-                        ),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -216,15 +184,31 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search vendors near you...',
+                  hintText: 'Search vendors... 📷 Image search',
                   prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
-                        onPressed: _handleImageSearch,
-                        tooltip: 'Search by image',
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                            onPressed: _handleImageSearch,
+                            tooltip: 'Search by image',
+                          ),
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       IconButton(
                         icon: Icon(

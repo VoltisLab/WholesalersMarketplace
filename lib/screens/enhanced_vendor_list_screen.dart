@@ -487,16 +487,32 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search suppliers, locations, categories...',
+              hintText: 'Search suppliers... 📷 Image search',
               hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
               prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
-                    onPressed: _handleImageSearch,
-                    tooltip: 'Search by image',
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                        onPressed: _handleImageSearch,
+                        tooltip: 'Search by image',
+                      ),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (_searchQuery.isNotEmpty)
                     IconButton(
@@ -733,7 +749,16 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
       ),
       itemCount: vendors.length,
       itemBuilder: (context, index) {
-        return VendorCard(vendor: vendors[index]);
+        return VendorCard(
+          vendor: vendors[index],
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              '/vendor-shop',
+              arguments: vendors[index],
+            );
+          },
+        );
       },
     );
   }

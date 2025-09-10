@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -109,25 +110,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               onPressed: () {
                 Navigator.pushNamed(context, '/messages');
               },
-            ),
-            badges.Badge(
-              badgeContent: Text(
-                cartProvider.itemCount.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-              badgeStyle: const badges.BadgeStyle(
-                badgeColor: Colors.red,
-              ),
-              showBadge: cartProvider.itemCount > 0,
-              child: IconButton(
-                icon: const Icon(Icons.shopping_cart_outlined),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageTransitions.slideFromBottom(const CartScreen()),
-                  );
-                },
-              ),
+              tooltip: 'Messages',
             ),
             const SizedBox(width: 8),
           ],
@@ -761,7 +744,10 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
     
     return BottomNavigationBar(
       currentIndex: _currentIndex,
-      onTap: (index) => setState(() => _currentIndex = index),
+      onTap: (index) {
+        HapticFeedback.selectionClick();
+        setState(() => _currentIndex = index);
+      },
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: AppColors.textSecondary,
@@ -784,16 +770,19 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         BottomNavigationBarItem(
           icon: Consumer<CartProvider>(
             builder: (context, cartProvider, child) {
-              return badges.Badge(
-                badgeContent: Text(
-                  cartProvider.itemCount.toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
+              return Semantics(
+                label: 'Cart with ${cartProvider.itemCount} items',
+                child: badges.Badge(
+                  badgeContent: Text(
+                    cartProvider.itemCount.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                  badgeStyle: const badges.BadgeStyle(
+                    badgeColor: Colors.red,
+                  ),
+                  showBadge: cartProvider.itemCount > 0,
+                  child: const Icon(Icons.shopping_cart_rounded),
                 ),
-                badgeStyle: const badges.BadgeStyle(
-                  badgeColor: Colors.red,
-                ),
-                showBadge: cartProvider.itemCount > 0,
-                child: const Icon(Icons.shopping_cart_rounded),
               );
             },
           ),

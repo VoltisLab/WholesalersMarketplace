@@ -6,6 +6,9 @@ import '../constants/app_constants.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
+import '../widgets/smart_card_input.dart';
+import '../utils/card_utils.dart';
+import 'smart_payment_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -38,6 +41,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String _selectedShippingMethod = 'standard';
   String _selectedPaymentMethod = 'card';
+  CardType _currentCardType = CardType.unknown;
 
   final List<Map<String, dynamic>> _shippingMethods = [
     {
@@ -610,38 +614,160 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          _buildTextField(
-            controller: _cardHolderController,
-            label: 'Cardholder Name *',
-            hint: 'Enter name on card',
+          // Use Smart Payment Button
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.2),
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.credit_card,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Smart Payment Entry',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Auto-detect card type, format numbers, and scan cards',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final cartProvider = context.read<CartProvider>();
+                      final total = cartProvider.totalPrice + 
+                          _shippingMethods.firstWhere((m) => m['id'] == _selectedShippingMethod)['price'];
+                      
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SmartPaymentScreen(
+                            amount: total,
+                            currency: 'USD',
+                            onPaymentComplete: () {
+                              // Payment completed, continue with order
+                              _nextStep();
+                            },
+                          ),
+                        ),
+                      );
+                      
+                      if (result == true) {
+                        // Payment was successful, fill in dummy data for review
+                        _cardNumberController.text = '•••• •••• •••• 1111';
+                        _cardHolderController.text = 'CARD HOLDER';
+                        _expiryController.text = '12/25';
+                        _cvvController.text = '***';
+                      }
+                    },
+                    icon: const Icon(Icons.payment),
+                    label: const Text('Enter Payment Details'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            controller: _cardNumberController,
-            label: 'Card Number *',
-            hint: '1234 5678 9012 3456',
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 16),
-          Row(
+          
+          const SizedBox(height: 24),
+          
+          // Alternative: Manual entry (collapsed by default)
+          ExpansionTile(
+            title: const Text(
+              'Manual Card Entry',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
             children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: _expiryController,
-                  label: 'Expiry Date *',
-                  hint: 'MM/YY',
-                  keyboardType: TextInputType.number,
-                ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _cardHolderController,
+                label: 'Cardholder Name *',
+                hint: 'Enter name on card',
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextField(
-                  controller: _cvvController,
-                  label: 'CVV *',
-                  hint: '123',
-                  keyboardType: TextInputType.number,
-                ),
+              const SizedBox(height: 16),
+              SmartCardNumberInput(
+                controller: _cardNumberController,
+                onCardTypeChanged: (cardType) {
+                  setState(() => _currentCardType = cardType);
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your card number';
+                  }
+                  if (!CardUtils.validateCardNumber(value)) {
+                    return 'Please enter a valid card number';
+                  }
+                  return null;
+                },
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: SmartExpiryInput(
+                      controller: _expiryController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        if (!CardUtils.validateExpiryDate(value)) {
+                          return 'Invalid date';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SmartCVVInput(
+                      controller: _cvvController,
+                      cardType: _currentCardType,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        if (!CardUtils.validateCVV(value, _currentCardType)) {
+                          return 'Invalid CVV';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
             ],
           ),
           const SizedBox(height: 24),

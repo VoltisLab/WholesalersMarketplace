@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../widgets/platform_widgets.dart';
 
 class OrderConfirmationScreen extends StatefulWidget {
   const OrderConfirmationScreen({super.key});
@@ -64,85 +66,100 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const SizedBox(), // Hide back button
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+        ),
+      ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(AppConstants.paddingLarge),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Success Animation
-                    Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        shape: BoxShape.circle,
+              // Add some top spacing for better visual balance
+              SizedBox(height: isSmallScreen ? 20 : 40),
+              // Success Animation - Responsive size
+              Container(
+                width: isSmallScreen ? 150 : 200,
+                height: isSmallScreen ? 150 : 200,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Container(
+                    width: isSmallScreen ? 90 : 120,
+                    height: isSmallScreen ? 90 : 120,
+                    decoration: const BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: isSmallScreen ? 45 : 60,
+                    ),
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: isSmallScreen ? 24 : 32),
+              
+              // Success Message - Responsive typography
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Column(
+                    children: [
+                      Text(
+                        'Order Confirmed!',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 24 : 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      child: Center(
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
-                            shape: BoxShape.circle,
+                      
+                      SizedBox(height: isSmallScreen ? 12 : 16),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Thank you for your order. We\'ll send you a confirmation email shortly.',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
                           ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 60,
-                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Success Message
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Order Confirmed!',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            Text(
-                              'Thank you for your order. We\'ll send you a confirmation email shortly.',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textSecondary,
-                                height: 1.5,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Order Details Card
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
+                    ],
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: isSmallScreen ? 24 : 32),
+              
+              // Order Details Card - Responsive padding
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
@@ -229,15 +246,15 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                         ),
                       ),
                     ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Next Steps
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
+              
+              SizedBox(height: isSmallScreen ? 24 : 32),
+              
+              // Next Steps - Responsive padding
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
@@ -265,79 +282,133 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                         ),
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
-              
-              // Action Buttons
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/home',
-                            (route) => false,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+            ),
+            
+            SizedBox(height: isSmallScreen ? 32 : 40),
+            
+            // Action Buttons - Better spacing and haptic feedback
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home',
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      label: const Text('Continue Shopping'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          vertical: isSmallScreen ? 14 : 16,
                         ),
-                        child: const Text(
-                          'Continue Shopping',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        PlatformWidgets.showSnackBar(
+                          context,
+                          message: 'Order tracking feature coming soon!',
+                          type: SnackBarType.info,
+                        );
+                      },
+                      icon: const Icon(Icons.local_shipping_outlined),
+                      label: const Text('Track Your Order'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isSmallScreen ? 14 : 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // Navigate to order tracking (placeholder)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Order tracking feature coming soon!'),
-                              backgroundColor: AppColors.primary,
-                            ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Additional actions row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            PlatformWidgets.showSnackBar(
+                              context,
+                              message: 'Order details saved to your account',
+                              type: SnackBarType.success,
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.receipt_outlined,
+                            size: 18,
                           ),
-                        ),
-                        child: const Text(
-                          'Track Your Order',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
+                          label: const Text('View Receipt'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      Container(
+                        width: 1,
+                        height: 20,
+                        color: AppColors.divider,
+                      ),
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            // Share order confirmation
+                            PlatformWidgets.showSnackBar(
+                              context,
+                              message: 'Sharing feature coming soon!',
+                              type: SnackBarType.info,
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.share_outlined,
+                            size: 18,
+                          ),
+                          label: const Text('Share'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Bottom padding for safe area
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

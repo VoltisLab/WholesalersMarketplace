@@ -1,7 +1,7 @@
 name: wholesalers_marketplace
 description: A B2B wholesalers marketplace Flutter application
 publish_to: 'none'
-version: 1.0.0+1
+version: 3.0.0+3
 
 environment:
   sdk: ^3.9.0

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Arc Vest Marketplace</string>
+	<string>Wholesalers B2B</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Wholesalers B2B uses your location to show nearby suppliers and vendors, calculate shipping distances, and provide location-based marketplace services.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Wholesalers B2B uses your location to show nearby suppliers and vendors, calculate shipping distances, and provide location-based marketplace services.</string>
 </dict>
 </plist>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
@@ -127,9 +128,11 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
+          tooltip: 'Back',
         ),
         title: const Text(
           'Search',
@@ -137,6 +140,10 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
+        ),
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
         ),
       ),
       body: Column(
@@ -176,16 +183,32 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
         focusNode: _searchFocusNode,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search products, brands, categories...',
+          hintText: 'Search products... 📷 Image search',
           hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
           prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                icon: const Icon(Icons.camera_alt, color: AppColors.textSecondary),
-                onPressed: _handleImageSearch,
-                tooltip: 'Search by image',
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                    onPressed: _handleImageSearch,
+                    tooltip: 'Search by image',
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (_searchQuery.isNotEmpty)
                 IconButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
@@ -6,6 +7,7 @@ import '../providers/enhanced_product_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../widgets/product_card.dart';
 import '../widgets/vendor_card.dart';
+import '../services/image_search_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -67,19 +69,45 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search products, suppliers...',
+          hintText: 'Search products... 📷 Image search',
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                    onPressed: _handleImageSearch,
+                    tooltip: 'Search by image',
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_searchQuery.isNotEmpty)
+                IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
+                    HapticFeedback.selectionClick();
                     _searchController.clear();
                     setState(() {
                       _searchQuery = '';
                     });
                   },
-                )
-              : null,
+                ),
+            ],
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
             borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
@@ -99,6 +127,10 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
           setState(() {
             _searchQuery = value;
           });
+        },
+        onSubmitted: (value) {
+          HapticFeedback.lightImpact();
+          // Trigger search when user presses enter
         },
       ),
     );
@@ -182,18 +214,26 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
 
   Widget _buildProductsTab() {
     if (_searchQuery.isEmpty) {
-      return _buildPopularProducts();
+      return SingleChildScrollView(
+        child: _buildPopularProducts(),
+      );
     }
     
-    return _buildProductResults();
+    return SingleChildScrollView(
+      child: _buildProductResults(),
+    );
   }
 
   Widget _buildSuppliersTab() {
     if (_searchQuery.isEmpty) {
-      return _buildFeaturedSuppliers();
+      return SingleChildScrollView(
+        child: _buildFeaturedSuppliers(),
+      );
     }
     
-    return _buildSupplierResults();
+    return SingleChildScrollView(
+      child: _buildSupplierResults(),
+    );
   }
 
   Widget _buildRecentSearches() {
@@ -204,11 +244,12 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
       'Shoes',
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.paddingMedium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           const Text(
             'Recent Searches',
             style: TextStyle(
@@ -224,6 +265,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
             children: recentSearches.map((search) {
               return InkWell(
                 onTap: () {
+                  HapticFeedback.selectionClick();
                   _searchController.text = search;
                   setState(() {
                     _searchQuery = search;
@@ -250,6 +292,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -439,5 +482,68 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
         ),
       ),
     );
+  }
+
+  Future<void> _handleImageSearch() async {
+    try {
+      HapticFeedback.lightImpact();
+      final imageSearchService = ImageSearchService();
+      
+      // Show image source selection dialog
+      final imageFile = await imageSearchService.showImageSourceDialog(context);
+      if (imageFile == null) return;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Analyzing image...'),
+            ],
+          ),
+        ),
+      );
+
+      // Process the image
+      final result = await imageSearchService.processImageForSearch(imageFile);
+      
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show results and handle search
+      if (mounted) {
+        imageSearchService.showImageSearchResults(
+          context,
+          result,
+          () {
+            if (result.success && result.searchTerms.isNotEmpty) {
+              // Set search query and trigger search
+              _searchController.text = result.searchTerms.join(' ');
+              setState(() {
+                _searchQuery = result.searchTerms.join(' ');
+              });
+            }
+          },
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.pop(context);
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
