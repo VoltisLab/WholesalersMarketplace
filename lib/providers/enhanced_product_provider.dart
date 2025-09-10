@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../models/product_model.dart';
 
 class EnhancedProductProvider extends ChangeNotifier {
@@ -57,8 +58,11 @@ class EnhancedProductProvider extends ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
-    setLoading(true);
-    setError(null);
+    // Use post frame callback to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setLoading(true);
+      setError(null);
+    });
 
     try {
       // Simulate API call

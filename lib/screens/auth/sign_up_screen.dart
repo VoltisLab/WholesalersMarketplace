@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
@@ -17,12 +18,11 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  CountryCode _selectedCountry = CountryCodes.countries.first;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -31,9 +31,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -54,61 +54,68 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     setState(() => _isLoading = true);
 
-    // First, navigate to phone verification
-    setState(() => _isLoading = false);
-    
-    final verificationResult = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PhoneVerificationScreen(
-          phoneNumber: _phoneController.text,
-          countryCode: _selectedCountry,
-          onVerificationComplete: () async {
-            try {
-              final authProvider = context.read<AuthProvider>();
-              await authProvider.signUp(
-                _nameController.text,
-                _emailController.text,
-                _passwordController.text,
-                isVendor: _isVendor,
-              );
-              
-              if (mounted) {
-                if (_isVendor) {
-                  // Navigate to vendor onboarding
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const VendorOnboardingScreen(),
-                    ),
-                  );
-                } else {
-                  // Navigate to home
-                  Navigator.of(context).pushReplacementNamed('/home');
-                }
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Sign up failed: ${e.toString()}'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-          },
-        ),
-      ),
-    );
-
-    // If verification was cancelled, don't proceed
-    if (verificationResult != true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone verification is required to complete registration'),
-          backgroundColor: AppColors.warning,
-        ),
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.register(
+        '${_firstNameController.text} ${_lastNameController.text}',
+        _emailController.text,
+        _passwordController.text,
+        _isVendor ? 'vendor' : 'customer',
       );
+      
+      if (success && mounted) {
+        if (_isVendor) {
+          // Navigate to vendor onboarding
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const VendorOnboardingScreen(),
+            ),
+          );
+        } else {
+          // Navigate to home
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } else if (mounted) {
+        final errorMessage = authProvider.error ?? 'Registration failed';
+        final errorCode = authProvider.lastErrorCode;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(errorMessage),
+                if (errorCode != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Error Code: $errorCode',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign up failed: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -247,48 +254,81 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Name Field
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'Enter your full name',
-                    prefixIcon: const Icon(Icons.person_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                // First Name and Last Name Fields
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'First Name',
+                          hintText: 'Enter first name',
+                          prefixIcon: const Icon(Icons.person_outlined, color: AppColors.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          labelStyle: const TextStyle(color: AppColors.textSecondary),
+                          hintStyle: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'First name required';
+                          }
+                          if (value.length < 2) {
+                            return 'Too short';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    if (value.length < 2) {
-                      return 'Name must be at least 2 characters';
-                    }
-                    return null;
-                  },
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Phone Number Field
-                PhoneNumberField(
-                  phoneController: _phoneController,
-                  selectedCountry: _selectedCountry,
-                  onCountryChanged: (country) {
-                    setState(() => _selectedCountry = country);
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    if (value.length < 6) {
-                      return 'Please enter a valid phone number';
-                    }
-                    return null;
-                  },
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Last Name',
+                          hintText: 'Enter last name',
+                          prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          labelStyle: const TextStyle(color: AppColors.textSecondary),
+                          hintStyle: const TextStyle(color: AppColors.textSecondary),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Last name required';
+                          }
+                          if (value.length < 2) {
+                            return 'Too short';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 
                 const SizedBox(height: 16),
@@ -300,12 +340,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -327,10 +378,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                    prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.textSecondary),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: AppColors.textSecondary,
                       ),
                       onPressed: () {
                         setState(() => _obscurePassword = !_obscurePassword);
@@ -338,9 +390,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -362,10 +425,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     hintText: 'Confirm your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                    prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.textSecondary),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                        color: AppColors.textSecondary,
                       ),
                       onPressed: () {
                         setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
@@ -373,9 +437,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -436,11 +511,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _signUp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: _isLoading 
+                          ? AppColors.primary.withOpacity(0.6)
+                          : AppColors.primary,
+                      foregroundColor: _isLoading 
+                          ? Colors.white.withOpacity(0.7)
+                          : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: _isLoading ? 0 : 2,
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -490,4 +570,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
 }

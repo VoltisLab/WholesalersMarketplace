@@ -75,7 +75,12 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
 
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
+      padding: const EdgeInsets.fromLTRB(
+        AppConstants.paddingMedium, 
+        16, 
+        AppConstants.paddingMedium, 
+        AppConstants.paddingMedium
+      ),
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
@@ -85,11 +90,17 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
             mainAxisSize: MainAxisSize.min,
             children: [
               Stack(
+                alignment: Alignment.center,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.camera_alt, color: AppColors.primary),
                     onPressed: _handleImageSearch,
                     tooltip: 'Search by image',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
                   ),
                   Positioned(
                     right: 8,
@@ -331,7 +342,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.55,
+                  childAspectRatio: 0.85,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
@@ -404,7 +415,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.6,
+              childAspectRatio: 0.85,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),

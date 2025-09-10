@@ -61,29 +61,38 @@ class ProductCard extends StatelessWidget {
                     
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Product name - always visible, constrained to 2 lines max
                         _buildProductName(),
-                        SizedBox(height: isConstrainedHeight ? 4 : 6),
+                        SizedBox(height: isConstrainedHeight ? 2 : 4),
                         
                         // Vendor name - always visible, 1 line max
                         _buildVendorName(),
-                        SizedBox(height: isConstrainedHeight ? 4 : 6),
+                        SizedBox(height: isConstrainedHeight ? 2 : 4),
                         
                         // Rating - always visible, 1 line max
                         _buildRating(),
                         
                         // Flexible spacer that adapts to available space
-                        Expanded(
-                          child: SizedBox(height: isConstrainedHeight ? 4 : 8),
-                        ),
+                        if (!isConstrainedHeight)
+                          Expanded(
+                            child: SizedBox(height: 4),
+                          )
+                        else
+                          SizedBox(height: 2),
                         
                         // Price - always visible, 1 line max
                         _buildPriceRow(),
-                        SizedBox(height: isConstrainedHeight ? 6 : 10),
+                        SizedBox(height: isConstrainedHeight ? 4 : 6),
                         
                         // Cart button - always visible, fixed height
-                        _buildAddToCartButton(context),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isConstrainedHeight = constraints.maxHeight < 120;
+                            return _buildAddToCartButton(context, isConstrainedHeight);
+                          },
+                        ),
                       ],
                     );
                   },
@@ -346,60 +355,67 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAddToCartButton(BuildContext context) {
+  Widget _buildAddToCartButton(BuildContext context, [bool isConstrainedHeight = false]) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
         final isInCart = cartProvider.isInCart(product.id);
         final quantity = cartProvider.getQuantity(product.id);
 
         if (isInCart) {
+          final buttonSize = isConstrainedHeight ? 24.0 : 28.0;
+          final iconSize = isConstrainedHeight ? 14.0 : 16.0;
+          final fontSize = isConstrainedHeight ? 10.0 : 12.0;
+          
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: buttonSize,
+                height: buttonSize,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: InkWell(
                   onTap: () => cartProvider.decrementQuantity(product.id),
-                  child: const Icon(
+                  child: Icon(
                     Icons.remove,
                     color: Colors.white,
-                    size: 16,
+                    size: iconSize,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isConstrainedHeight ? 6 : 8, 
+                  vertical: isConstrainedHeight ? 2 : 4
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   quantity.toString(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: fontSize,
                   ),
                 ),
               ),
               Container(
-                width: 28,
-                height: 28,
+                width: buttonSize,
+                height: buttonSize,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: InkWell(
                   onTap: () => cartProvider.incrementQuantity(product.id),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
                     color: Colors.white,
-                    size: 16,
+                    size: iconSize,
                   ),
                 ),
               ),
@@ -407,11 +423,14 @@ class ProductCard extends StatelessWidget {
           );
         }
 
+        final buttonSize = isConstrainedHeight ? 28.0 : 32.0;
+        final iconSize = isConstrainedHeight ? 14.0 : 16.0;
+        
         return Align(
           alignment: Alignment.centerRight,
           child: Container(
-            width: 32,
-            height: 32,
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(8),
@@ -421,10 +440,10 @@ class ProductCard extends StatelessWidget {
                   ? () => cartProvider.addItem(product)
                   : null,
               borderRadius: BorderRadius.circular(8),
-              child: const Icon(
+              child: Icon(
                 Icons.add_shopping_cart,
                 color: Colors.white,
-                size: 16,
+                size: iconSize,
               ),
             ),
           ),

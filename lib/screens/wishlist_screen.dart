@@ -194,7 +194,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             padding: const EdgeInsets.all(AppConstants.paddingMedium),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65, // Improved aspect ratio for better thumbnail display
+              childAspectRatio: 0.52, // Final adjustment to eliminate overflow
               crossAxisSpacing: 12,
               mainAxisSpacing: 16,
             ),
@@ -203,8 +203,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
               final product = items[index];
               return Container(
                 constraints: const BoxConstraints(
-                  minHeight: 280, // Minimum height to prevent overflow
-                  maxHeight: 320, // Maximum height to maintain consistency
+                  minHeight: 320, // Increased minimum height for new aspect ratio
+                  maxHeight: 360, // Increased maximum height for new aspect ratio
                 ),
                 child: ProductCard(product: product),
               );

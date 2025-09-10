@@ -267,7 +267,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.divider.withOpacity(0.3), width: 2.0),
                 ),
                 child: Row(
                   children: [
@@ -478,7 +478,12 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.all(AppConstants.paddingMedium),
+          margin: const EdgeInsets.fromLTRB(
+            AppConstants.paddingMedium, 
+            16, 
+            AppConstants.paddingMedium, 
+            AppConstants.paddingMedium
+          ),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
@@ -609,7 +614,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
 
   Widget _buildSearchTags() {
     final suggestedTags = [
-      'Streetwear', 'Vintage', 'Denim', 'Activewear', 'Outerwear', 'Footwear', 'Accessories', 'Premium'
+      'Fashion', 'Electronics', 'Home & Garden', 'Sports', 'Books', 'Beauty'
     ];
 
     return SizedBox(
@@ -743,8 +748,8 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
       padding: const EdgeInsets.all(AppConstants.paddingMedium),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
+        childAspectRatio: 0.69, // Keep the bottom fix
+        crossAxisSpacing: 4, // Further reduced to achieve -3px target
         mainAxisSpacing: 16,
       ),
       itemCount: vendors.length,
@@ -1153,7 +1158,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start, // Changed from center to start
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(

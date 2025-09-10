@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/auth_provider.dart';
@@ -8,8 +10,16 @@ import 'edit_phone_screen.dart';
 import '../data/country_codes.dart';
 import '../services/share_service.dart';
 
-class ModernProfileScreen extends StatelessWidget {
+class ModernProfileScreen extends StatefulWidget {
   const ModernProfileScreen({super.key});
+
+  @override
+  State<ModernProfileScreen> createState() => _ModernProfileScreenState();
+}
+
+class _ModernProfileScreenState extends State<ModernProfileScreen> {
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +30,13 @@ class ModernProfileScreen extends StatelessWidget {
           final user = authProvider.currentUser;
           
           if (user == null) {
-            return _buildLoginPrompt(context, authProvider);
+            // Redirect to sign-in screen instead of showing login prompt
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacementNamed(context, '/sign-in');
+            });
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
           
           return CustomScrollView(
@@ -28,7 +44,7 @@ class ModernProfileScreen extends StatelessWidget {
               _buildProfileHeader(context, user),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 60), // Added bottom padding to fix overflow
                   child: Column(
                     children: [
                       _buildQuickActions(context),
@@ -139,6 +155,28 @@ class ModernProfileScreen extends StatelessWidget {
                           onTap: () => _showAboutDialog(context),
                         ),
                       ]),
+                      const SizedBox(height: 24),
+                      _buildMenuSection('Legal', [
+                        _buildMenuItem(
+                          icon: Icons.description_outlined,
+                          title: 'Terms & Conditions',
+                          subtitle: 'Platform terms and policies',
+                          onTap: () => Navigator.pushNamed(context, '/terms-conditions'),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'Privacy Policy',
+                          subtitle: 'How we handle your data',
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Privacy Policy coming soon!'),
+                                backgroundColor: AppColors.info,
+                              ),
+                            );
+                          },
+                        ),
+                      ]),
                       const SizedBox(height: 32),
                       _buildLogoutButton(context, authProvider),
                       const SizedBox(height: 32),
@@ -155,9 +193,9 @@ class ModernProfileScreen extends StatelessWidget {
 
   Widget _buildProfileHeader(BuildContext context, dynamic user) {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 240,
       floating: false,
-      pinned: true,
+      pinned: false,
       backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
@@ -166,33 +204,71 @@ class ModernProfileScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                const SizedBox(height: 20), // Reduced from 40 to move content up
+                Stack(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 37,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      (user?.name ?? user?['name'] ?? 'User').substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                      child: CircleAvatar(
+                        radius: 37,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _profileImage != null 
+                            ? FileImage(_profileImage!) 
+                            : null,
+                        child: _profileImage == null
+                            ? Text(
+                                (user?.name ?? user?['name'] ?? 'User').substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
-                  ),
+                    // Edit button
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _showImagePicker,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -511,94 +587,6 @@ class ModernProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginPrompt(BuildContext context, AuthProvider authProvider) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_outline,
-                size: 60,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              'Welcome to Wholesalers',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Sign in to access your account, track orders, and manage your business',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary.withOpacity(0.8),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/sign-in'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, '/sign-up'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showEditProfileOptions(BuildContext context, dynamic user) {
     showModalBottomSheet(
@@ -797,8 +785,8 @@ class ModernProfileScreen extends StatelessWidget {
             onPressed: () {
               // TODO: Update user information
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
                   content: Text('Profile updated successfully!'),
                   backgroundColor: AppColors.success,
                 ),
@@ -1321,6 +1309,153 @@ class ModernProfileScreen extends StatelessWidget {
             child: const Text('Sign Out'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showImagePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Change Profile Picture',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildImagePickerOption(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: () => _pickImage(ImageSource.camera),
+                ),
+                _buildImagePickerOption(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onTap: () => _pickImage(ImageSource.gallery),
+                ),
+                if (_profileImage != null)
+                  _buildImagePickerOption(
+                    icon: Icons.delete,
+                    label: 'Remove',
+                    onTap: _removeImage,
+                    color: AppColors.error,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePickerOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: (color ?? AppColors.primary).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 30,
+              color: color ?? AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color ?? AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _profileImage = File(image.path);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _profileImage = null;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile picture removed'),
+        backgroundColor: AppColors.info,
       ),
     );
   }

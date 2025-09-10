@@ -45,3 +45,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS build artifacts
+ios/build/
+*.xcarchive/
+
+# Temporary files
+temp_*
+graphql_schema.graphql

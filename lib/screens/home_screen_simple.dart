@@ -32,12 +32,15 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _feedScrollController = ScrollController();
+  final PageController _bannerPageController = PageController();
+  int _currentBannerIndex = 0;
   
 
   @override
   void dispose() {
     _searchController.dispose();
     _feedScrollController.dispose();
+    _bannerPageController.dispose();
     super.dispose();
   }
 
@@ -102,12 +105,27 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           floating: true,
           backgroundColor: AppColors.surface,
           elevation: 0,
-          title: const Text(
-            'Wholesalers',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Wholesalers',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  fontSize: 20,
+                ),
+              ),
+              Text(
+                'Discover premium wholesale products',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary.withOpacity(0.8),
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
           actions: [
             IconButton(
@@ -627,9 +645,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.52, // Final adjustment to eliminate remaining overflow
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 18,
                 ),
                 itemCount: recentProducts.length,
                 itemBuilder: (context, index) {
@@ -670,9 +688,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.52, // Final adjustment to eliminate remaining overflow
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 18,
                 ),
                 itemCount: popularProducts.length,
                 itemBuilder: (context, index) {
@@ -857,6 +875,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 ),
               ),
               Stack(
+                alignment: Alignment.center,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.camera_alt, color: AppColors.primary),
@@ -870,6 +889,11 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                       );
                     },
                     tooltip: 'Search by image',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
                   ),
                   Positioned(
                     right: 8,
@@ -967,10 +991,18 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           });
         }
 
-        return SizedBox(
-          height: 220, // Increased height similar to welcome banner
-          child: PageView.builder(
-            itemCount: bannerItems.length,
+        return Column(
+          children: [
+            SizedBox(
+              height: 220, // Increased height similar to welcome banner
+              child: PageView.builder(
+                controller: _bannerPageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentBannerIndex = index;
+                  });
+                },
+                itemCount: bannerItems.length,
             itemBuilder: (context, index) {
               final item = bannerItems[index];
               return Container(
@@ -1017,7 +1049,30 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 ),
               );
             },
-          ),
+              ),
+            ),
+            // Navigation dots
+            if (bannerItems.length > 1) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  bannerItems.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: _currentBannerIndex == index ? 12 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: _currentBannerIndex == index
+                          ? AppColors.primary
+                          : AppColors.primary.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
         );
       },
     );

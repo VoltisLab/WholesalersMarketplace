@@ -33,10 +33,38 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      await authProvider.signIn(_emailController.text, _passwordController.text);
+      final success = await authProvider.login(_emailController.text, _passwordController.text);
       
-      if (mounted) {
+      if (success && mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
+      } else if (mounted) {
+        // Show error with tracking code
+        final errorMessage = authProvider.error ?? 'Login failed';
+        final errorCode = authProvider.lastErrorCode;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(errorMessage),
+                if (errorCode != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Error Code: $errorCode',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -54,8 +82,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _signInWithDemo() {
     // Auto-fill demo credentials and sign in
-    _emailController.text = 'demo@wholesalers.com';
-    _passwordController.text = 'demo123';
+    _emailController.text = 'toziz@yahoo.com';
+    _passwordController.text = 'Password123!!!';
     
     // Automatically trigger sign in
     _signIn();
@@ -120,12 +148,23 @@ class _SignInScreenState extends State<SignInScreen> {
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -147,10 +186,11 @@ class _SignInScreenState extends State<SignInScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outlined),
+                    prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.textSecondary),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: AppColors.textSecondary,
                       ),
                       onPressed: () {
                         setState(() => _obscurePassword = !_obscurePassword);
@@ -158,9 +198,20 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.4)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
+                    labelStyle: const TextStyle(color: AppColors.textSecondary),
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -202,11 +253,16 @@ class _SignInScreenState extends State<SignInScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _signIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: _isLoading 
+                          ? AppColors.primary.withOpacity(0.6)
+                          : AppColors.primary,
+                      foregroundColor: _isLoading 
+                          ? Colors.white.withOpacity(0.7)
+                          : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: _isLoading ? 0 : 2,
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -235,14 +291,23 @@ class _SignInScreenState extends State<SignInScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signInWithDemo,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
+                      side: BorderSide(
+                        color: _isLoading 
+                            ? AppColors.primary.withOpacity(0.4)
+                            : AppColors.primary,
+                      ),
+                      foregroundColor: _isLoading 
+                          ? AppColors.primary.withOpacity(0.6)
+                          : AppColors.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.play_arrow,
-                      color: AppColors.primary,
+                      color: _isLoading 
+                          ? AppColors.primary.withOpacity(0.6)
+                          : AppColors.primary,
                     ),
                     label: const Text(
                       'Try Demo Account',

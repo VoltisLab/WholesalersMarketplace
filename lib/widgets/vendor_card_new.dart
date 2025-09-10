@@ -228,3 +228,4 @@ class VendorCard extends StatelessWidget {
     );
   }
 }
+

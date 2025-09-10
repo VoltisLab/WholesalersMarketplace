@@ -11,6 +11,7 @@ import 'providers/vendor_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen_simple.dart';
+import 'screens/maps_screen.dart';
 import 'screens/vendor_list_screen.dart';
 import 'screens/product_detail_screen.dart';
 import 'screens/cart_screen.dart';
@@ -32,6 +33,8 @@ import 'screens/contact_us_screen.dart';
 import 'screens/addresses_screen.dart';
 import 'screens/wishlist_screen.dart';
 import 'screens/orders_screen.dart';
+import 'screens/terms_conditions_screen.dart';
+import 'screens/vendor_dashboard_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/modern_profile_screen.dart';
 import 'screens/enhanced_vendor_list_screen.dart';
@@ -191,7 +194,7 @@ class MyApp extends StatelessWidget {
           '/search': (context) => const EnhancedSearchScreen(),
           '/order-success': (context) => const OrderSuccessScreen(),
           '/order-confirmation': (context) => const OrderSuccessScreen(),
-          '/maps': (context) => const HomeScreen(),
+          '/maps': (context) => const MapsScreen(),
           '/live-chat': (context) => const LiveChatScreen(),
           '/email-support': (context) => const EmailSupportScreen(),
           '/faq': (context) => const FAQScreen(),
@@ -205,6 +208,8 @@ class MyApp extends StatelessWidget {
           '/addresses': (context) => const AddressesScreen(),
           '/wishlist': (context) => const WishlistScreen(),
           '/orders': (context) => const OrdersScreen(),
+          '/terms-conditions': (context) => const TermsConditionsScreen(),
+          '/vendor-dashboard': (context) => const VendorDashboardScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

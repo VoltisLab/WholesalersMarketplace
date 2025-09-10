@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _error;
+  String? _lastErrorCode;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get lastErrorCode => _lastErrorCode;
   bool get isLoggedIn => _currentUser != null;
   bool get isVendor => _currentUser?.userType == 'vendor';
   bool get isCustomer => _currentUser?.userType == 'customer';
@@ -18,8 +23,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setError(String? error) {
+  void setError(String? error, {String? errorCode}) {
     _error = error;
+    _lastErrorCode = errorCode;
     notifyListeners();
   }
 
@@ -28,65 +34,117 @@ class AuthProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock user data based on email
-      if (email.contains('vendor')) {
-        _currentUser = UserModel(
-          id: '1',
-          name: 'John Vendor',
-          email: email,
-          phone: '+1234567890',
-          userType: 'vendor',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          profileImage: 'https://via.placeholder.com/150',
+      final result = await AuthService.login(
+        email: email,
+        password: password,
+      );
+
+      if (result != null && result['token'] != null) {
+        // Save tokens
+        await TokenService.saveTokens(
+          token: result['token'],
+          refreshToken: result['refreshToken'] ?? '',
         );
-      } else {
-        _currentUser = UserModel(
-          id: '2',
-          name: 'Jane Customer',
-          email: email,
-          phone: '+1234567890',
-          userType: 'customer',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          profileImage: 'https://via.placeholder.com/150',
-        );
+
+        // Get user details
+        final userData = await AuthService.viewMe(result['token']);
+        
+        if (userData != null) {
+          _currentUser = UserModel(
+            id: userData['id']?.toString() ?? '',
+            name: '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim(),
+            email: userData['email'] ?? email,
+            phone: '', // Will be updated from profile
+            userType: result['user']?['accountType']?.toLowerCase() ?? 'customer',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            profileImage: null,
+          );
+
+          await TokenService.saveUserData(userData);
+          setLoading(false);
+          notifyListeners(); // Ensure UI updates after login
+          return true;
+        }
       }
       
+      setError('Invalid login credentials');
       setLoading(false);
-      return true;
+      return false;
     } catch (e) {
-      setError('Login failed: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage, errorCode: e.trackingCode);
+      } else {
+        final error = createError(ErrorCode.unknown, details: e.toString());
+        setError(error.userMessage, errorCode: error.trackingCode);
+      }
       setLoading(false);
       return false;
     }
   }
 
-  Future<bool> register(String name, String email, String password, String userType) async {
+  Future<bool> register(String name, String email, String password, String userType, {String? phone, bool termsAccepted = false}) async {
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      _currentUser = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
+      final nameParts = name.split(' ');
+      final firstName = nameParts.first;
+      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+      final result = await AuthService.register(
+        firstName: firstName,
+        lastName: lastName,
         email: email,
-        phone: '',
-        userType: userType,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        password: password,
+        confirmPassword: password,
+        accountType: userType,
+        termsAccepted: termsAccepted,
       );
+
+      if (result != null && result['success'] == true && result['token'] != null) {
+        // Save tokens
+        await TokenService.saveTokens(
+          token: result['token'],
+          refreshToken: result['refreshToken'] ?? '',
+        );
+
+        // Get user details
+        final userData = await AuthService.viewMe(result['token']);
+        
+        if (userData != null) {
+          _currentUser = UserModel(
+            id: userData['id']?.toString() ?? '',
+            name: '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim(),
+            email: userData['email'] ?? email,
+            phone: phone ?? '',
+            userType: userType.toLowerCase(),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            profileImage: null,
+          );
+
+          await TokenService.saveUserData(userData);
+          setLoading(false);
+          notifyListeners(); // Ensure UI updates after registration
+          return true;
+        }
+      }
       
+      final errors = result?['errors'] as List?;
+      final errorDetails = errors?.join(', ') ?? 'Registration failed';
+      final error = createError(ErrorCode.authInvalidCredentials, details: errorDetails);
+      setError(error.userMessage, errorCode: error.trackingCode);
       setLoading(false);
-      return true;
+      return false;
+      
     } catch (e) {
-      setError('Registration failed: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage, errorCode: e.trackingCode);
+      } else {
+        final error = createError(ErrorCode.unknown, details: e.toString());
+        setError(error.userMessage, errorCode: error.trackingCode);
+      }
       setLoading(false);
       return false;
     }
@@ -96,12 +154,30 @@ class AuthProvider extends ChangeNotifier {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Get refresh token for API logout
+      final refreshToken = await TokenService.getRefreshToken();
+      
+      if (refreshToken != null) {
+        // Call API logout
+        try {
+          await AuthService.logout(refreshToken);
+          debugPrint('✅ Server-side logout successful');
+        } catch (e) {
+          // API logout failed, but continue with local cleanup
+          debugPrint('⚠️ API logout failed, continuing with local cleanup: $e');
+        }
+      }
+      
+      // Clear tokens and user data locally
+      await TokenService.clearTokens();
       _currentUser = null;
+      _error = null;
+      _lastErrorCode = null;
+      
       setLoading(false);
     } catch (e) {
-      setError('Logout failed: ${e.toString()}');
+      final error = createError(ErrorCode.unknown, details: 'Logout failed: ${e.toString()}');
+      setError(error.userMessage, errorCode: error.trackingCode);
       setLoading(false);
     }
   }
@@ -131,10 +207,10 @@ class AuthProvider extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       
       // Mock authentication - in real app, validate with backend
-      if (email == 'demo@wholesalers.com' && password == 'demo123') {
+      if (email == 'toziz@yahoo.com' && password == 'Password123!!!') {
         _currentUser = UserModel(
-          id: 'demo',
-          name: 'Demo User',
+          id: 'toziz',
+          name: 'Toziz User',
           email: email,
           phone: '+1234567890',
           userType: 'customer',
@@ -168,22 +244,26 @@ class AuthProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      _currentUser = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        email: email,
-        phone: '',
-        userType: isVendor ? 'vendor' : 'customer',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+      final success = await register(
+        name, 
+        email, 
+        password, 
+        isVendor ? 'vendor' : 'customer',
+        termsAccepted: true,
       );
+      
+      if (!success) {
+        throw createError(ErrorCode.authInvalidCredentials, details: 'Registration failed during signup');
+      }
       
       setLoading(false);
     } catch (e) {
-      setError('Sign up failed: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage, errorCode: e.trackingCode);
+      } else {
+        final error = createError(ErrorCode.unknown, details: e.toString());
+        setError(error.userMessage, errorCode: error.trackingCode);
+      }
       setLoading(false);
       rethrow;
     }

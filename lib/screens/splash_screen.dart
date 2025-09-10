@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
 import '../constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 import '../providers/enhanced_product_provider.dart';
 import '../providers/vendor_provider.dart';
+import '../services/token_service.dart';
+import '../services/graphql_service.dart';
+import '../models/user_model.dart';
 import 'home_screen_simple.dart';
 import 'auth/sign_in_screen.dart';
 
@@ -50,7 +53,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _initializeApp();
   }
 
+
   Future<void> _initializeApp() async {
+    // Wait for the first frame to complete before loading data
+    await Future.delayed(Duration.zero);
+    
     // Load initial data
     await Future.wait([
       context.read<EnhancedProductProvider>().loadProducts(),
@@ -63,16 +70,36 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (mounted) {
       final authProvider = context.read<AuthProvider>();
       
-      // Check if user is already logged in
-      if (authProvider.isLoggedIn) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreenSimple()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const SignInScreen()),
-        );
+      // Check for stored authentication token
+      final hasToken = await TokenService.hasValidToken();
+      
+      if (hasToken) {
+        try {
+          final token = await TokenService.getToken();
+          if (token != null) {
+            // Validate token by fetching user profile
+            final userData = await AuthService.viewMe(token);
+            if (userData != null) {
+              // Token is valid, user will be set during login flow
+              debugPrint('✅ Valid token found, user will be authenticated');
+              
+              // Navigate to home
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreenSimple()),
+              );
+              return;
+            }
+          }
+        } catch (e) {
+          // Token invalid, clear it
+          await TokenService.clearTokens();
+        }
       }
+      
+      // No valid token, go to sign in
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+      );
     }
   }
 
@@ -100,13 +127,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: Lottie.asset(
-                            'assets/animations/shop_icon_animation.json',
-                            width: 150,
-                            height: 150,
-                            fit: BoxFit.contain,
-                            repeat: true,
+                        Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.store,
+                            size: 80,
+                            color: AppColors.primary,
                           ),
                         ),
                         const SizedBox(height: 24),
