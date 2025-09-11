@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 
 enum ErrorCode {
   // Authentication Errors (AUTH_xxx)
-  authInvalidCredentials('AUTH_001', 'Invalid email or password'),
-  authUserNotFound('AUTH_002', 'User account not found'),
-  authEmailAlreadyExists('AUTH_003', 'Email address already registered'),
+  authInvalidCredentials('AUTH_001', 'Incorrect email or password'),
+  authUserNotFound('AUTH_002', 'Incorrect email or password'),
+  authEmailAlreadyExists('AUTH_003', 'Email already exists'),
   authWeakPassword('AUTH_004', 'Password does not meet security requirements'),
   authPasswordMismatch('AUTH_005', 'Passwords do not match'),
   authInvalidEmail('AUTH_006', 'Invalid email format'),

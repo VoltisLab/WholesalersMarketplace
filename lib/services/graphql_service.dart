@@ -132,7 +132,12 @@ class AuthService {
           final graphqlError = exception.graphqlErrors.first;
           final errorMessage = graphqlError.message;
           
-          if (errorMessage.toLowerCase().contains('email') && errorMessage.toLowerCase().contains('exist')) {
+          // Check for duplicate email errors
+          if (errorMessage.toLowerCase().contains('email') && 
+              (errorMessage.toLowerCase().contains('exist') ||
+               errorMessage.toLowerCase().contains('already') ||
+               errorMessage.toLowerCase().contains('taken') ||
+               errorMessage.toLowerCase().contains('duplicate'))) {
             throw createError(ErrorCode.authEmailAlreadyExists, details: 'Email: $email');
           } else if (errorMessage.toLowerCase().contains('password')) {
             throw createError(ErrorCode.authWeakPassword, details: errorMessage);
@@ -200,13 +205,15 @@ class AuthService {
           final graphqlError = exception.graphqlErrors.first;
           final errorMessage = graphqlError.message;
           
+          // For login, we want to show the same message for both user not found and wrong password
+          // This prevents user enumeration attacks
           if (errorMessage.toLowerCase().contains('invalid') || 
-              errorMessage.toLowerCase().contains('incorrect')) {
+              errorMessage.toLowerCase().contains('incorrect') ||
+              errorMessage.toLowerCase().contains('not found') ||
+              errorMessage.toLowerCase().contains('wrong') ||
+              errorMessage.toLowerCase().contains('bad')) {
             throw createError(ErrorCode.authInvalidCredentials, 
               details: 'Login failed for: $email');
-          } else if (errorMessage.toLowerCase().contains('not found')) {
-            throw createError(ErrorCode.authUserNotFound, 
-              details: 'Email: $email');
           } else {
             throw createError(ErrorCode.graphqlMutationError, 
               details: errorMessage);

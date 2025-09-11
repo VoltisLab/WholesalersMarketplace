@@ -85,6 +85,11 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        // This will trigger a rebuild when tab changes
+      });
+    });
     _searchFocusNode.addListener(() {
       setState(() {
         _showSuggestions = _searchFocusNode.hasFocus && _searchQuery.isEmpty;
@@ -451,53 +456,46 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
-      height: 48,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-        border: Border.all(
-          color: AppColors.textSecondary.withOpacity(0.3),
-          width: 2.0, // Increased border thickness x2
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider.withOpacity(0.3)),
       ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-        ),
-        labelColor: Colors.white,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.normal,
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('All'),
-            ),
-          ),
-          Tab(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('Products'),
-            ),
-          ),
-          Tab(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('Suppliers'),
-            ),
-          ),
+      child: Row(
+        children: [
+          _buildFilterButton('All', 0),
+          _buildFilterButton('Products', 1),
+          _buildFilterButton('Suppliers', 2),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String label, int index) {
+    final isSelected = _tabController.index == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _tabController.animateTo(index);
+          HapticFeedback.selectionClick();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -542,7 +540,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 0.54,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -614,7 +612,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 0.54,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
