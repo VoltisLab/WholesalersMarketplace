@@ -213,32 +213,15 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
-                    onPressed: _handleImageSearch,
-                    tooltip: 'Search by image',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                onPressed: _handleImageSearch,
+                tooltip: 'Search by image',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
               ),
               if (_searchQuery.isNotEmpty)
                 IconButton(

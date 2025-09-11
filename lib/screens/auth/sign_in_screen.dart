@@ -33,38 +33,12 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      final success = await authProvider.login(_emailController.text, _passwordController.text);
       
-      if (success && mounted) {
+      // Use mock authentication for demo
+      await authProvider.signIn(_emailController.text, _passwordController.text);
+      
+      if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
-      } else if (mounted) {
-        // Show error with tracking code
-        final errorMessage = authProvider.error ?? 'Login failed';
-        final errorCode = authProvider.lastErrorCode;
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(errorMessage),
-                if (errorCode != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Error Code: $errorCode',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 5),
-          ),
-        );
       }
     } catch (e) {
       if (mounted) {

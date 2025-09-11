@@ -14,7 +14,6 @@ import '../models/product_model.dart';
 import '../utils/page_transitions.dart';
 import 'enhanced_search_screen.dart';
 import 'enhanced_vendor_list_screen.dart';
-import 'search_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'modern_profile_screen.dart';
@@ -83,9 +82,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               const SizedBox(height: 24),
               _buildTrendingProducts(),
               const SizedBox(height: 24),
-              _buildFeaturedVendors(),
-              const SizedBox(height: 24),
               _buildCategoryShowcase(),
+              const SizedBox(height: 24),
+              _buildFeaturedVendors(),
               const SizedBox(height: 16),
               _buildRecentlyAdded(),
               const SizedBox(height: 16),
@@ -312,7 +311,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           children: [
             // Vendor header with logo and name
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6), // Reduced vertical padding
               child: Row(
                 children: [
                   Container(
@@ -377,7 +376,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
             // Product gallery grid (2x2)
             Expanded(
               child: Container(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8), // Reduced bottom padding
                 child: products.isEmpty
                     ? Container(
                         decoration: BoxDecoration(
@@ -398,19 +397,15 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 1.0,
-                          crossAxisSpacing: 3,
-                          mainAxisSpacing: 3,
+                          childAspectRatio: 1.0, // Square aspect ratio for 2x2 grid
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
                         ),
                         itemCount: 4,
                         itemBuilder: (context, index) {
                           if (index < products.length) {
                             final product = products[index];
                             return Container(
-                              constraints: const BoxConstraints(
-                                minHeight: 60,
-                                maxHeight: 80,
-                              ),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: AppColors.divider.withOpacity(0.3)),
@@ -419,7 +414,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                                 borderRadius: BorderRadius.circular(6),
                                 child: CachedNetworkImage(
                                   imageUrl: product.images.first,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.cover, // Cover to fill the square space properly
                                   placeholder: (context, url) => Container(
                                     color: AppColors.divider.withOpacity(0.3),
                                     child: const Center(
@@ -438,14 +433,13 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                           } else {
                             // Empty placeholder
                             return Container(
-                              constraints: const BoxConstraints(
-                                minHeight: 60,
-                                maxHeight: 80,
-                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.divider.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.add, size: 20, color: AppColors.textSecondary),
                               ),
                             );
                           }
@@ -517,10 +511,10 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                     margin: const EdgeInsets.only(right: 16),
                     child: InkWell(
                       onTap: () {
-                        productProvider.setSelectedCategory(category);
-                        Navigator.push(
+                        Navigator.pushNamed(
                           context,
-                          PageTransitions.slideAndFade(const SearchScreen()),
+                          '/categories',
+                          arguments: category,
                         );
                       },
                       borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
@@ -853,40 +847,23 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.camera_alt, color: AppColors.primary),
-                        onPressed: () {
-                          // Handle image search
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image search coming soon!'),
-                              backgroundColor: AppColors.info,
-                            ),
-                          );
-                        },
-                        tooltip: 'Search by image',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 40,
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                    onPressed: () {
+                      // Handle image search
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Image search coming soon!'),
+                          backgroundColor: AppColors.info,
                         ),
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.orange,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
+                      );
+                    },
+                    tooltip: 'Search by image',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
                   ),
                 ],
               ),

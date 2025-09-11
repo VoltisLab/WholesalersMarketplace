@@ -189,26 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Stack(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.camera_alt, color: AppColors.primary),
-                            onPressed: _handleImageSearch,
-                            tooltip: 'Search by image',
-                          ),
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Colors.orange,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                        onPressed: _handleImageSearch,
+                        tooltip: 'Search by image',
                       ),
                       IconButton(
                         icon: Icon(

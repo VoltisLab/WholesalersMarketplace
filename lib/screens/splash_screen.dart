@@ -77,18 +77,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         try {
           final token = await TokenService.getToken();
           if (token != null) {
-            // Validate token by fetching user profile
-            final userData = await AuthService.viewMe(token);
-            if (userData != null) {
-              // Token is valid, user will be set during login flow
-              debugPrint('✅ Valid token found, user will be authenticated');
-              
-              // Navigate to home
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const HomeScreenSimple()),
-              );
-              return;
-            }
+            // For demo purposes, use mock authentication
+            debugPrint('✅ Using mock authentication for demo');
+            authProvider.mockLogin();
+            
+            // Navigate to home
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomeScreenSimple()),
+            );
+            return;
           }
         } catch (e) {
           // Token invalid, clear it

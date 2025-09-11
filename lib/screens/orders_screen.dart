@@ -21,6 +21,11 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        // This will trigger a rebuild when tab changes
+      });
+    });
   }
 
   @override
@@ -72,29 +77,55 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        indicatorColor: AppColors.primary,
-        indicatorWeight: 3,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
-        onTap: (index) {
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterButton('All', 0),
+            _buildFilterButton('Pending', 1),
+            _buildFilterButton('Processing', 2),
+            _buildFilterButton('Shipped', 3),
+            _buildFilterButton('Delivered', 4),
+            _buildFilterButton('Cancelled', 5),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String label, int index) {
+    final isSelected = _tabController.index == index;
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: GestureDetector(
+        onTap: () {
+          _tabController.animateTo(index);
           setState(() {
             _selectedStatus = OrderStatus.values[index];
           });
           HapticFeedback.selectionClick();
         },
-        tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Pending'),
-          Tab(text: 'Processing'),
-          Tab(text: 'Shipped'),
-          Tab(text: 'Delivered'),
-          Tab(text: 'Cancelled'),
-        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
     );
   }

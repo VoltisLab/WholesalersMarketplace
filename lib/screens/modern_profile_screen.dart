@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../utils/page_transitions.dart';
 import '../data/country_codes.dart';
 import '../services/share_service.dart';
+import 'customer_analytics_screen.dart';
 
 class ModernProfileScreen extends StatefulWidget {
   const ModernProfileScreen({super.key});
@@ -90,6 +91,15 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                           title: 'Sales Analytics',
                           subtitle: 'View performance metrics',
                           onTap: () => Navigator.pushNamed(context, '/sales-analytics'),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.people_outline,
+                          title: 'Customer Analytics',
+                          subtitle: 'Analyze customer behavior & insights',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CustomerAnalyticsScreen()),
+                          ),
                         ),
                         _buildMenuItem(
                           icon: Icons.inventory_2_outlined,

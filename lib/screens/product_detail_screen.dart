@@ -821,7 +821,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 280,
+              height: 320,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
@@ -872,7 +872,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             // Product Image
             Expanded(
-              flex: 3,
+              flex: 2,
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Stack(
@@ -947,7 +947,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             // Product Info
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(

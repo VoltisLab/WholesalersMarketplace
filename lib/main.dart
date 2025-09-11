@@ -25,6 +25,7 @@ import 'screens/auth/vendor_onboarding_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/enhanced_search_screen.dart';
+import 'screens/category_screen.dart';
 import 'screens/order_confirmation_screen.dart';
 import 'screens/personal_info_screen.dart';
 import 'screens/sales_analytics_screen.dart';
@@ -196,6 +197,7 @@ class MyApp extends StatelessWidget {
           '/messages': (context) => const MessagesScreen(),
           '/checkout': (context) => const CheckoutScreen(),
           '/search': (context) => const EnhancedSearchScreen(),
+          '/categories': (context) => const CategoryScreen(),
           '/order-success': (context) => const OrderSuccessScreen(),
           '/order-confirmation': (context) => const OrderSuccessScreen(),
           '/maps': (context) => const MapsScreen(),

@@ -102,9 +102,157 @@ class _MessagesScreenState extends State<MessagesScreen> {
       'unreadCount': 1,
       'isOnline': false,
     },
+    {
+      'id': 'vendor_5',
+      'name': 'Retro Revival Fashion',
+      'avatar': 'https://picsum.photos/50/50?random=5',
+      'lastMessage': 'Y2K bomber jackets - 40% off this week only!',
+      'timestamp': DateTime.now().subtract(const Duration(hours: 5)),
+      'unreadCount': 3,
+      'isOnline': true,
+    },
+    {
+      'id': 'vendor_6',
+      'name': 'Second Chance Vintage',
+      'avatar': 'https://picsum.photos/50/50?random=6',
+      'lastMessage': 'Your order has been dispatched with tracking #TRK123456',
+      'timestamp': DateTime.now().subtract(const Duration(hours: 8)),
+      'unreadCount': 0,
+      'isOnline': false,
+    },
+    {
+      'id': 'vendor_7',
+      'name': 'Designer Bags Direct',
+      'avatar': 'https://picsum.photos/50/50?random=7',
+      'lastMessage': 'Limited edition Gucci bags just arrived',
+      'timestamp': DateTime.now().subtract(const Duration(days: 1, hours: 2)),
+      'unreadCount': 1,
+      'isOnline': true,
+    },
+    {
+      'id': 'vendor_8',
+      'name': 'Sneaker Central',
+      'avatar': 'https://picsum.photos/50/50?random=8',
+      'lastMessage': 'Jordan 1s restock happening tomorrow at 10 AM',
+      'timestamp': DateTime.now().subtract(const Duration(days: 1, hours: 6)),
+      'unreadCount': 0,
+      'isOnline': false,
+    },
+    {
+      'id': 'vendor_9',
+      'name': 'Fashion Forward',
+      'avatar': 'https://picsum.photos/50/50?random=9',
+      'lastMessage': 'Can we schedule a call to discuss bulk pricing?',
+      'timestamp': DateTime.now().subtract(const Duration(days: 2, hours: 3)),
+      'unreadCount': 2,
+      'isOnline': true,
+    },
+    {
+      'id': 'vendor_10',
+      'name': 'Trendy Threads Co.',
+      'avatar': 'https://picsum.photos/50/50?random=10',
+      'lastMessage': 'New summer collection launching next week',
+      'timestamp': DateTime.now().subtract(const Duration(days: 3)),
+      'unreadCount': 0,
+      'isOnline': false,
+    },
+    {
+      'id': 'vendor_11',
+      'name': 'Elite Footwear',
+      'avatar': 'https://picsum.photos/50/50?random=11',
+      'lastMessage': 'Nike Air Max 90s - all sizes available',
+      'timestamp': DateTime.now().subtract(const Duration(days: 3, hours: 4)),
+      'unreadCount': 1,
+      'isOnline': true,
+    },
+    {
+      'id': 'vendor_12',
+      'name': 'Chic Boutique',
+      'avatar': 'https://picsum.photos/50/50?random=12',
+      'lastMessage': 'Thank you for your recent purchase!',
+      'timestamp': DateTime.now().subtract(const Duration(days: 4)),
+      'unreadCount': 0,
+      'isOnline': false,
+    },
+    {
+      'id': 'vendor_13',
+      'name': 'Urban Outfitters Wholesale',
+      'avatar': 'https://picsum.photos/50/50?random=13',
+      'lastMessage': 'Bulk discount available for orders over £5,000',
+      'timestamp': DateTime.now().subtract(const Duration(days: 5)),
+      'unreadCount': 3,
+      'isOnline': true,
+    },
+    {
+      'id': 'vendor_14',
+      'name': 'Vintage Finds',
+      'avatar': 'https://picsum.photos/50/50?random=14',
+      'lastMessage': 'Authentic 90s band tees just in stock',
+      'timestamp': DateTime.now().subtract(const Duration(days: 6)),
+      'unreadCount': 0,
+      'isOnline': false,
+    },
+    {
+      'id': 'vendor_15',
+      'name': 'Luxury Streetwear',
+      'avatar': 'https://picsum.photos/50/50?random=15',
+      'lastMessage': 'Supreme drop this Friday - be ready!',
+      'timestamp': DateTime.now().subtract(const Duration(days: 7)),
+      'unreadCount': 2,
+      'isOnline': true,
+    },
   ];
 
   String? _selectedConversationId;
+
+  // Sample transaction data for relationship details
+  final List<Map<String, dynamic>> _sampleTransactions = [
+    {
+      'id': 'txn_001',
+      'date': DateTime.now().subtract(const Duration(days: 15)),
+      'type': 'Order',
+      'amount': 1250.00,
+      'status': 'Completed',
+      'items': ['Y2K Leather Bomber Jacket x2', 'Vintage Denim Jeans x3'],
+      'orderId': 'ORD-2024-001',
+    },
+    {
+      'id': 'txn_002',
+      'date': DateTime.now().subtract(const Duration(days: 45)),
+      'type': 'Order',
+      'amount': 890.50,
+      'status': 'Completed',
+      'items': ['Retro Sneakers x4', 'Streetwear Hoodies x2'],
+      'orderId': 'ORD-2024-002',
+    },
+    {
+      'id': 'txn_003',
+      'date': DateTime.now().subtract(const Duration(days: 78)),
+      'type': 'Refund',
+      'amount': -150.00,
+      'status': 'Processed',
+      'items': ['Defective Item Return'],
+      'orderId': 'REF-2024-001',
+    },
+    {
+      'id': 'txn_004',
+      'date': DateTime.now().subtract(const Duration(days: 120)),
+      'type': 'Order',
+      'amount': 2100.75,
+      'status': 'Completed',
+      'items': ['Bulk T-Shirts x50', 'Accessories x20'],
+      'orderId': 'ORD-2024-003',
+    },
+    {
+      'id': 'txn_005',
+      'date': DateTime.now().subtract(const Duration(days: 180)),
+      'type': 'Order',
+      'amount': 675.25,
+      'status': 'Completed',
+      'items': ['Designer Bags x3', 'Luxury Watches x1'],
+      'orderId': 'ORD-2024-004',
+    },
+  ];
 
   @override
   void dispose() {
@@ -169,6 +317,237 @@ class _MessagesScreenState extends State<MessagesScreen> {
     });
 
     _messageController.clear();
+  }
+
+  void _showRelationshipDetails(Map<String, dynamic> conversation) {
+    print('_showRelationshipDetails called for: ${conversation['name']}');
+    final totalSpent = _sampleTransactions
+        .where((txn) => txn['type'] == 'Order')
+        .fold(0.0, (sum, txn) => sum + (txn['amount'] as double));
+    
+    final totalRefunds = _sampleTransactions
+        .where((txn) => txn['type'] == 'Refund')
+        .fold(0.0, (sum, txn) => sum + (txn['amount'] as double).abs());
+    
+    final netSpent = totalSpent - totalRefunds;
+    final orderCount = _sampleTransactions.where((txn) => txn['type'] == 'Order').length;
+    final relationshipDays = DateTime.now().difference(_sampleTransactions.last['date']).inDays;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 25,
+                          backgroundImage: CachedNetworkImageProvider(conversation['avatar']),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Relationship with ${conversation['name']}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Customer since ${_formatDate(_sampleTransactions.last['date'])}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildRelationshipStats(netSpent, orderCount, relationshipDays),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Transaction History',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _sampleTransactions.length,
+                        itemBuilder: (context, index) {
+                          final txn = _sampleTransactions[index];
+                          return _buildTransactionCard(txn);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelationshipStats(double netSpent, int orderCount, int relationshipDays) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatItem('Total Spent', '£${netSpent.toStringAsFixed(2)}', AppColors.primary),
+          ),
+          Container(width: 1, height: 40, color: AppColors.divider),
+          Expanded(
+            child: _buildStatItem('Orders', orderCount.toString(), AppColors.success),
+          ),
+          Container(width: 1, height: 40, color: AppColors.divider),
+          Expanded(
+            child: _buildStatItem('Relationship', '${relationshipDays} days', AppColors.warning),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionCard(Map<String, dynamic> txn) {
+    final isRefund = txn['type'] == 'Refund';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                txn['orderId'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isRefund ? AppColors.error.withOpacity(0.1) : AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  txn['status'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isRefund ? AppColors.error : AppColors.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _formatDate(txn['date']),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            txn['items'].join(', '),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${isRefund ? '-' : '+'}£${txn['amount'].toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isRefund ? AppColors.error : AppColors.success,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   @override
@@ -316,11 +695,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
             // TODO: Implement voice call
           },
         ),
-        IconButton(
+        PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
-          onPressed: () {
-            // TODO: Implement more options
+          onSelected: (value) {
+            print('Selected menu item: $value');
+            if (value == 'relationship') {
+              print('Showing relationship details for: ${conversation['name']}');
+              _showRelationshipDetails(conversation);
+            }
           },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'relationship',
+              child: Row(
+                children: [
+                  Icon(Icons.handshake, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Relationship'),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
