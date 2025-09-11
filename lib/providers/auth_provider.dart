@@ -274,7 +274,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> completeVendorOnboarding(Map<String, dynamic> vendorData) async {
+  Future<void> completeSupplierOnboarding(Map<String, dynamic> supplierData) async {
     setLoading(true);
     setError(null);
 
@@ -282,14 +282,14 @@ class AuthProvider extends ChangeNotifier {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 1));
       
-      // Update user to be a verified vendor
+      // Update user to be a verified supplier
       if (_currentUser != null) {
         _currentUser = UserModel(
           id: _currentUser!.id,
           name: _currentUser!.name,
           email: _currentUser!.email,
-          phone: vendorData['phone'] ?? _currentUser!.phone,
-          userType: 'vendor',
+          phone: supplierData['phone'] ?? _currentUser!.phone,
+          userType: 'supplier',
           createdAt: _currentUser!.createdAt,
           updatedAt: DateTime.now(),
           profileImage: _currentUser!.profileImage,
@@ -298,7 +298,7 @@ class AuthProvider extends ChangeNotifier {
       
       setLoading(false);
     } catch (e) {
-      setError('Vendor onboarding failed: ${e.toString()}');
+      setError('Supplier onboarding failed: ${e.toString()}');
       setLoading(false);
       rethrow;
     }
@@ -310,14 +310,14 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Mock login for demo purposes
-  void mockLogin({bool asVendor = false}) {
-    if (asVendor) {
+  void mockLogin({bool asSupplier = false}) {
+    if (asSupplier) {
       _currentUser = UserModel(
         id: '1',
-        name: 'Demo Vendor',
-        email: 'vendor@demo.com',
+        name: 'Demo Supplier',
+        email: 'supplier@demo.com',
         phone: '+1234567890',
-        userType: 'vendor',
+        userType: 'supplier',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         profileImage: 'https://via.placeholder.com/150',

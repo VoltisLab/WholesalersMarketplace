@@ -9,6 +9,7 @@ class ModalDropdown extends StatelessWidget {
   final IconData icon;
   final String? hint;
   final String? Function(String?)? validator;
+  final Map<String, String>? itemSubtitles;
 
   const ModalDropdown({
     super.key,
@@ -19,6 +20,7 @@ class ModalDropdown extends StatelessWidget {
     required this.icon,
     this.hint,
     this.validator,
+    this.itemSubtitles,
   });
 
   @override
@@ -153,14 +155,31 @@ class ModalDropdown extends StatelessWidget {
                         child: Row(
                           children: [
                             Expanded(
-                              child: Text(
-                                item,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (itemSubtitles != null && itemSubtitles![item] != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      itemSubtitles![item]!,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary.withOpacity(0.7),
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                             if (isSelected)

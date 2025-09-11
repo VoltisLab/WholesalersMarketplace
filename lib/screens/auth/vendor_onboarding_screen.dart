@@ -70,7 +70,7 @@ class _VendorOnboardingScreenState extends State<VendorOnboardingScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      await authProvider.completeVendorOnboarding({
+      await authProvider.completeSupplierOnboarding({
         'businessName': _businessNameController.text,
         'description': _businessDescriptionController.text,
         'phone': _phoneController.text,

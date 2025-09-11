@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../constants/app_colors.dart';
-import '../utils/page_transitions.dart';
+import '../widgets/modal_dropdown.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -21,11 +21,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _weightController = TextEditingController();
   final _dimensionsController = TextEditingController();
   final _brandController = TextEditingController();
-  final _skuController = TextEditingController();
+  final _customTagsController = TextEditingController();
+  final _customProcessingDaysController = TextEditingController();
+  final _deliveryTimeController = TextEditingController();
 
   String _selectedCategory = '';
   String _selectedCondition = 'New';
   String _selectedSize = '';
+  String _selectedBrand = '';
   List<String> _selectedTags = [];
   List<File> _selectedImages = [];
   bool _isVintage = false;
@@ -35,6 +38,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   bool _isShippingIncluded = false;
   String _shippingMethod = 'Standard';
   int _processingTime = 1;
+  bool _useCustomProcessingDays = false;
+  String _generatedSku = '';
 
   final List<String> _categories = [
     'Clothing',
@@ -54,6 +59,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final List<String> _conditions = [
     'New',
     'Like New',
+    'Used/2nd hand',
     'Good',
     'Fair',
     'Poor'
@@ -73,6 +79,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
     'Sustainable', 'Handmade', 'Designer', 'Luxury', 'Affordable'
   ];
 
+  final List<String> _brands = [
+    'Nike', 'Adidas', 'Zara', 'H&M', 'Uniqlo', 'Gap', 'Levi\'s', 'Tommy Hilfiger',
+    'Calvin Klein', 'Ralph Lauren', 'Gucci', 'Prada', 'Chanel', 'Louis Vuitton',
+    'Versace', 'Armani', 'Burberry', 'Hermès', 'Dior', 'Balenciaga', 'Other'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _generateSku();
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -83,7 +101,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _weightController.dispose();
     _dimensionsController.dispose();
     _brandController.dispose();
-    _skuController.dispose();
+    _customTagsController.dispose();
+    _customProcessingDaysController.dispose();
+    _deliveryTimeController.dispose();
     super.dispose();
   }
 
@@ -170,12 +190,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          height: 200,
-          child: _selectedImages.isEmpty
-              ? _buildAddImageButton()
-              : _buildImageGrid(),
-        ),
+        _selectedImages.isEmpty
+            ? _buildAddImageButton()
+            : _buildImageGrid(),
       ],
     );
   }
@@ -228,10 +245,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Widget _buildImageGrid() {
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
+        childAspectRatio: 1,
       ),
       itemCount: _selectedImages.length + (_selectedImages.length < 10 ? 1 : 0),
       itemBuilder: (context, index) {
@@ -333,7 +353,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           controller: _titleController,
           label: 'Product Title',
           hint: 'e.g., Vintage 90s Denim Jacket',
-          maxLines: 2,
+          maxLines: 1,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter a product title';
@@ -361,31 +381,45 @@ class _AddProductScreenState extends State<AddProductScreen> {
           },
         ),
         const SizedBox(height: 16),
-        _buildDropdown(
+        ModalDropdown(
           label: 'Category',
-          value: _selectedCategory,
+          value: _selectedCategory.isEmpty ? null : _selectedCategory,
           items: _categories,
-          onChanged: (value) => setState(() => _selectedCategory = value!),
+          onChanged: (value) => setState(() => _selectedCategory = value ?? ''),
+          icon: Icons.category_outlined,
+          hint: 'Select category',
           validator: (value) => value == null || value.isEmpty ? 'Please select a category' : null,
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: _buildDropdown(
+              child: ModalDropdown(
                 label: 'Condition',
                 value: _selectedCondition,
                 items: _conditions,
-                onChanged: (value) => setState(() => _selectedCondition = value!),
+                onChanged: (value) => setState(() => _selectedCondition = value ?? 'New'),
+                icon: Icons.verified_outlined,
+                hint: 'Select condition',
+                itemSubtitles: {
+                  'New': 'Brand new item that has never been used',
+                  'Like New': 'Gently used with minimal signs of wear',
+                  'Used/2nd hand': 'Previously owned item in good working condition',
+                  'Good': 'Used with some signs of wear but still functional',
+                  'Fair': 'Well-used with visible wear but works properly',
+                  'Poor': 'Heavily used with significant wear or damage',
+                },
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildDropdown(
+              child: ModalDropdown(
                 label: 'Size',
-                value: _selectedSize,
+                value: _selectedSize.isEmpty ? null : _selectedSize,
                 items: _sizes,
-                onChanged: (value) => setState(() => _selectedSize = value!),
+                onChanged: (value) => setState(() => _selectedSize = value ?? ''),
+                icon: Icons.straighten_outlined,
+                hint: 'Select size',
                 validator: (value) => value == null || value.isEmpty ? 'Please select a size' : null,
               ),
             ),
@@ -395,18 +429,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildTextField(
-                controller: _brandController,
+              child: ModalDropdown(
                 label: 'Brand',
-                hint: 'e.g., Nike, Zara',
+                value: _selectedBrand.isEmpty ? null : _selectedBrand,
+                items: _brands,
+                onChanged: (value) => setState(() => _selectedBrand = value ?? ''),
+                icon: Icons.branding_watermark_outlined,
+                hint: 'Select brand',
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: _buildTextField(
-                controller: _skuController,
-                label: 'SKU (Optional)',
-                hint: 'Product code',
+                controller: TextEditingController(text: _generatedSku),
+                label: 'SKU (Auto-generated)',
+                hint: 'Auto-generated',
+                enabled: false,
               ),
             ),
           ],
@@ -436,7 +474,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 label: 'Selling Price',
                 hint: '0.00',
                 keyboardType: TextInputType.number,
-                prefix: const Text('£ '),
+                prefix: Container(
+                  padding: const EdgeInsets.only(left: 16, right: 8),
+                  child: const Text(
+                    '£',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a price';
@@ -455,7 +503,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 label: 'Original Price (Optional)',
                 hint: '0.00',
                 keyboardType: TextInputType.number,
-                prefix: const Text('£ '),
+                prefix: Container(
+                  padding: const EdgeInsets.only(left: 16, right: 8),
+                  child: const Text(
+                    '£',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -565,19 +623,54 @@ class _AddProductScreenState extends State<AddProductScreen> {
           activeColor: AppColors.primary,
         ),
         const SizedBox(height: 16),
-        _buildDropdown(
+        ModalDropdown(
           label: 'Shipping Method',
           value: _shippingMethod,
           items: ['Standard', 'Express', 'Next Day', 'Collection Only'],
-          onChanged: (value) => setState(() => _shippingMethod = value!),
+          onChanged: (value) => setState(() => _shippingMethod = value ?? 'Standard'),
+          icon: Icons.local_shipping_outlined,
+          hint: 'Select shipping method',
         ),
         const SizedBox(height: 16),
-        _buildDropdown(
-          label: 'Processing Time',
-          value: _processingTime.toString(),
-          items: ['1', '2', '3', '5', '7', '14'],
-          onChanged: (value) => setState(() => _processingTime = int.parse(value!)),
-          suffix: 'days',
+        Row(
+          children: [
+            Expanded(
+              child: ModalDropdown(
+                label: 'Processing Time',
+                value: _useCustomProcessingDays ? 'Custom' : _processingTime.toString(),
+                items: ['1', '2', '3', '5', '7', '14', 'Custom'],
+                onChanged: (value) {
+                  if (value == 'Custom') {
+                    setState(() => _useCustomProcessingDays = true);
+                  } else {
+                    setState(() {
+                      _useCustomProcessingDays = false;
+                      _processingTime = int.parse(value ?? '1');
+                    });
+                  }
+                },
+                icon: Icons.schedule_outlined,
+                hint: 'Select processing time',
+              ),
+            ),
+            if (_useCustomProcessingDays) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTextField(
+                  controller: _customProcessingDaysController,
+                  label: 'Custom Days',
+                  hint: 'e.g., 10',
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _deliveryTimeController,
+          label: 'Estimated Delivery Time',
+          hint: 'e.g., 3-5 business days',
         ),
       ],
     );
@@ -640,6 +733,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
             );
           }).toList(),
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          controller: _customTagsController,
+          label: 'Add Custom Tags',
+          hint: 'Enter custom tags separated by commas',
+          onSubmitted: _addCustomTags,
         ),
         if (_selectedTags.length >= 5)
           Padding(
@@ -748,6 +848,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
     TextInputType? keyboardType,
     Widget? prefix,
     String? Function(String?)? validator,
+    bool enabled = true,
+    Function(String)? onSubmitted,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,6 +868,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
+          enabled: enabled,
+          onFieldSubmitted: onSubmitted,
           decoration: InputDecoration(
             hintText: hint,
             prefix: prefix,
@@ -782,7 +886,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: enabled ? Colors.white : AppColors.surface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
@@ -790,58 +894,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _buildDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required Function(String?) onChanged,
-    String? Function(String?)? validator,
-    String? suffix,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: value.isEmpty ? null : value,
-          items: items.map((item) {
-            return DropdownMenuItem(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
-          onChanged: onChanged,
-          validator: validator,
-          decoration: InputDecoration(
-            suffixText: suffix,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.divider),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.divider),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-      ],
-    );
-  }
 
   Future<void> _pickImages() async {
     final ImagePicker picker = ImagePicker();
@@ -921,4 +973,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
       );
     });
   }
+
+  void _generateSku() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final random = (timestamp.length > 6) ? timestamp.substring(timestamp.length - 6) : timestamp;
+    setState(() {
+      _generatedSku = 'SKU-$random';
+    });
+  }
+
+  void _addCustomTags(String value) {
+    if (value.trim().isNotEmpty) {
+      final tags = value.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
+      setState(() {
+        for (String tag in tags) {
+          if (!_selectedTags.contains(tag) && _selectedTags.length < 5) {
+            _selectedTags.add(tag);
+          }
+        }
+      });
+      _customTagsController.clear();
+    }
+  }
+
 }

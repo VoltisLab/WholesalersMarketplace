@@ -139,11 +139,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'Back',
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Search',
           style: TextStyle(

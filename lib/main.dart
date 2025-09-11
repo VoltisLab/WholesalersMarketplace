@@ -215,7 +215,6 @@ class MyApp extends StatelessWidget {
           '/terms-conditions': (context) => const TermsConditionsScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/about': (context) => const AboutScreen(),
-          '/supplier-dashboard': (context) => const VendorDashboardScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {
