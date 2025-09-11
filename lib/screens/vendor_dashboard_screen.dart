@@ -21,7 +21,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Vendor Dashboard',
+          'Supplier Dashboard',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
@@ -37,14 +37,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications coming soon!'),
-                  backgroundColor: AppColors.info,
-                ),
-              );
-            },
+            onPressed: () => _showNotificationsBottomSheet(context),
           ),
         ],
       ),
@@ -111,26 +104,54 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   }
 
   Widget _buildQuickStats() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildStatCard(
-            'Total Revenue',
-            '£12,450',
-            '+12.5%',
-            Icons.attach_money,
-            AppColors.success,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Total Revenue',
+                '£12,450',
+                '+12.5%',
+                Icons.attach_money,
+                AppColors.success,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Orders',
+                '156',
+                '+8.2%',
+                Icons.shopping_bag,
+                AppColors.primary,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Orders',
-            '156',
-            '+8.2%',
-            Icons.shopping_bag,
-            AppColors.primary,
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionCard(
+                'Add Product',
+                'Create new product listing',
+                Icons.add_circle_outline,
+                AppColors.primary,
+                () => _showAddProductDialog(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                'Sales Analytics',
+                'View detailed analytics',
+                Icons.analytics_outlined,
+                AppColors.info,
+                () => Navigator.pushNamed(context, '/sales-analytics'),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -194,6 +215,62 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddProductDialog() {
+    Navigator.pushNamed(context, '/add-product');
   }
 
   Widget _buildViewSelector() {
@@ -286,14 +363,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               ),
             ),
             ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Add Product feature coming soon!'),
-                    backgroundColor: AppColors.info,
-                  ),
-                );
-              },
+              onPressed: () => Navigator.pushNamed(context, '/add-product'),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add Product'),
               style: ElevatedButton.styleFrom(
@@ -686,6 +756,654 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotificationsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.notifications,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Notifications',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            'Stay updated with your business',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Mark All Read'),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Notifications list
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    _buildNotificationItem(
+                      'New Order Received',
+                      'Order #12345 from ABC Company',
+                      '2 minutes ago',
+                      Icons.shopping_bag,
+                      AppColors.primary,
+                      true,
+                      () => _navigateToOrderDetails('12345'),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildNotificationItem(
+                      'Product Review',
+                      '5-star review for "Premium Widget"',
+                      '1 hour ago',
+                      Icons.star,
+                      AppColors.warning,
+                      true,
+                      () => _navigateToProductReviews('Premium Widget'),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildNotificationItem(
+                      'Payment Received',
+                      '£450.00 payment processed',
+                      '3 hours ago',
+                      Icons.payment,
+                      AppColors.success,
+                      false,
+                      () => _navigateToPaymentHistory(),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildNotificationItem(
+                      'Low Stock Alert',
+                      'Premium Widget is running low',
+                      '1 day ago',
+                      Icons.warning,
+                      AppColors.error,
+                      false,
+                      () => _navigateToInventoryManagement(),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildNotificationItem(
+                      'New Message',
+                      'Message from XYZ Supplier',
+                      '2 days ago',
+                      Icons.message,
+                      AppColors.info,
+                      false,
+                      () => _navigateToMessages(),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationItem(
+    String title,
+    String subtitle,
+    String time,
+    IconData icon,
+    Color color,
+    bool isUnread,
+    VoidCallback? onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isUnread ? color.withOpacity(0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isUnread ? Border.all(color: color.withOpacity(0.2)) : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                if (isUnread)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: AppColors.textSecondary.withOpacity(0.5),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToOrderDetails(String orderId) {
+    Navigator.pop(context); // Close notifications sheet
+    Navigator.pushNamed(context, '/orders');
+    // Show specific order details
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening order #$orderId details...'),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _navigateToProductReviews(String productName) {
+    Navigator.pop(context); // Close notifications sheet
+    _showProductReviewsDialog(productName);
+  }
+
+  void _navigateToPaymentHistory() {
+    Navigator.pop(context); // Close notifications sheet
+    _showPaymentHistoryDialog();
+  }
+
+  void _navigateToInventoryManagement() {
+    Navigator.pop(context); // Close notifications sheet
+    Navigator.pushNamed(context, '/inventory-management');
+  }
+
+  void _navigateToMessages() {
+    Navigator.pop(context); // Close notifications sheet
+    Navigator.pushNamed(context, '/messages');
+  }
+
+  void _showProductReviewsDialog(String productName) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.star,
+                        color: AppColors.warning,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Reviews for $productName',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const Text(
+                            'Customer feedback and ratings',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Reviews content
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildReviewItem(
+                        'John Smith',
+                        'Excellent product quality and fast delivery!',
+                        5,
+                        '2 hours ago',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildReviewItem(
+                        'Sarah Johnson',
+                        'Great value for money. Highly recommended.',
+                        5,
+                        '1 day ago',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildReviewItem(
+                        'Mike Wilson',
+                        'Good product, but delivery was a bit slow.',
+                        4,
+                        '3 days ago',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewItem(String name, String comment, int rating, String time) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primary.withOpacity(0.1),
+                child: Text(
+                  name[0],
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          size: 16,
+                          color: AppColors.warning,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            comment,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentHistoryDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.payment,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Payment History',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            'Recent payment transactions',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Payment history content
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildPaymentItem(
+                        'Order #12345',
+                        '£450.00',
+                        'Completed',
+                        '3 hours ago',
+                        AppColors.success,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentItem(
+                        'Order #12344',
+                        '£320.00',
+                        'Completed',
+                        '1 day ago',
+                        AppColors.success,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentItem(
+                        'Order #12343',
+                        '£180.00',
+                        'Processing',
+                        '2 days ago',
+                        AppColors.warning,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPaymentItem(String orderId, String amount, String status, String time, Color statusColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.receipt,
+              color: statusColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  orderId,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                amount,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

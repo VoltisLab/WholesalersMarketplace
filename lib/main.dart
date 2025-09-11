@@ -18,6 +18,7 @@ import 'screens/cart_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/vendor_dashboard_screen.dart';
 import 'screens/vendor_shop_screen.dart';
+import 'screens/add_product_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/vendor_onboarding_screen.dart';
@@ -34,6 +35,8 @@ import 'screens/addresses_screen.dart';
 import 'screens/wishlist_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/terms_conditions_screen.dart';
+import 'screens/privacy_policy_screen.dart';
+import 'screens/about_screen.dart';
 import 'screens/vendor_dashboard_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/modern_profile_screen.dart';
@@ -185,7 +188,8 @@ class MyApp extends StatelessWidget {
           '/vendors': (context) => const EnhancedVendorListScreen(),
           '/cart': (context) => const CartScreen(),
           '/profile': (context) => const ModernProfileScreen(),
-          '/vendor-dashboard': (context) => const VendorDashboardScreen(),
+          '/supplier-dashboard': (context) => const VendorDashboardScreen(),
+          '/add-product': (context) => const AddProductScreen(),
           '/sign-in': (context) => const SignInScreen(),
           '/sign-up': (context) => const SignUpScreen(),
           '/vendor-onboarding': (context) => const VendorOnboardingScreen(),
@@ -209,7 +213,9 @@ class MyApp extends StatelessWidget {
           '/wishlist': (context) => const WishlistScreen(),
           '/orders': (context) => const OrdersScreen(),
           '/terms-conditions': (context) => const TermsConditionsScreen(),
-          '/vendor-dashboard': (context) => const VendorDashboardScreen(),
+          '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+          '/about': (context) => const AboutScreen(),
+          '/supplier-dashboard': (context) => const VendorDashboardScreen(),
         },
         onGenerateRoute: (settings) {
           switch (settings.name) {

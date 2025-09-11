@@ -15,7 +15,7 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   String? get lastErrorCode => _lastErrorCode;
   bool get isLoggedIn => _currentUser != null;
-  bool get isVendor => _currentUser?.userType == 'vendor';
+  bool get isSupplier => _currentUser?.userType == 'supplier';
   bool get isCustomer => _currentUser?.userType == 'customer';
 
   void setLoading(bool loading) {
@@ -26,6 +26,11 @@ class AuthProvider extends ChangeNotifier {
   void setError(String? error, {String? errorCode}) {
     _error = error;
     _lastErrorCode = errorCode;
+    notifyListeners();
+  }
+
+  void updateUser(UserModel user) {
+    _currentUser = user;
     notifyListeners();
   }
 
@@ -239,7 +244,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> signUp(String name, String email, String password, {bool isVendor = false}) async {
+  Future<void> signUp(String name, String email, String password, {bool isSupplier = false}) async {
     setLoading(true);
     setError(null);
 
@@ -248,7 +253,7 @@ class AuthProvider extends ChangeNotifier {
         name, 
         email, 
         password, 
-        isVendor ? 'vendor' : 'customer',
+        isSupplier ? 'supplier' : 'customer',
         termsAccepted: true,
       );
       

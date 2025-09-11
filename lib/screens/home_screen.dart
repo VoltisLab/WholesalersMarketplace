@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildMapHomeTab(),
           const EnhancedVendorListScreen(),
           const CartScreen(),
-          authProvider.isVendor ? const VendorDashboardScreen() : const ProfileScreen(),
+          authProvider.isSupplier ? const VendorDashboardScreen() : const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -567,9 +567,9 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Cart',
         ),
         BottomNavigationBarItem(
-          icon: Icon(authProvider.isVendor ? Icons.dashboard_outlined : Icons.person_outlined),
-          activeIcon: Icon(authProvider.isVendor ? Icons.dashboard : Icons.person),
-          label: authProvider.isVendor ? 'Dashboard' : 'Profile',
+          icon: Icon(authProvider.isSupplier ? Icons.dashboard_outlined : Icons.person_outlined),
+          activeIcon: Icon(authProvider.isSupplier ? Icons.dashboard : Icons.person),
+          label: authProvider.isSupplier ? 'Dashboard' : 'Profile',
         ),
       ],
     );

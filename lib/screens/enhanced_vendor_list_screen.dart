@@ -544,8 +544,6 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
         const SizedBox(height: 8),
         _buildSearchTags(),
         const SizedBox(height: 16),
-        _buildViewToggleBar(),
-        const SizedBox(height: 16),
       ],
     );
   }

@@ -26,7 +26,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isVendor = false;
+  bool _isSupplier = false;
   bool _agreeToTerms = false;
 
   @override
@@ -60,11 +60,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         '${_firstNameController.text} ${_lastNameController.text}',
         _emailController.text,
         _passwordController.text,
-        _isVendor ? 'vendor' : 'customer',
+        _isSupplier ? 'supplier' : 'customer',
       );
       
       if (success && mounted) {
-        if (_isVendor) {
+        if (_isSupplier) {
           // Navigate to vendor onboarding
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -183,29 +183,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           Expanded(
                             child: InkWell(
-                              onTap: () => setState(() => _isVendor = false),
+                              onTap: () => setState(() => _isSupplier = false),
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: !_isVendor ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                                  color: !_isSupplier ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: !_isVendor ? AppColors.primary : AppColors.divider,
+                                    color: !_isSupplier ? AppColors.primary : AppColors.divider,
                                   ),
                                 ),
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.person,
-                                      color: !_isVendor ? AppColors.primary : AppColors.textSecondary,
+                                      color: !_isSupplier ? AppColors.primary : AppColors.textSecondary,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       'Customer',
                                       style: TextStyle(
-                                        color: !_isVendor ? AppColors.primary : AppColors.textSecondary,
-                                        fontWeight: !_isVendor ? FontWeight.w600 : FontWeight.normal,
+                                        color: !_isSupplier ? AppColors.primary : AppColors.textSecondary,
+                                        fontWeight: !_isSupplier ? FontWeight.w600 : FontWeight.normal,
                                       ),
                                     ),
                                   ],
@@ -216,29 +216,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: InkWell(
-                              onTap: () => setState(() => _isVendor = true),
+                              onTap: () => setState(() => _isSupplier = true),
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: _isVendor ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                                  color: _isSupplier ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: _isVendor ? AppColors.primary : AppColors.divider,
+                                    color: _isSupplier ? AppColors.primary : AppColors.divider,
                                   ),
                                 ),
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.store,
-                                      color: _isVendor ? AppColors.primary : AppColors.textSecondary,
+                                      color: _isSupplier ? AppColors.primary : AppColors.textSecondary,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Vendor',
+                                      'Supplier',
                                       style: TextStyle(
-                                        color: _isVendor ? AppColors.primary : AppColors.textSecondary,
-                                        fontWeight: _isVendor ? FontWeight.w600 : FontWeight.normal,
+                                        color: _isSupplier ? AppColors.primary : AppColors.textSecondary,
+                                        fontWeight: _isSupplier ? FontWeight.w600 : FontWeight.normal,
                                       ),
                                     ),
                                   ],
@@ -532,7 +532,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           )
                         : Text(
-                            _isVendor ? 'Create Vendor Account' : 'Create Account',
+                            _isSupplier ? 'Create Supplier Account' : 'Create Account',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
