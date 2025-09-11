@@ -114,7 +114,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(
-                        Icons.shopping_bag,
+                        Icons.store,
                         color: Colors.white,
                         size: 40,
                       ),
@@ -293,12 +293,12 @@ class _SignInScreenState extends State<SignInScreen> {
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
                         color: _isLoading 
-                            ? AppColors.primary.withOpacity(0.4)
-                            : AppColors.primary,
+                            ? AppColors.greyBorder.withOpacity(0.4)
+                            : AppColors.greyBorder,
                       ),
                       foregroundColor: _isLoading 
-                          ? AppColors.primary.withOpacity(0.6)
-                          : AppColors.primary,
+                          ? AppColors.greyBorder.withOpacity(0.6)
+                          : AppColors.greyBorder,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -306,15 +306,17 @@ class _SignInScreenState extends State<SignInScreen> {
                     icon: Icon(
                       Icons.play_arrow,
                       color: _isLoading 
-                          ? AppColors.primary.withOpacity(0.6)
-                          : AppColors.primary,
+                          ? AppColors.greyBorder.withOpacity(0.6)
+                          : AppColors.greyBorder,
                     ),
-                    label: const Text(
+                    label: Text(
                       'Try Demo Account',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: _isLoading 
+                            ? AppColors.greyBorder.withOpacity(0.6)
+                            : AppColors.greyBorder,
                       ),
                     ),
                   ),

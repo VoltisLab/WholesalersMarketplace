@@ -480,7 +480,7 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
         Container(
           margin: const EdgeInsets.fromLTRB(
             AppConstants.paddingMedium, 
-            16, 
+            0, 
             AppConstants.paddingMedium, 
             AppConstants.paddingMedium
           ),
@@ -1079,22 +1079,15 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
           arguments: vendor,
         );
       },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+      borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+          side: BorderSide(
             color: AppColors.divider.withOpacity(0.3),
             width: 0.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           children: [
@@ -1105,8 +1098,8 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+                    topLeft: Radius.circular(AppConstants.radiusLarge),
+                    topRight: Radius.circular(AppConstants.radiusLarge),
                   ),
                   border: Border.all(
                     color: AppColors.divider.withOpacity(0.3),
@@ -1115,8 +1108,8 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                 ),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+                    topLeft: Radius.circular(AppConstants.radiusLarge),
+                    topRight: Radius.circular(AppConstants.radiusLarge),
                   ),
                   child: CachedNetworkImage(
                     imageUrl: vendor.logo,
@@ -1176,16 +1169,6 @@ class _EnhancedVendorListScreenState extends State<EnhancedVendorListScreen>
                           ),
                         ),
                       ],
-                    ),
-                    Text(
-                      CountryEmoji.getCountryWithFlag(vendor.address.country),
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: AppColors.textSecondary.withOpacity(0.8),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),

@@ -116,7 +116,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         Expanded(
           child: _buildStatCard(
             'Total Revenue',
-            '\$12,450',
+            '£12,450',
             '+12.5%',
             Icons.attach_money,
             AppColors.success,
@@ -455,9 +455,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   Widget _buildTopProducts() {
     final products = [
-      {'name': 'Premium Widget A', 'sales': '45 units', 'revenue': '\$2,250'},
-      {'name': 'Standard Widget B', 'sales': '32 units', 'revenue': '\$1,280'},
-      {'name': 'Deluxe Widget C', 'sales': '28 units', 'revenue': '\$1,680'},
+      {'name': 'Premium Widget A', 'sales': '45 units', 'revenue': '£2,250'},
+      {'name': 'Standard Widget B', 'sales': '32 units', 'revenue': '£1,280'},
+      {'name': 'Deluxe Widget C', 'sales': '28 units', 'revenue': '£1,680'},
     ];
 
     return Column(
@@ -580,7 +580,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${(index + 1) * 50}.00',
+                  '£${(index + 1) * 50}.00',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -681,7 +681,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Total: \$${(index + 1) * 125}.00',
+            'Total: £${(index + 1) * 125}.00',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,

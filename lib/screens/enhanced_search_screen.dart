@@ -184,7 +184,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppConstants.paddingMedium, 
-        16, 
+        0, 
         AppConstants.paddingMedium, 
         AppConstants.paddingMedium
       ),
@@ -404,7 +404,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   Widget _buildSearchTags() {
     return Container(
       margin: const EdgeInsets.only(
-        left: AppConstants.paddingMedium,
+        left: 0.0, // Removed left padding to align with search bar
         right: AppConstants.paddingMedium,
         bottom: AppConstants.paddingMedium,
       ),

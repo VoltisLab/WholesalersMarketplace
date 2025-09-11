@@ -105,27 +105,12 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           floating: true,
           backgroundColor: AppColors.surface,
           elevation: 0,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Wholesalers',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  fontSize: 20,
-                ),
-              ),
-              Text(
-                'Discover premium wholesale products',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary.withOpacity(0.8),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
+          title: const Text(
+            'Wholesalers',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
           ),
           actions: [
             IconButton(
@@ -506,7 +491,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+              padding: EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 'Shop by Category',
                 style: TextStyle(
@@ -521,7 +506,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
               height: 100,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final category = categories[index];
@@ -852,64 +837,61 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          height: 56, // Fixed height to prevent expansion
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.textSecondary.withOpacity(0.4), width: 2.0),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Icon(Icons.search, color: AppColors.textSecondary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Search products...',
-                  style: TextStyle(
-                    color: AppColors.textSecondary.withOpacity(0.7),
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Stack(
-                alignment: Alignment.center,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Search products...',
+              hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
+              prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+              border: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.camera_alt, color: AppColors.primary),
-                    onPressed: () {
-                      // Handle image search
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Image search coming soon!'),
-                          backgroundColor: AppColors.info,
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, color: AppColors.primary),
+                        onPressed: () {
+                          // Handle image search
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Image search coming soon!'),
+                              backgroundColor: AppColors.info,
+                            ),
+                          );
+                        },
+                        tooltip: 'Search by image',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
                         ),
-                      );
-                    },
-                    tooltip: 'Search by image',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
                       ),
-                    ),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
           ),
         ),
       ),

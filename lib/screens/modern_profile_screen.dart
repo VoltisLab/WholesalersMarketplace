@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import '../utils/page_transitions.dart';
-import 'edit_phone_screen.dart';
 import '../data/country_codes.dart';
 import '../services/share_service.dart';
 
@@ -18,8 +15,6 @@ class ModernProfileScreen extends StatefulWidget {
 }
 
 class _ModernProfileScreenState extends State<ModernProfileScreen> {
-  File? _profileImage;
-  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -60,24 +55,13 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                           icon: Icons.phone_outlined,
                           title: 'Phone Number',
                           subtitle: 'Update your phone number',
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              PageTransitions.slideFromRight(EditPhoneScreen(
-                                currentPhone: '+1234567890', // TODO: Get from user data
-                                currentCountryCode: CountryCodes.countries.first, // TODO: Get from user data
-                              )),
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Phone editing coming soon!'),
+                                backgroundColor: AppColors.info,
+                              ),
                             );
-                            
-                            if (result != null) {
-                              // Phone number was updated
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Phone number updated successfully!'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            }
                           },
                         ),
                         _buildMenuItem(
@@ -204,7 +188,7 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20), // Reduced from 40 to move content up
+                const SizedBox(height: 10), // Further reduced to fix overflow
                 Stack(
                   children: [
                     Container(
@@ -224,53 +208,19 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                       child: CircleAvatar(
                         radius: 37,
                         backgroundColor: Colors.white,
-                        backgroundImage: _profileImage != null 
-                            ? FileImage(_profileImage!) 
-                            : null,
-                        child: _profileImage == null
-                            ? Text(
-                                (user?.name ?? user?['name'] ?? 'User').substring(0, 1).toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
-                    // Edit button
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _showImagePicker,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
+                        child: Text(
+                          (user?.name ?? user?['name'] ?? 'User').substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
                             color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 14,
-                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   user?.name ?? user?['name'] ?? 'User',
                   style: const TextStyle(
@@ -287,7 +237,7 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 // Account Type Indicator
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -317,41 +267,6 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Edit Profile Button
-                GestureDetector(
-                  onTap: () => _showEditProfileOptions(context, user),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'EDIT PROFILE',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(
-                          Icons.edit,
-                          size: 12,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -587,703 +502,46 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
     );
   }
 
-
-  void _showEditProfileOptions(BuildContext context, dynamic user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.textHint,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Title
-              const Text(
-                'Edit Profile',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Edit options
-              _buildEditOption(
-                icon: Icons.person_outline,
-                title: 'Personal Information',
-                subtitle: 'Update name, email, phone',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showEditPersonalInfo(context, user);
-                },
-              ),
-              _buildEditOption(
-                icon: Icons.photo_camera_outlined,
-                title: 'Profile Picture',
-                subtitle: 'Change your profile photo',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showEditProfilePicture(context);
-                },
-              ),
-              _buildEditOption(
-                icon: Icons.lock_outline,
-                title: 'Change Password',
-                subtitle: 'Update your password',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showChangePassword(context);
-                },
-              ),
-              _buildEditOption(
-                icon: Icons.business_outlined,
-                title: 'Account Type',
-                subtitle: 'Switch between Customer/Vendor',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showAccountTypeOptions(context);
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.textHint,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditPersonalInfo(BuildContext context, dynamic user) {
-    final nameController = TextEditingController(text: user?.name ?? user?['name'] ?? '');
-    final emailController = TextEditingController(text: user?.email ?? user?['email'] ?? '');
-    final phoneController = TextEditingController(text: user?.phone ?? user?['phone'] ?? '');
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Personal Information'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Update user information
-              Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-                  content: Text('Profile updated successfully!'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditProfilePicture(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Change Profile Picture',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildPhotoOption(
-                  icon: Icons.camera_alt,
-                  label: 'Camera',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showComingSoon(context, 'Camera feature');
-                  },
-                ),
-                _buildPhotoOption(
-                  icon: Icons.photo_library,
-                  label: 'Gallery',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showComingSoon(context, 'Gallery feature');
-                  },
-                ),
-                _buildPhotoOption(
-                  icon: Icons.delete,
-                  label: 'Remove',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showComingSoon(context, 'Remove photo feature');
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPhotoOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showChangePassword(BuildContext context) {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Change Password'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: currentPasswordController,
-                decoration: const InputDecoration(
-                  labelText: 'Current Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: newPasswordController,
-                decoration: const InputDecoration(
-                  labelText: 'New Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmPasswordController,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm New Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Validate and change password
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Password changed successfully!'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
-            child: const Text('Change'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAccountTypeOptions(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Switch Account Type'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Choose your account type:',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.person, color: AppColors.primary),
-              title: const Text('Customer'),
-              subtitle: const Text('Buy products from vendors'),
-              onTap: () {
-                Navigator.pop(context);
-                _switchAccountType(context, 'customer', 'Customer');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.store, color: AppColors.primary),
-              title: const Text('Vendor'),
-              subtitle: const Text('Sell products to customers'),
-              onTap: () {
-                Navigator.pop(context);
-                _switchAccountType(context, 'vendor', 'Vendor');
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  void _showComingSoon(BuildContext context, [String? feature]) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(feature != null ? '$feature coming soon!' : 'Feature coming soon!'),
-        backgroundColor: AppColors.info,
-      ),
-    );
-  }
-
-  void _showAccountTypeSwitcher(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textHint,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Title
-              const Text(
-                'Switch Account Type',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Choose the account type that best fits your needs',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              
-              // Account type options
-              _buildAccountTypeOption(
-                context: context,
-                icon: Icons.person,
-                title: 'Customer',
-                subtitle: 'Browse and buy products from vendors',
-                color: AppColors.primary,
-                accountType: 'customer',
-              ),
-              const SizedBox(height: 12),
-              _buildAccountTypeOption(
-                context: context,
-                icon: Icons.store,
-                title: 'Vendor',
-                subtitle: 'Sell your own products to customers',
-                color: Colors.green,
-                accountType: 'vendor',
-              ),
-              const SizedBox(height: 12),
-              _buildAccountTypeOption(
-                context: context,
-                icon: Icons.business_center,
-                title: 'Reseller',
-                subtitle: 'Buy wholesale and resell products',
-                color: Colors.orange,
-                accountType: 'reseller',
-              ),
-              const SizedBox(height: 24),
-              
-              // Cancel button
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAccountTypeOption({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required String accountType,
-  }) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        _switchAccountType(context, accountType, title);
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: color,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _switchAccountType(BuildContext context, String accountType, String typeName) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Switch to $typeName'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              accountType == 'customer' ? Icons.person :
-              accountType == 'vendor' ? Icons.store : Icons.business_center,
-              size: 48,
-              color: accountType == 'customer' ? AppColors.primary :
-                     accountType == 'vendor' ? Colors.green : Colors.orange,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Are you sure you want to switch to a $typeName account?',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              accountType == 'customer' 
-                  ? 'You\'ll have access to shopping features and order tracking.'
-                  : accountType == 'vendor'
-                      ? 'You\'ll gain access to vendor dashboard, sales analytics, and inventory management.'
-                      : 'You\'ll have access to wholesale pricing and bulk order features.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement actual account type switching logic
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Switched to $typeName account!'),
-                  backgroundColor: Colors.green,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: accountType == 'customer' ? AppColors.primary :
-                             accountType == 'vendor' ? Colors.green : Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-            child: Text('Switch to $typeName'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getAccountTypeIcon(String accountType) {
-    switch (accountType.toLowerCase()) {
+  IconData _getAccountTypeIcon(String userType) {
+    switch (userType.toLowerCase()) {
       case 'vendor':
-        return Icons.store;
-      case 'reseller':
-        return Icons.business_center;
-      case 'customer':
+        return Icons.business;
+      case 'admin':
+        return Icons.admin_panel_settings;
       default:
         return Icons.person;
     }
   }
 
-  String _getAccountTypeLabel(String accountType) {
-    switch (accountType.toLowerCase()) {
+  String _getAccountTypeLabel(String userType) {
+    switch (userType.toLowerCase()) {
       case 'vendor':
         return 'Vendor Account';
-      case 'reseller':
-        return 'Reseller Account';
-      case 'customer':
+      case 'admin':
+        return 'Admin Account';
       default:
         return 'Customer Account';
     }
   }
 
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About Wholesalers'),
-        content: const Text(
-          'Wholesalers Marketplace v1.0.0\n\nA modern B2B marketplace connecting suppliers and retailers worldwide.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+  void _showAccountTypeSwitcher(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account type switching coming soon!'),
+        backgroundColor: AppColors.info,
       ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'Wholesalers B2B',
+      applicationVersion: '1.0.0',
+      applicationIcon: const Icon(Icons.store, size: 48),
+      children: [
+        const Text('A B2B marketplace for wholesalers and suppliers.'),
+      ],
     );
   }
 
@@ -1298,164 +556,14 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              authProvider.signOut();
               Navigator.pop(context);
+              authProvider.signOut();
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
             child: const Text('Sign Out'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showImagePicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Change Profile Picture',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildImagePickerOption(
-                  icon: Icons.camera_alt,
-                  label: 'Camera',
-                  onTap: () => _pickImage(ImageSource.camera),
-                ),
-                _buildImagePickerOption(
-                  icon: Icons.photo_library,
-                  label: 'Gallery',
-                  onTap: () => _pickImage(ImageSource.gallery),
-                ),
-                if (_profileImage != null)
-                  _buildImagePickerOption(
-                    icon: Icons.delete,
-                    label: 'Remove',
-                    onTap: _removeImage,
-                    color: AppColors.error,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePickerOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: (color ?? AppColors.primary).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 30,
-              color: color ?? AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color ?? AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 400,
-        maxHeight: 400,
-        imageQuality: 80,
-      );
-      
-      if (image != null) {
-        setState(() {
-          _profileImage = File(image.path);
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture updated successfully!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking image: ${e.toString()}'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
-  }
-
-  void _removeImage() {
-    setState(() {
-      _profileImage = null;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile picture removed'),
-        backgroundColor: AppColors.info,
       ),
     );
   }

@@ -22,29 +22,106 @@ class VendorShopScreen extends StatefulWidget {
 
 class _VendorShopScreenState extends State<VendorShopScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   String _selectedCategory = 'All';
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.offset > 200) {
+      if (!_showScrollToTop) {
+        setState(() {
+          _showScrollToTop = true;
+        });
+      }
+    } else {
+      if (_showScrollToTop) {
+        setState(() {
+          _showScrollToTop = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: _buildVendorHeader(),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              _buildAppBar(),
+              SliverToBoxAdapter(
+                child: _buildVendorHeader(),
+              ),
+              SliverToBoxAdapter(
+                child: _buildSearchAndFilters(),
+              ),
+              _buildProductGrid(),
+            ],
           ),
-          SliverToBoxAdapter(
-            child: _buildSearchAndFilters(),
+          // Sticky back button in top left
+          Positioned(
+            top: 50, // Below status bar
+            left: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
+                iconSize: 24,
+              ),
+            ),
           ),
-          _buildProductGrid(),
+          // Scroll to top button - only show when scrolled
+          if (_showScrollToTop)
+            Positioned(
+              bottom: 100, // Above bottom navigation
+              left: 16,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.keyboard_arrow_up,
+                    color: Colors.white,
+                  ),
+                  iconSize: 24,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -54,15 +131,9 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
     return SliverAppBar(
       expandedHeight: 200,
       floating: false,
-      pinned: true,
+      pinned: false,
       backgroundColor: AppColors.primary,
-      title: Text(
-        widget.vendor.name,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      title: const Text(''), // Empty title
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -117,6 +188,30 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                 ),
               ),
             ),
+            // Title positioned closer to banner bottom
+            Positioned(
+              bottom: 30, // Reduced from 46px to 30px
+              left: 88, // Start after the 60px circle + 16px margin + 12px spacing
+              right: 16,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.vendor.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 2,
+                        color: Colors.black26,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -125,7 +220,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
 
   Widget _buildVendorHeader() {
     return Container(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,7 +250,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     if (widget.vendor.rating > 0) ...[
                       Row(
                         children: [
@@ -178,7 +273,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 2),
                     ],
                     Text(
                       widget.vendor.description,
@@ -187,7 +282,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         const Icon(
@@ -211,15 +306,15 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
             ],
           ),
           if (widget.vendor.categories.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: widget.vendor.categories.map((category) {
                 return Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 8,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.1),
@@ -271,7 +366,10 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                       : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(
+                      color: AppColors.textHint.withOpacity(0.5),
+                      width: 1,
+                    ),
                   ),
                   filled: true,
                   fillColor: AppColors.background,
@@ -374,7 +472,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.85,
+              childAspectRatio: 0.52,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),

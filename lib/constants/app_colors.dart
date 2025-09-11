@@ -20,6 +20,9 @@ class AppColors {
   static const Color divider = Color(0xFFE8E8E8);
   static const Color shadow = Color(0x1A000000);
   
+  // Border colors
+  static const Color greyBorder = Color(0xFF757575); // Same as textSecondary
+  
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFF9800);
   static const Color info = Color(0xFF2196F3);

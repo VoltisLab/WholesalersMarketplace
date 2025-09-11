@@ -161,16 +161,31 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 48),
-                        const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                          strokeWidth: 3,
-                        ),
                       ],
                     ),
                   ),
                 );
               },
+            ),
+          ),
+          // Loader positioned 50px above "Powered by Voltis Labs"
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 90, // 40 + 50
+            left: 0,
+            right: 0,
+            child: Center(
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      strokeWidth: 3,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           Positioned(
