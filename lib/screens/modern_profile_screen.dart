@@ -53,6 +53,19 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                       if (user?.accountType?.toLowerCase() == 'supplier' || user?.userType?.toLowerCase() == 'supplier') ...[
                         _buildMenuSection('Business', [
                           _buildMenuItem(
+                            icon: Icons.storefront_outlined,
+                            title: 'View my Shop',
+                            subtitle: 'View your shop page',
+                            onTap: () => Navigator.pushNamed(context, '/my-shop'),
+                            hasArrow: true,
+                          ),
+                          _buildMenuItem(
+                            icon: Icons.add_circle_outline,
+                            title: 'Create a Product',
+                            subtitle: 'Add new product to your inventory',
+                            onTap: () => Navigator.pushNamed(context, '/add-product'),
+                          ),
+                          _buildMenuItem(
                             icon: Icons.store_outlined,
                             title: 'Supplier Dashboard',
                             subtitle: 'Manage your business',

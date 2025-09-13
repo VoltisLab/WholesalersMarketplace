@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'dart:io';
 import '../constants/app_colors.dart';
 import '../widgets/modal_dropdown.dart';
@@ -8,6 +9,7 @@ import '../services/graphql_service.dart';
 import '../services/token_service.dart';
 import '../services/error_service.dart';
 import '../services/product_service.dart';
+import '../services/aws_s3_service.dart';
 import '../providers/enhanced_product_provider.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -32,7 +34,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _deliveryTimeController = TextEditingController();
 
   String _selectedCategory = '';
-  String _selectedCondition = 'New';
+  String _selectedCondition = 'NEW';
   String _selectedSize = '';
   String _selectedBrand = '';
   List<String> _selectedTags = [];
@@ -42,33 +44,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
   bool _isHandmade = false;
   bool _isNegotiable = true;
   bool _isShippingIncluded = false;
-  String _shippingMethod = 'Standard';
+  String _shippingMethod = 'STANDARD';
   int _processingTime = 1;
   bool _useCustomProcessingDays = false;
   String _generatedSku = '';
+  
+  // Upload progress tracking
+  bool _isUploading = false;
+  double _uploadProgress = 0.0;
+  int _currentImageIndex = 0;
+  int _totalImages = 0;
 
-  final List<String> _categories = [
-    'Clothing',
-    'Shoes',
-    'Accessories',
-    'Bags',
-    'Jewelry',
-    'Beauty',
-    'Home & Living',
-    'Electronics',
-    'Books',
-    'Sports',
-    'Toys',
-    'Other'
-  ];
+  List<Map<String, dynamic>> _categories = [];
+  final Map<String, int> _categoryNameToId = {};
 
   final List<String> _conditions = [
-    'New',
-    'Like New',
-    'Used/2nd hand',
-    'Good',
-    'Fair',
-    'Poor'
+    'NEW',
+    'LIKE_NEW',
+    'GOOD',
+    'FAIR',
+    'POOR',
   ];
 
   final List<String> _sizes = [
@@ -95,6 +90,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void initState() {
     super.initState();
     _generateSku();
+    _loadCategories();
   }
 
   @override
@@ -133,6 +129,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            onPressed: _fillMockData,
+            icon: const Icon(
+              Icons.auto_fix_high,
+              color: AppColors.primary,
+              size: 20,
+            ),
+            tooltip: 'Fill Mock Data',
+          ),
           TextButton(
             onPressed: _saveDraft,
             child: const Text(
@@ -390,7 +395,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ModalDropdown(
           label: 'Category',
           value: _selectedCategory.isEmpty ? null : _selectedCategory,
-          items: _categories,
+          items: _categories.map((cat) => cat['name'] as String).toList(),
           onChanged: (value) => setState(() => _selectedCategory = value ?? ''),
           icon: Icons.category_outlined,
           hint: 'Select category',
@@ -404,7 +409,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 label: 'Condition',
                 value: _selectedCondition,
                 items: _conditions,
-                onChanged: (value) => setState(() => _selectedCondition = value ?? 'New'),
+                onChanged: (value) => setState(() => _selectedCondition = value ?? 'NEW'),
                 icon: Icons.verified_outlined,
                 hint: 'Select condition',
                 itemSubtitles: {
@@ -632,8 +637,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ModalDropdown(
           label: 'Shipping Method',
           value: _shippingMethod,
-          items: ['Standard', 'Express', 'Next Day', 'Collection Only'],
-          onChanged: (value) => setState(() => _shippingMethod = value ?? 'Standard'),
+          items: ['STANDARD', 'EXPRESS', 'NEXT_DAY', 'COLLECTION_ONLY'],
+          onChanged: (value) => setState(() => _shippingMethod = value ?? 'STANDARD'),
           icon: Icons.local_shipping_outlined,
           hint: 'Select shipping method',
         ),
@@ -922,6 +927,100 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
   }
 
+  void _fillMockData() {
+    setState(() {
+      // Basic product information
+      _titleController.text = 'Premium Cotton T-Shirt - Summer Collection';
+      _descriptionController.text = 'High-quality 100% organic cotton t-shirt perfect for summer. Soft, breathable, and comfortable. Available in multiple colors and sizes. Perfect for casual wear or layering. Machine washable and colorfast.';
+      _priceController.text = '29.99';
+      _originalPriceController.text = '39.99';
+      _quantityController.text = '100';
+      _weightController.text = '0.2';
+      _dimensionsController.text = 'Length: 70cm, Chest: 50cm, Sleeve: 20cm';
+      _brandController.text = 'EcoWear';
+      _deliveryTimeController.text = '3 Business days';
+      
+      // Product attributes
+      _selectedCategory = 'Women > Clothing > Tops > T-Shirts';
+      _selectedCondition = 'NEW';
+      _selectedSize = 'M';
+      _selectedBrand = 'EcoWear';
+      
+      // Tags
+      _selectedTags = ['Sustainable', 'Affordable', 'Cottagecore'];
+      _customTagsController.text = 'organic, cotton, summer, casual';
+      
+      // Special features
+      _isVintage = false;
+      _isSustainable = true;
+      _isHandmade = false;
+      _isNegotiable = true;
+      _isShippingIncluded = false;
+      _shippingMethod = 'STANDARD';
+      _processingTime = 1;
+      _useCustomProcessingDays = false;
+      
+      // Generate SKU
+      _generatedSku = 'EW-COTTON-TS-M-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎯 Mock data filled! Ready for testing.'),
+        backgroundColor: AppColors.success,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Widget _buildSimpleProgressDialog() {
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: AlertDialog(
+        contentPadding: const EdgeInsets.all(20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _uploadProgress == 0.0 
+                ? 'Preparing upload...'
+                : 'Uploading ${_totalImages} image${_totalImages > 1 ? 's' : ''}...',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _uploadProgress == 0.0 
+                ? 'Initializing...'
+                : '${(_uploadProgress * 100).toInt()}% complete',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (_uploadProgress > 0.0) ...[
+              const SizedBox(height: 12),
+              LinearProgressIndicator(
+                value: _uploadProgress,
+                backgroundColor: AppColors.textSecondary.withOpacity(0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   void _saveDraft() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -956,13 +1055,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
       return;
     }
 
-    // Show loading dialog
+    // Initialize upload progress
+    setState(() {
+      _isUploading = true;
+      _uploadProgress = 0.0;
+      _currentImageIndex = 0;
+      _totalImages = _selectedImages.length;
+    });
+
+    // Show simple, stable progress dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => _buildSimpleProgressDialog(),
     );
 
     try {
@@ -974,73 +1079,128 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
       // Upload images first
       final List<Map<String, String>> imageUrls = [];
-      for (final imageFile in _selectedImages) {
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final imageFile = _selectedImages[i];
+        
+        // Update current image index and show initial progress
+        setState(() {
+          _currentImageIndex = i;
+          _uploadProgress = i / _selectedImages.length; // Show progress for completed images
+        });
+        
         try {
-          // For now, we'll use a placeholder URL since image upload needs backend support
-          // In a real implementation, you'd upload to a service like AWS S3
-          imageUrls.add({
-            'url': 'https://via.placeholder.com/400x400?text=Product+Image',
-            'thumbnail': 'https://via.placeholder.com/200x200?text=Thumb'
-          });
+          // Upload to AWS S3 with progress callback
+          final imageUrl = await AwsS3Service.uploadImage(
+            imageFile, 
+            folder: 'products',
+            onProgress: (progress) {
+              // Calculate overall progress: (completed images + current image progress) / total images
+              final overallProgress = (i + progress) / _selectedImages.length;
+              // Update more frequently for better user feedback (every 5%)
+              if ((overallProgress - _uploadProgress).abs() > 0.05 || overallProgress >= 1.0) {
+                if (mounted) {
+                  setState(() {
+                    _uploadProgress = overallProgress;
+                  });
+                }
+              }
+            },
+          );
+          
+          if (imageUrl != null) {
+            imageUrls.add({
+              'url': imageUrl,
+              'thumbnail': imageUrl // S3 URLs can be used directly
+            });
+            debugPrint('✅ Image uploaded to S3: $imageUrl');
+          } else {
+            debugPrint('❌ Failed to upload image: ${imageFile.path}');
+            // Continue with other images
+          }
         } catch (e) {
-          debugPrint('Error uploading image: $e');
+          debugPrint('❌ Error uploading image: $e');
           // Continue with other images
         }
+      }
+      
+      // Set progress to 100% when all images are uploaded
+      setState(() {
+        _uploadProgress = 1.0;
+      });
+      
+      // Check if at least one image was uploaded successfully
+      if (imageUrls.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+            _uploadProgress = 0.0;
+            _currentImageIndex = 0;
+            _totalImages = 0;
+          });
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to upload images. Please try again.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
       }
 
       // Prepare product data
       final productData = {
-        'name': _titleController.text.trim(),
+        'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'price': double.parse(_priceController.text),
-        'discountPrice': _originalPriceController.text.isNotEmpty 
+        'sellingPrice': double.parse(_priceController.text),
+        'originalPrice': _originalPriceController.text.isNotEmpty 
             ? double.parse(_originalPriceController.text) 
             : null,
         'imagesUrl': imageUrls,
         'category': _selectedCategory,
-        'subcategory': _selectedSize.isNotEmpty ? _selectedSize : null,
-        'stockQuantity': int.parse(_quantityController.text),
-        'tags': _selectedTags,
-        'specifications': {
-          'weight': _weightController.text.isNotEmpty ? _weightController.text : null,
-          'dimensions': _dimensionsController.text.isNotEmpty ? _dimensionsController.text : null,
-          'brand': _brandController.text.isNotEmpty ? _brandController.text : null,
-          'condition': _selectedCondition,
-          'isVintage': _isVintage,
-          'isSustainable': _isSustainable,
-          'isHandmade': _isHandmade,
-          'isNegotiable': _isNegotiable,
-          'shippingIncluded': _isShippingIncluded,
-          'shippingMethod': _shippingMethod,
-          'processingTime': _useCustomProcessingDays 
-              ? int.parse(_customProcessingDaysController.text)
-              : _processingTime,
-          'deliveryTime': _deliveryTimeController.text.isNotEmpty 
-              ? _deliveryTimeController.text 
-              : null,
-        },
+        'quantityAvailable': int.parse(_quantityController.text),
+        'selectedTags': _selectedTags,
+        'weight': _weightController.text.isNotEmpty ? _weightController.text : null,
+        'dimensions': _dimensionsController.text.isNotEmpty ? _dimensionsController.text : null,
+        'brand': _brandController.text.isNotEmpty ? _brandController.text : null,
+        'condition': _selectedCondition,
+        'isVintage': _isVintage,
+        'isSustainable': _isSustainable,
+        'isHandmade': _isHandmade,
+        'isNegotiable': _isNegotiable,
+        'isShippingIncluded': _isShippingIncluded,
+        'shippingMethod': _shippingMethod,
+        'processingTime': _useCustomProcessingDays 
+            ? int.parse(_customProcessingDaysController.text)
+            : _processingTime,
+        'deliveryTime': _deliveryTimeController.text.isNotEmpty 
+            ? _deliveryTimeController.text 
+            : null,
         'materials': _selectedTags.where((tag) => 
             ['Cotton', 'Leather', 'Silk', 'Wool', 'Denim', 'Linen'].contains(tag)
         ).toList(),
         'careInstructions': _isVintage ? 'Handle with care. Vintage item.' : null,
       };
 
+      // Map category name to ID (you may want to fetch this from backend)
+      int categoryId = _mapCategoryToId(_selectedCategory);
+      
       // Create product via GraphQL
       final result = await ProductService.createProduct(
         token: token,
-        name: productData['name'] as String,
+        name: productData['title'] as String,
         description: productData['description'] as String,
-        price: productData['price'] as double,
-        discount: productData['discountPrice'] as double?,
+        price: productData['sellingPrice'] as double,
+        category: categoryId,
+        size: _selectedSize.isNotEmpty ? _mapSizeToId(_selectedSize) : null,
         imagesUrl: imageUrls,
-        category: 1, // Default category ID - you may want to map this properly
-        brand: 1, // Default brand ID - you may want to map this properly
-        customBrand: _selectedBrand.isNotEmpty ? _selectedBrand : null,
-        size: 1, // Default size ID - you may want to map this properly
-        materials: 1, // Default materials ID - you may want to map this properly
-        color: 'Black', // Default color - you may want to add color selection
+        discount: 0.00,
         condition: _mapConditionToEnum(_selectedCondition),
-        style: 'CASUAL', // Default style - you may want to add style selection
+        style: _mapStyleToEnum('casual'), // Default style - you may want to add style selection
+        color: ['Black'], // Default color as array - you may want to add color selection
+        brand: null, // No brands in database, use customBrand instead
+        materials: null, // Materials not implemented in backend yet
+        customBrand: _selectedBrand.isNotEmpty ? _selectedBrand : null,
         isFeatured: false,
       );
 
@@ -1049,8 +1209,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
         final productProvider = context.read<EnhancedProductProvider>();
         await productProvider.loadProducts();
 
-        // Close loading dialog
+        // Close loading dialog and reset upload state
         if (mounted) {
+          setState(() {
+            _isUploading = false;
+            _uploadProgress = 0.0;
+            _currentImageIndex = 0;
+            _totalImages = 0;
+          });
           Navigator.pop(context); // Close loading dialog
           Navigator.pop(context); // Close add product screen
           
@@ -1067,8 +1233,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
       }
 
     } catch (e) {
-      // Close loading dialog
+      // Close loading dialog and reset upload state
       if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadProgress = 0.0;
+          _currentImageIndex = 0;
+          _totalImages = 0;
+        });
         Navigator.pop(context); // Close loading dialog
         
         String errorMessage = 'Failed to create product';
@@ -1097,6 +1269,45 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
   }
 
+  Future<void> _loadCategories() async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) return;
+
+      final authenticatedClient = GraphQLService.getAuthenticatedClient(token);
+      final QueryResult result = await authenticatedClient.query(
+        QueryOptions(
+          document: gql('''
+            query GetCategories {
+              categories {
+                id
+                name
+              }
+            }
+          '''),
+        ),
+      );
+
+      if (result.hasException) {
+        debugPrint('❌ Error loading categories: ${result.exception}');
+        return;
+      }
+
+      final categories = result.data?['categories'] as List? ?? [];
+      setState(() {
+        _categories = categories.cast<Map<String, dynamic>>();
+        // Create mapping for easy lookup
+        for (final category in _categories) {
+          _categoryNameToId[category['name']] = int.parse(category['id'].toString());
+        }
+      });
+
+      debugPrint('✅ Loaded ${_categories.length} categories');
+    } catch (e) {
+      debugPrint('❌ Error loading categories: $e');
+    }
+  }
+
   void _addCustomTags(String value) {
     if (value.trim().isNotEmpty) {
       final tags = value.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
@@ -1112,19 +1323,114 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   String _mapConditionToEnum(String condition) {
-    switch (condition.toLowerCase()) {
-      case 'new':
+    // Map frontend condition values to backend enum values
+    switch (condition.toUpperCase()) {
+      case 'NEW':
         return 'BRAND_NEW_WITH_TAGS';
-      case 'like new':
+      case 'LIKE_NEW':
         return 'EXCELLENT_CONDITION';
-      case 'used/2nd hand':
-      case 'good':
+      case 'GOOD':
         return 'GOOD_CONDITION';
-      case 'fair':
-      case 'poor':
+      case 'FAIR':
+      case 'POOR':
         return 'HEAVILY_USED';
       default:
-        return 'GOOD_CONDITION';
+        return 'BRAND_NEW_WITH_TAGS';
+    }
+  }
+
+  String _mapStyleToEnum(String style) {
+    switch (style.toLowerCase()) {
+      case 'casual':
+        return 'CASUAL';
+      case 'formal':
+        return 'FORMAL_WEAR';
+      case 'party':
+        return 'PARTY_OUTFIT';
+      case 'work':
+        return 'WORKWEAR';
+      case 'workout':
+        return 'WORKOUT';
+      case 'vintage':
+        return 'VINTAGE';
+      case 'minimalist':
+        return 'MINIMALIST';
+      case 'boho':
+        return 'BOHO';
+      case 'grunge':
+        return 'GRUNGE';
+      case 'streetwear':
+        return 'STREETWEAR';
+      case 'preppy':
+        return 'PREPPY';
+      case 'cottagecore':
+        return 'COTTAGECORE';
+      case 'y2k':
+        return 'Y2K';
+      default:
+        return 'CASUAL';
+    }
+  }
+
+  int _mapCategoryToId(String categoryName) {
+    // Use the actual category ID from the API
+    final categoryId = _categoryNameToId[categoryName];
+    if (categoryId != null) {
+      return categoryId;
+    }
+    
+    // Fallback mapping for common categories
+    switch (categoryName.toLowerCase()) {
+      case 'electronics':
+        return 673;
+      case 'fashion':
+        return 675;
+      case 'men':
+        return 1;
+      case 'women':
+        return 179;
+      case 'boys':
+        return 434;
+      case 'girls':
+        return 539;
+      case 'toddlers':
+        return 672;
+      default:
+        return 674; // Default to General category
+    }
+  }
+
+  String _mapShippingMethodToEnum(String shippingMethod) {
+    // Shipping method values are already in the correct enum format
+    return shippingMethod;
+  }
+
+  int? _mapSizeToId(String sizeName) {
+    // Map common size names to backend IDs
+    switch (sizeName.toUpperCase()) {
+      case 'XS': return 2;  // ID: 2
+      case 'S': return 3;   // ID: 3
+      case 'M': return 4;   // ID: 4
+      case 'L': return 5;   // ID: 5
+      case 'XL': return 6;  // ID: 6
+      case 'XXL': return 7; // ID: 7 (2XL)
+      case 'XXXL': return 8; // ID: 8 (3XL)
+      case 'UK 4': return 34; // ID: 34
+      case 'UK 6': return 35; // ID: 35
+      case 'UK 8': return 36; // ID: 36
+      case 'UK 10': return 37; // ID: 37
+      case 'UK 12': return 38; // ID: 38
+      case 'UK 14': return 39; // ID: 39
+      case 'UK 16': return 40; // ID: 40
+      case 'US 0': return 91; // ID: 91 (15)
+      case 'US 2': return 92; // ID: 92 (16)
+      case 'US 4': return 93; // ID: 93 (17)
+      case 'US 6': return 94; // ID: 94 (18)
+      case 'US 8': return 95; // ID: 95 (19)
+      case 'US 10': return 96; // ID: 96 (20)
+      case 'US 12': return 97; // ID: 97 (21)
+      case 'US 14': return 98; // ID: 98 (22)
+      default: return null; // Unknown size
     }
   }
 

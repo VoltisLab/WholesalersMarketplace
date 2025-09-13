@@ -61,6 +61,25 @@ class MessagingProvider extends ChangeNotifier {
     }
   }
 
+  // Load the last conversation automatically
+  Future<void> loadLastConversation() async {
+    await loadConversations();
+    
+    if (_conversations.isNotEmpty) {
+      // Sort conversations by timestamp (most recent first)
+      _conversations.sort((a, b) {
+        final aTime = a['timestamp'] as DateTime? ?? DateTime(1970);
+        final bTime = b['timestamp'] as DateTime? ?? DateTime(1970);
+        return bTime.compareTo(aTime);
+      });
+      
+      // Load the most recent conversation
+      final lastConversation = _conversations.first;
+      debugPrint('🔄 Auto-loading last conversation: ${lastConversation['id']}');
+      await loadMessages(lastConversation['id']);
+    }
+  }
+
   // Load messages for a specific conversation
   Future<void> loadMessages(String conversationId) async {
     setLoading(true);

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
 class ImageUploadService {
-  static const String _baseUrl = 'http://127.0.0.1:8000';
+  static const String _baseUrl = 'http://localhost:8000';
   
   /// Upload an image file to the server
   /// Returns the URL of the uploaded image if successful, null otherwise

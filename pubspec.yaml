@@ -1,7 +1,7 @@
 name: wholesalers_marketplace
 description: A B2B wholesalers marketplace Flutter application
 publish_to: 'none'
-version: 3.0.0+3
+version: 3.0.0+4
 
 environment:
   sdk: ^3.9.0
@@ -30,6 +30,9 @@ dependencies:
   lottie: ^3.1.2
   share_plus: ^7.2.2
   graphql_flutter: ^5.2.1
+  dio: ^5.3.2
+  flutter_dotenv: ^5.1.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -43,3 +46,4 @@ flutter:
     - assets/icons/
     - assets/logos/
     - assets/animations/
+    - .env

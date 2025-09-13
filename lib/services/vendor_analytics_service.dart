@@ -26,16 +26,33 @@ class VendorAnalyticsService {
       if (result.hasException) {
         final exception = result.exception!;
         
+        // Detailed GraphQL error handling
         if (exception.graphqlErrors.isNotEmpty) {
           final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
+          debugPrint('🚨 VendorAnalytics GraphQL Error Details:');
+          debugPrint('   Message: ${graphqlError.message}');
+          debugPrint('   Locations: ${graphqlError.locations}');
+          debugPrint('   Path: ${graphqlError.path}');
+          debugPrint('   Extensions: ${graphqlError.extensions}');
+          debugPrint('   Query: vendorAnalytics (this endpoint may not exist in backend)');
+          throw createError(ErrorCode.graphqlQueryError, details: 'VendorAnalytics GraphQL Error: ${graphqlError.message} (Path: ${graphqlError.path}) - This endpoint may not exist in backend');
         }
         
+        // Detailed network error handling
         if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Vendor analytics endpoint unreachable');
+          final linkException = exception.linkException!;
+          debugPrint('🚨 VendorAnalytics Network Error Details:');
+          debugPrint('   Type: ${linkException.runtimeType}');
+          debugPrint('   Message: ${linkException.toString()}');
+          debugPrint('   Query: vendorAnalytics (this endpoint may not exist in backend)');
+          throw createError(ErrorCode.networkConnectionFailed, details: 'VendorAnalytics Network Error: ${linkException.runtimeType} - ${linkException.toString()}');
         }
         
-        throw createError(ErrorCode.unknown, details: exception.toString());
+        debugPrint('🚨 VendorAnalytics Unknown Exception Details:');
+        debugPrint('   Type: ${exception.runtimeType}');
+        debugPrint('   Message: ${exception.toString()}');
+        debugPrint('   Query: vendorAnalytics (this endpoint may not exist in backend)');
+        throw createError(ErrorCode.unknown, details: 'VendorAnalytics Unknown Error: ${exception.runtimeType} - ${exception.toString()}');
       }
 
       final analytics = result.data?['vendorAnalytics'];

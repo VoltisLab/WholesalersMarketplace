@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'constants/app_colors.dart';
 import 'providers/auth_provider.dart';
@@ -46,6 +48,7 @@ import 'screens/about_screen.dart';
 import 'screens/vendor_dashboard_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/modern_profile_screen.dart';
+import 'screens/my_shop_screen.dart';
 import 'screens/enhanced_vendor_list_screen.dart';
 import 'screens/live_chat_screen.dart';
 import 'screens/email_support_screen.dart';
@@ -59,7 +62,12 @@ import 'screens/two_factor_auth_screen.dart';
 import 'screens/active_sessions_screen.dart';
 import 'models/product_model.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+  
   runApp(const MyApp());
 }
 
@@ -119,7 +127,7 @@ class MyApp extends StatelessWidget {
             foregroundColor: AppColors.textPrimary,
             elevation: 0,
             surfaceTintColor: Colors.transparent,
-            centerTitle: Platform.isIOS,
+            centerTitle: kIsWeb ? false : Platform.isIOS,
             systemOverlayStyle: const SystemUiOverlayStyle(
               statusBarColor: Colors.transparent,
               statusBarIconBrightness: Brightness.dark,
@@ -138,8 +146,8 @@ class MyApp extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              elevation: Platform.isIOS ? 0 : 2,
-              shadowColor: Platform.isIOS ? Colors.transparent : Colors.black26,
+              elevation: kIsWeb ? 0 : (Platform.isIOS ? 0 : 2),
+              shadowColor: kIsWeb ? Colors.transparent : (Platform.isIOS ? Colors.transparent : Colors.black26),
             ),
           ),
           cardTheme: CardThemeData(
@@ -201,6 +209,7 @@ class MyApp extends StatelessWidget {
           '/vendors': (context) => const EnhancedVendorListScreen(),
           '/cart': (context) => const CartScreen(),
           '/profile': (context) => const ModernProfileScreen(),
+          '/my-shop': (context) => const MyShopScreen(),
           '/supplier-dashboard': (context) => const VendorDashboardScreen(),
           '/add-product': (context) => const AddProductScreen(),
           '/sign-in': (context) => const SignInScreen(),

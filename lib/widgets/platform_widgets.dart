@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
@@ -20,7 +21,7 @@ class PlatformWidgets {
             valueColor: AlwaysStoppedAnimation<Color>(
               color ?? AppColors.primary,
             ),
-            strokeWidth: Platform.isIOS ? 2.0 : 4.0,
+            strokeWidth: kIsWeb ? 2.0 : (Platform.isIOS ? 2.0 : 4.0),
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
@@ -198,7 +199,7 @@ class PlatformWidgets {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          elevation: Platform.isIOS ? 0 : 2,
+          elevation: kIsWeb ? 0 : (Platform.isIOS ? 0 : 2),
         ),
         child: isLoading
             ? const SizedBox(

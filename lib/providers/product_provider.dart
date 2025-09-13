@@ -73,7 +73,7 @@ class ProductProvider extends ChangeNotifier {
       _featuredProducts = featuredData.map((json) => ProductModel.fromJson(json)).toList();
       
       // Load categories
-      final categoriesData = await ProductService.getProductCategories();
+      final categoriesData = await ProductService.getProductCategories(token: token);
       _categories = ['All', ...categoriesData.map((cat) => cat['name'] as String)];
       
       setLoading(false);

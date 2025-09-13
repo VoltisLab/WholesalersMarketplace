@@ -171,7 +171,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
         minPrice: null,
         maxPrice: null,
         sortBy: 'relevance',
-        first: 50,
       );
 
       setState(() {

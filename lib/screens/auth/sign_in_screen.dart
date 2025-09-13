@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import 'sign_up_screen.dart';
+import '../test_aws_upload_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -322,6 +323,33 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     child: const Text(
                       'Clear Tokens (Debug)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Debug: Test AWS S3 Upload Button
+                SizedBox(
+                  height: 40,
+                  child: TextButton(
+                    onPressed: _isLoading ? null : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TestAwsUploadScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                    child: const Text(
+                      'Test AWS S3 Upload (Debug)',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

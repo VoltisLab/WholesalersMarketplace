@@ -52,4 +52,4 @@ ios/build/
 
 # Temporary files
 temp_*
-graphql_schema.graphql
+graphql_schema.graphql.env

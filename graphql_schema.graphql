@@ -1,0 +1,244 @@
+# GraphQL Schema for Wholesalers Marketplace API
+# Endpoint: https://uat-api.vmodel.app/wms/graphql/
+
+# Root Types
+type Query {
+  # Get current authenticated user profile
+  viewMe: User
+  
+  # Introspection
+  __typename: String
+}
+
+type Mutation {
+  # User Registration
+  register(
+    firstName: String!
+    lastName: String!
+    password1: String!
+    password2: String!
+    email: String!
+    accountType: AccountType!
+    termsAccepted: Boolean!
+  ): RegisterPayload
+  
+  # User Authentication
+  login(
+    email: String!
+    password: String!
+  ): LoginPayload
+  
+  # User Logout
+  logout(refreshToken: String!): LogoutMutation
+}
+
+# User Types
+type User {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  accountType: AccountType
+}
+
+# Account Types Enum
+enum AccountType {
+  CUSTOMER
+  VENDOR
+  RESELLER
+}
+
+# Authentication Payloads
+type RegisterPayload {
+  success: Boolean!
+  token: String
+  refreshToken: String
+  errors: RegisterErrors
+}
+
+type LoginPayload {
+  token: String!
+  refreshToken: String!
+  user: UserInfo
+}
+
+type UserInfo {
+  accountType: AccountType
+}
+
+type LogoutMutation {
+  __typename: String
+  message: String
+}
+
+# Error Types
+type RegisterErrors {
+  # Field-specific errors
+  email: [String]
+  password1: [String]
+  password2: [String]
+  firstName: [String]
+  lastName: [String]
+  accountType: [String]
+  termsAccepted: [String]
+  
+  # Non-field errors
+  __all__: [String]
+}
+
+# Example Queries and Mutations
+
+"""
+Example Register Mutation:
+mutation Register {
+  register(
+    firstName: "Jose"
+    lastName: "Mane"
+    password1: "fakePassword"
+    password2: "fakePassword"
+    email: "jose@gmail.com"
+    accountType: CUSTOMER
+    termsAccepted: true
+  ) {
+    token
+    refreshToken
+    success
+    errors {
+      email
+      password2
+    }
+  }
+}
+"""
+
+"""
+Example Login Mutation:
+mutation Login {
+  login(
+    password: "fakePassword"
+    email: "jose@gmail.com"
+  ) {
+    token
+    refreshToken
+    user {
+      accountType
+    }
+  }
+}
+"""
+
+"""
+Example ViewMe Query:
+query ViewMe {
+  viewMe {
+    id
+    email
+    firstName
+    lastName
+    accountType
+  }
+}
+"""
+
+"""
+Example Logout Mutation:
+mutation Logout {
+  logout(refreshToken: "your_refresh_token_here") {
+    __typename
+    message
+  }
+}
+"""
+
+# Error Handling Examples
+
+"""
+Registration Error Response Example:
+{
+  "data": {
+    "register": {
+      "success": false,
+      "errors": {
+        "password2": ["The password is too similar to the email."]
+      },
+      "token": null
+    }
+  }
+}
+"""
+
+"""
+Login Success Response Example:
+{
+  "data": {
+    "login": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "a160ee812c0e6cf0237e0d2ca35aaa53368141ca",
+      "user": {
+        "accountType": "CUSTOMER"
+      }
+    }
+  }
+}
+"""
+
+"""
+ViewMe Success Response Example:
+{
+  "data": {
+    "viewMe": {
+      "id": "1",
+      "email": "jose@gmail.com",
+      "firstName": "mimiJose",
+      "lastName": "mimi",
+      "accountType": "CUSTOMER"
+    }
+  }
+}
+"""
+
+"""
+Logout Error Response Example:
+{
+  "errors": [
+    {
+      "message": "You do not have permission to perform this action",
+      "locations": [{"line": 1, "column": 12}],
+      "path": ["logout"]
+    }
+  ],
+  "data": {
+    "logout": null
+  }
+}
+"""
+
+# Authentication Headers
+"""
+For authenticated requests (ViewMe, Logout):
+Headers:
+{
+  "Authorization": "Bearer YOUR_JWT_TOKEN_HERE",
+  "Content-Type": "application/json"
+}
+"""
+
+# API Validation Rules
+"""
+Password Validation:
+- Must not be too similar to email
+- Must meet minimum security requirements
+
+Email Validation:
+- Must be valid email format
+- Must be unique for registration
+
+Terms Acceptance:
+- Must be true for registration
+
+Account Types:
+- CUSTOMER: Regular buyer account
+- VENDOR: Seller account with business features  
+- RESELLER: Wholesale buyer account
+"""
+

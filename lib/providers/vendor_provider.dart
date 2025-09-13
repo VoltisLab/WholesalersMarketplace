@@ -35,9 +35,9 @@ class VendorProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Load vendors from backend
-      final vendorsData = await ProductService.getAllVendors();
-      _vendors = vendorsData.map((json) => VendorModel.fromJson(json)).toList();
+      // Note: Backend doesn't have getAllVendors query
+      // For now, initialize with empty list until individual vendor queries are implemented
+      _vendors = [];
       
       setLoading(false);
     } catch (e) {

@@ -4,7 +4,7 @@ import 'error_service.dart';
 import 'token_service.dart';
 
 class GraphQLService {
-  static const String _endpoint = 'http://127.0.0.1:8000/graphql/';
+  static const String _endpoint = 'http://localhost:8000/wms/graphql/';
   
   static GraphQLClient get client {
     final HttpLink httpLink = HttpLink(
@@ -35,6 +35,31 @@ class GraphQLService {
       link: link,
       cache: GraphQLCache(store: InMemoryStore()),
     );
+  }
+
+  /// Helper method to log detailed GraphQL errors
+  static void logDetailedError(String operation, dynamic exception) {
+    debugPrint('🚨 $operation Error Details:');
+    debugPrint('   Exception Type: ${exception.runtimeType}');
+    debugPrint('   Exception: ${exception.toString()}');
+    
+    if (exception is OperationException) {
+      debugPrint('   GraphQL Errors: ${exception.graphqlErrors.length}');
+      for (int i = 0; i < exception.graphqlErrors.length; i++) {
+        final error = exception.graphqlErrors[i];
+        debugPrint('     Error $i:');
+        debugPrint('       Message: ${error.message}');
+        debugPrint('       Locations: ${error.locations}');
+        debugPrint('       Path: ${error.path}');
+        debugPrint('       Extensions: ${error.extensions}');
+      }
+      
+      if (exception.linkException != null) {
+        debugPrint('   Link Exception:');
+        debugPrint('     Type: ${exception.linkException.runtimeType}');
+        debugPrint('     Message: ${exception.linkException.toString()}');
+      }
+    }
   }
 }
 
@@ -182,6 +207,98 @@ class GraphQLQueries {
       terminateAllOtherSessions {
         success
         message
+      }
+    }
+  ''';
+
+  // Shop Management Queries
+  static const String getShopData = '''
+    mutation GetShopData(\$sellerId: ID) {
+      getShopData(sellerId: \$sellerId) {
+        success
+        message
+        shopStats {
+          totalProducts
+          totalOrders
+          totalRevenue
+          averageRating
+          totalReviews
+          productsSold
+        }
+        products {
+          id
+          name
+          description
+          price
+          category {
+            id
+            name
+          }
+          brand {
+            id
+            name
+          }
+          size {
+            id
+            name
+          }
+          seller {
+            id
+            firstName
+            lastName
+          }
+          materials {
+            id
+            name
+          }
+          userLiked
+          totalSales
+          totalRevenue
+          averageRating
+          reviewCount
+        }
+      }
+    }
+  ''';
+
+  static const String updateShopSettings = '''
+    mutation UpdateShopSettings(
+      \$shopName: String,
+      \$shopDescription: String,
+      \$shopLogoUrl: String,
+      \$shopBannerUrl: String,
+      \$shopContactEmail: String,
+      \$shopContactPhone: String,
+      \$shopAddress: String,
+      \$shopCity: String,
+      \$shopCountry: String,
+      \$shopPostalCode: String
+    ) {
+      updateShopSettings(
+        shopName: \$shopName,
+        shopDescription: \$shopDescription,
+        shopLogoUrl: \$shopLogoUrl,
+        shopBannerUrl: \$shopBannerUrl,
+        shopContactEmail: \$shopContactEmail,
+        shopContactPhone: \$shopContactPhone,
+        shopAddress: \$shopAddress,
+        shopCity: \$shopCity,
+        shopCountry: \$shopCountry,
+        shopPostalCode: \$shopPostalCode
+      ) {
+        success
+        message
+        shopData {
+          id
+          firstName
+          lastName
+          email
+          phoneNumber
+          streetAddress
+          city
+          country
+          postalCode
+        }
       }
     }
   ''';
@@ -727,51 +844,40 @@ class GraphQLQueries {
 
   // Product Management Queries
   static const String allProducts = '''
-    query AllProducts(\$first: Int, \$after: String, \$category: String, \$search: String, \$minPrice: Float, \$maxPrice: Float, \$sortBy: String) {
+    query AllProducts(\$filters: ProductFiltersInput, \$search: String, \$sort: SortEnum, \$pageCount: Int, \$pageNumber: Int) {
       allProducts(
-        first: \$first,
-        after: \$after,
-        category: \$category,
+        filters: \$filters,
         search: \$search,
-        minPrice: \$minPrice,
-        maxPrice: \$maxPrice,
-        sortBy: \$sortBy
+        sort: \$sort,
+        pageCount: \$pageCount,
+        pageNumber: \$pageNumber
       ) {
-        edges {
-          node {
-            id
-            name
-            description
-            price
-            discountPrice
-            imagesUrl
-            category
-            subcategory
-            stockQuantity
-            rating
-            reviewCount
-            tags
-            isFeatured
-            isActive
-            createdAt
-            updatedAt
-            vendor {
-              id
-              firstName
-              lastName
-              businessName
-              rating
-              reviewCount
-              isVerified
-            }
-          }
+        id
+        name
+        description
+        price
+        category {
+          id
+          name
         }
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-          startCursor
-          endCursor
+        brand {
+          id
+          name
         }
+        size {
+          id
+          name
+        }
+        seller {
+          id
+          firstName
+          lastName
+        }
+        materials {
+          id
+          name
+        }
+        userLiked
       }
     }
   ''';
@@ -843,7 +949,7 @@ class GraphQLQueries {
 
   static const String productCategories = '''
     query ProductCategories {
-      productCategories {
+      categories {
         id
         name
         description
@@ -860,32 +966,32 @@ class GraphQLQueries {
       \$name: String!,
       \$description: String!,
       \$price: Float!,
-      \$discount: Float,
-      \$imagesUrl: [String!],
-      \$category: Int,
-      \$brand: Int,
-      \$customBrand: String,
+      \$category: Int!,
       \$size: Int,
-      \$materials: Int,
-      \$color: String,
+      \$imagesUrl: [ImagesInputType!]!,
+      \$discount: Float,
       \$condition: ConditionEnum,
       \$style: StyleEnum,
+      \$color: [String],
+      \$brand: Int,
+      \$materials: [Int],
+      \$customBrand: String,
       \$isFeatured: Boolean
     ) {
       createProduct(
         name: \$name,
         description: \$description,
         price: \$price,
-        discount: \$discount,
-        imagesUrl: \$imagesUrl,
         category: \$category,
-        brand: \$brand,
-        customBrand: \$customBrand,
         size: \$size,
-        materials: \$materials,
-        color: \$color,
+        imagesUrl: \$imagesUrl,
+        discount: \$discount,
         condition: \$condition,
         style: \$style,
+        color: \$color,
+        brand: \$brand,
+        materials: \$materials,
+        customBrand: \$customBrand,
         isFeatured: \$isFeatured
       ) {
         success
@@ -895,13 +1001,7 @@ class GraphQLQueries {
           name
           description
           price
-          discount
-          imagesUrl
           category {
-            id
-            name
-          }
-          brand {
             id
             name
           }
@@ -909,15 +1009,20 @@ class GraphQLQueries {
             id
             name
           }
+          brand {
+            id
+            name
+          }
+          seller {
+            id
+            firstName
+            lastName
+          }
           materials {
             id
             name
           }
-          color
-          condition
-          style
-          isFeatured
-          createdAt
+          userLiked
         }
       }
     }
@@ -990,37 +1095,21 @@ class GraphQLQueries {
   ''';
 
   // Vendor Management Queries
-  static const String allVendors = '''
-    query AllVendors(\$first: Int, \$after: String, \$search: String, \$category: String, \$isVerified: Boolean) {
-      allVendors(
-        first: \$first,
-        after: \$after,
-        search: \$search,
-        category: \$category,
-        isVerified: \$isVerified
-      ) {
-        edges {
-          node {
-            id
-            businessName
-            description
-            email
-            phone
-            address
-            rating
-            reviewCount
-            isVerified
-            categories
-            createdAt
-            logo
-          }
-        }
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-          startCursor
-          endCursor
-        }
+  static const String vendorProfileById = '''
+    query VendorProfileById(\$id: ID!) {
+      vendorProfileById(id: \$id) {
+        id
+        businessName
+        description
+        email
+        phone
+        address
+        rating
+        reviewCount
+        isVerified
+        categories
+        createdAt
+        logo
       }
     }
   ''';

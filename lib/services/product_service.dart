@@ -11,23 +11,25 @@ class ProductService {
     double? minPrice,
     double? maxPrice,
     String? sortBy,
-    int? first,
-    String? after,
   }) async {
     try {
       debugPrint('🔄 Fetching products...');
+      
+      // Build filters object for backend
+      final Map<String, dynamic> filters = {};
+      if (category != null) filters['category'] = int.tryParse(category);
+      if (minPrice != null) filters['min_price'] = minPrice;
+      if (maxPrice != null) filters['max_price'] = maxPrice;
       
       final QueryResult result = await GraphQLService.client.query(
         QueryOptions(
           document: gql(GraphQLQueries.allProducts),
           variables: {
-            'first': first ?? 20,
-            'after': after,
-            'category': category,
+            'filters': filters.isNotEmpty ? filters : null,
             'search': search,
-            'minPrice': minPrice,
-            'maxPrice': maxPrice,
-            'sortBy': sortBy,
+            'sort': sortBy, // Backend expects 'sort' not 'sortBy'
+            'pageCount': 50,
+            'pageNumber': 1,
           },
         ),
       );
@@ -35,23 +37,36 @@ class ProductService {
       if (result.hasException) {
         final exception = result.exception!;
         
+        // Detailed GraphQL error handling
         if (exception.graphqlErrors.isNotEmpty) {
           final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
+          debugPrint('🚨 GraphQL Error Details:');
+          debugPrint('   Message: ${graphqlError.message}');
+          debugPrint('   Locations: ${graphqlError.locations}');
+          debugPrint('   Path: ${graphqlError.path}');
+          debugPrint('   Extensions: ${graphqlError.extensions}');
+          throw createError(ErrorCode.graphqlQueryError, details: 'GraphQL Error: ${graphqlError.message} (Path: ${graphqlError.path})');
         }
         
+        // Detailed network error handling
         if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Products endpoint unreachable');
+          final linkException = exception.linkException!;
+          debugPrint('🚨 Network Error Details:');
+          debugPrint('   Type: ${linkException.runtimeType}');
+          debugPrint('   Message: ${linkException.toString()}');
+          throw createError(ErrorCode.networkConnectionFailed, details: 'Network Error: ${linkException.runtimeType} - ${linkException.toString()}');
         }
         
-        throw createError(ErrorCode.unknown, details: exception.toString());
+        debugPrint('🚨 Unknown Exception Details:');
+        debugPrint('   Type: ${exception.runtimeType}');
+        debugPrint('   Message: ${exception.toString()}');
+        throw createError(ErrorCode.unknown, details: 'Unknown Error: ${exception.runtimeType} - ${exception.toString()}');
       }
 
-      final edges = result.data?['allProducts']?['edges'] as List? ?? [];
-      final products = edges.map((edge) => edge['node'] as Map<String, dynamic>).toList();
+      final products = result.data?['allProducts'] as List? ?? [];
       
       debugPrint('✅ Fetched ${products.length} products');
-      return products;
+      return products.cast<Map<String, dynamic>>();
       
     } catch (e) {
       if (e is AppError) {
@@ -160,11 +175,16 @@ class ProductService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getProductCategories() async {
+  static Future<List<Map<String, dynamic>>> getProductCategories({String? token}) async {
     try {
       debugPrint('🔄 Fetching product categories...');
       
-      final QueryResult result = await GraphQLService.client.query(
+      // Use authenticated client if token is provided, otherwise use unauthenticated client
+      final GraphQLClient client = token != null 
+          ? GraphQLService.getAuthenticatedClient(token)
+          : GraphQLService.client;
+      
+      final QueryResult result = await client.query(
         QueryOptions(
           document: gql(GraphQLQueries.productCategories),
         ),
@@ -173,16 +193,30 @@ class ProductService {
       if (result.hasException) {
         final exception = result.exception!;
         
+        // Detailed GraphQL error handling
         if (exception.graphqlErrors.isNotEmpty) {
           final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
+          debugPrint('🚨 Categories GraphQL Error Details:');
+          debugPrint('   Message: ${graphqlError.message}');
+          debugPrint('   Locations: ${graphqlError.locations}');
+          debugPrint('   Path: ${graphqlError.path}');
+          debugPrint('   Extensions: ${graphqlError.extensions}');
+          throw createError(ErrorCode.graphqlQueryError, details: 'Categories GraphQL Error: ${graphqlError.message} (Path: ${graphqlError.path})');
         }
         
+        // Detailed network error handling
         if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Categories endpoint unreachable');
+          final linkException = exception.linkException!;
+          debugPrint('🚨 Categories Network Error Details:');
+          debugPrint('   Type: ${linkException.runtimeType}');
+          debugPrint('   Message: ${linkException.toString()}');
+          throw createError(ErrorCode.networkConnectionFailed, details: 'Categories Network Error: ${linkException.runtimeType} - ${linkException.toString()}');
         }
         
-        throw createError(ErrorCode.unknown, details: exception.toString());
+        debugPrint('🚨 Categories Unknown Exception Details:');
+        debugPrint('   Type: ${exception.runtimeType}');
+        debugPrint('   Message: ${exception.toString()}');
+        throw createError(ErrorCode.unknown, details: 'Categories Unknown Error: ${exception.runtimeType} - ${exception.toString()}');
       }
 
       final categories = result.data?['productCategories'] as List? ?? [];
@@ -208,16 +242,16 @@ class ProductService {
     required String name,
     required String description,
     required double price,
-    double? discount,
-    List<Map<String, String>>? imagesUrl,
-    int? category,
-    int? brand,
-    String? customBrand,
+    required int category,
     int? size,
-    int? materials,
-    String? color,
+    required List<Map<String, String>> imagesUrl,
+    double? discount,
     String? condition,
     String? style,
+    List<String>? color,
+    int? brand,
+    List<int>? materials,
+    String? customBrand,
     bool? isFeatured,
   }) async {
     try {
@@ -232,16 +266,16 @@ class ProductService {
             'name': name,
             'description': description,
             'price': price,
-            'discount': discount,
-            'imagesUrl': imagesUrl,
             'category': category,
-            'brand': brand,
-            'customBrand': customBrand,
             'size': size,
-            'materials': materials,
-            'color': color,
+            'imagesUrl': imagesUrl,
+            'discount': discount,
             'condition': condition,
             'style': style,
+            'color': color,
+            'brand': brand,
+            'materials': materials,
+            'customBrand': customBrand,
             'isFeatured': isFeatured,
           },
         ),
@@ -250,16 +284,33 @@ class ProductService {
       if (result.hasException) {
         final exception = result.exception!;
         
+        // Detailed GraphQL error handling
         if (exception.graphqlErrors.isNotEmpty) {
           final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlMutationError, details: graphqlError.message);
+          debugPrint('🚨 CreateProduct GraphQL Error Details:');
+          debugPrint('   Message: ${graphqlError.message}');
+          debugPrint('   Locations: ${graphqlError.locations}');
+          debugPrint('   Path: ${graphqlError.path}');
+          debugPrint('   Extensions: ${graphqlError.extensions}');
+          debugPrint('   Variables sent: {name: $name, category: $category, imagesUrl: $imagesUrl}');
+          throw createError(ErrorCode.graphqlMutationError, details: 'CreateProduct GraphQL Error: ${graphqlError.message} (Path: ${graphqlError.path})');
         }
         
+        // Detailed network error handling
         if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Create product endpoint unreachable');
+          final linkException = exception.linkException!;
+          debugPrint('🚨 CreateProduct Network Error Details:');
+          debugPrint('   Type: ${linkException.runtimeType}');
+          debugPrint('   Message: ${linkException.toString()}');
+          debugPrint('   Variables sent: {name: $name, category: $category, imagesUrl: $imagesUrl}');
+          throw createError(ErrorCode.networkConnectionFailed, details: 'CreateProduct Network Error: ${linkException.runtimeType} - ${linkException.toString()}');
         }
         
-        throw createError(ErrorCode.unknown, details: exception.toString());
+        debugPrint('🚨 CreateProduct Unknown Exception Details:');
+        debugPrint('   Type: ${exception.runtimeType}');
+        debugPrint('   Message: ${exception.toString()}');
+        debugPrint('   Variables sent: {name: $name, category: $category, imagesUrl: $imagesUrl}');
+        throw createError(ErrorCode.unknown, details: 'CreateProduct Unknown Error: ${exception.runtimeType} - ${exception.toString()}');
       }
 
       final createData = result.data?['createProduct'];
@@ -433,47 +484,18 @@ class ProductService {
     double? minPrice,
     double? maxPrice,
     String? sortBy,
-    int? first,
-    String? after,
   }) async {
     try {
       debugPrint('🔄 Searching products: $query');
       
-      final QueryResult result = await GraphQLService.client.query(
-        QueryOptions(
-          document: gql(GraphQLQueries.searchProducts),
-          variables: {
-            'query': query,
-            'category': category,
-            'minPrice': minPrice,
-            'maxPrice': maxPrice,
-            'sortBy': sortBy,
-            'first': first ?? 20,
-            'after': after,
-          },
-        ),
+      // Use getAllProducts with search parameter since backend doesn't have dedicated searchProducts query
+      return await getAllProducts(
+        search: query,
+        category: category,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        sortBy: sortBy,
       );
-
-      if (result.hasException) {
-        final exception = result.exception!;
-        
-        if (exception.graphqlErrors.isNotEmpty) {
-          final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
-        }
-        
-        if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Search endpoint unreachable');
-        }
-        
-        throw createError(ErrorCode.unknown, details: exception.toString());
-      }
-
-      final edges = result.data?['searchProducts']?['edges'] as List? ?? [];
-      final products = edges.map((edge) => edge['node'] as Map<String, dynamic>).toList();
-      
-      debugPrint('✅ Found ${products.length} products for query: $query');
-      return products;
       
     } catch (e) {
       if (e is AppError) {
@@ -489,63 +511,8 @@ class ProductService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getAllVendors({
-    String? search,
-    String? category,
-    bool? isVerified,
-    int? first,
-    String? after,
-  }) async {
-    try {
-      debugPrint('🔄 Fetching vendors...');
-      
-      final QueryResult result = await GraphQLService.client.query(
-        QueryOptions(
-          document: gql(GraphQLQueries.allVendors),
-          variables: {
-            'first': first ?? 20,
-            'after': after,
-            'search': search,
-            'category': category,
-            'isVerified': isVerified,
-          },
-        ),
-      );
-
-      if (result.hasException) {
-        final exception = result.exception!;
-        
-        if (exception.graphqlErrors.isNotEmpty) {
-          final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
-        }
-        
-        if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Vendors endpoint unreachable');
-        }
-        
-        throw createError(ErrorCode.unknown, details: exception.toString());
-      }
-
-      final edges = result.data?['allVendors']?['edges'] as List? ?? [];
-      final vendors = edges.map((edge) => edge['node'] as Map<String, dynamic>).toList();
-      
-      debugPrint('✅ Fetched ${vendors.length} vendors');
-      return vendors;
-      
-    } catch (e) {
-      if (e is AppError) {
-        rethrow;
-      }
-      
-      final error = createError(
-        ErrorCode.unknown, 
-        details: 'Get vendors exception: ${e.toString()}',
-        stackTrace: StackTrace.current.toString(),
-      );
-      throw error;
-    }
-  }
+  // Note: Backend doesn't have getAllVendors query, only individual vendor profile queries
+  // Use vendorProfileById for specific vendor data
 
   static Future<Map<String, dynamic>?> getVendorById(String vendorId) async {
     try {

@@ -59,7 +59,7 @@ class EnhancedProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadProducts() async {
+  Future<void> loadProducts({String? token}) async {
     // Use post frame callback to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setLoading(true);
@@ -71,8 +71,7 @@ class EnhancedProductProvider extends ChangeNotifier {
       
       // Load products from backend API
       final productsData = await ProductService.getAllProducts(
-        first: 100, // Load first 100 products
-        sortBy: 'created_at',
+        sortBy: 'NEWEST',
       );
       
       // Convert API data to ProductModel objects
@@ -83,7 +82,7 @@ class EnhancedProductProvider extends ChangeNotifier {
       _featuredProducts = featuredData.map((json) => ProductModel.fromJson(json)).toList();
       
       // Load categories from backend
-      final categoriesData = await ProductService.getProductCategories();
+      final categoriesData = await ProductService.getProductCategories(token: token);
       _categories = ['All', ...categoriesData.map((cat) => cat['name'] as String)];
       
       debugPrint('✅ Loaded ${_products.length} products, ${_featuredProducts.length} featured, ${_categories.length} categories');
@@ -124,7 +123,6 @@ class EnhancedProductProvider extends ChangeNotifier {
       // Search products using backend API
       final productsData = await ProductService.searchProducts(
         query: query,
-        first: 50,
       );
       
       // Convert API data to ProductModel objects
@@ -152,7 +150,6 @@ class EnhancedProductProvider extends ChangeNotifier {
       // Load products by category using backend API
       final productsData = await ProductService.getAllProducts(
         category: category,
-        first: 50,
       );
       
       // Convert API data to ProductModel objects
