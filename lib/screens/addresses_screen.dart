@@ -1,36 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../widgets/country_code_picker.dart';
+import '../widgets/address_autocomplete_field.dart';
 import '../data/country_codes.dart';
+import '../services/address_service.dart';
+import '../services/token_service.dart';
+import '../providers/auth_provider.dart';
 
 enum AddressType { home, work, other }
 
 class AddressModel {
   final String id;
   final String name;
-  final String phone;
-  final String address;
+  final String phoneNumber;
+  final String streetAddress;
   final String city;
   final String state;
-  final String postalCode;
   final String country;
-  final AddressType type;
+  final String postalCode;
+  final String addressType;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
+  final String? instructions;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   AddressModel({
     required this.id,
     required this.name,
-    required this.phone,
-    required this.address,
+    required this.phoneNumber,
+    required this.streetAddress,
     required this.city,
     required this.state,
-    required this.postalCode,
     required this.country,
-    required this.type,
+    required this.postalCode,
+    required this.addressType,
     this.isDefault = false,
+    this.latitude,
+    this.longitude,
+    this.instructions,
+    this.createdAt,
+    this.updatedAt,
   });
+
+  factory AddressModel.fromJson(Map<String, dynamic> json) {
+    return AddressModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      streetAddress: json['streetAddress'] ?? '',
+      city: json['city'] ?? '',
+      state: json['state'] ?? '',
+      country: json['country'] ?? '',
+      postalCode: json['postalCode'] ?? '',
+      addressType: json['addressType'] ?? 'home',
+      isDefault: json['isDefault'] ?? false,
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
+      instructions: json['instructions'],
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'streetAddress': streetAddress,
+      'city': city,
+      'state': state,
+      'country': country,
+      'postalCode': postalCode,
+      'addressType': addressType,
+      'isDefault': isDefault,
+      'latitude': latitude,
+      'longitude': longitude,
+      'instructions': instructions,
+    };
+  }
+
+  String get fullAddress {
+    return '$streetAddress, $city, $state $postalCode, $country';
+  }
 }
 
 class AddressesScreen extends StatefulWidget {
@@ -42,39 +99,44 @@ class AddressesScreen extends StatefulWidget {
 
 class _AddressesScreenState extends State<AddressesScreen> {
   List<AddressModel> _addresses = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadDemoAddresses();
+    _loadAddresses();
   }
 
-  void _loadDemoAddresses() {
-    _addresses = [
-      AddressModel(
-        id: '1',
-        name: 'John Doe',
-        phone: '+1234567890',
-        address: '123 Main Street, Apt 4B',
-        city: 'London',
-        state: 'England',
-        postalCode: 'SW1A 1AA',
-        country: 'United Kingdom',
-        type: AddressType.home,
-        isDefault: true,
-      ),
-      AddressModel(
-        id: '2',
-        name: 'John Doe',
-        phone: '+1234567890',
-        address: '456 Business Ave, Suite 200',
-        city: 'Manchester',
-        state: 'England',
-        postalCode: 'M1 1AA',
-        country: 'United Kingdom',
-        type: AddressType.work,
-      ),
-    ];
+  Future<void> _loadAddresses() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        setState(() {
+          _error = 'Please log in to view addresses';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final addressesData = await AddressService.getMyAddresses(token);
+      final addresses = addressesData.map((json) => AddressModel.fromJson(json)).toList();
+      
+      setState(() {
+        _addresses = addresses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load addresses: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -100,13 +162,78 @@ class _AddressesScreenState extends State<AddressesScreen> {
           ),
         ],
       ),
-      body: _addresses.isEmpty ? _buildEmptyState() : _buildAddressList(),
+      body: _isLoading 
+          ? _buildLoadingState() 
+          : _error != null 
+              ? _buildErrorState() 
+              : _addresses.isEmpty 
+                  ? _buildEmptyState() 
+                  : _buildAddressList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addNewAddress,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_location_alt),
         label: const Text('Add Address'),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading addresses...'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.red.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? 'Something went wrong',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadAddresses,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -211,24 +338,24 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getAddressTypeColor(address.type).withOpacity(0.1),
+                      color: _getAddressTypeColor(address.addressType).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _getAddressTypeIcon(address.type),
+                          _getAddressTypeIcon(address.addressType),
                           size: 14,
-                          color: _getAddressTypeColor(address.type),
+                          color: _getAddressTypeColor(address.addressType),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _getAddressTypeLabel(address.type),
+                          _getAddressTypeLabel(address.addressType),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: _getAddressTypeColor(address.type),
+                            color: _getAddressTypeColor(address.addressType),
                           ),
                         ),
                       ],
@@ -286,7 +413,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                address.phone,
+                address.phoneNumber,
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -294,7 +421,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                address.address,
+                address.streetAddress,
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textPrimary,
@@ -324,36 +451,42 @@ class _AddressesScreenState extends State<AddressesScreen> {
     );
   }
 
-  Color _getAddressTypeColor(AddressType type) {
-    switch (type) {
-      case AddressType.home:
+  Color _getAddressTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'home':
         return AppColors.primary;
-      case AddressType.work:
+      case 'work':
         return Colors.orange;
-      case AddressType.other:
+      case 'other':
         return Colors.purple;
+      default:
+        return AppColors.primary;
     }
   }
 
-  IconData _getAddressTypeIcon(AddressType type) {
-    switch (type) {
-      case AddressType.home:
+  IconData _getAddressTypeIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'home':
         return Icons.home;
-      case AddressType.work:
+      case 'work':
         return Icons.business;
-      case AddressType.other:
+      case 'other':
+        return Icons.location_on;
+      default:
         return Icons.location_on;
     }
   }
 
-  String _getAddressTypeLabel(AddressType type) {
-    switch (type) {
-      case AddressType.home:
+  String _getAddressTypeLabel(String type) {
+    switch (type.toLowerCase()) {
+      case 'home':
         return 'Home';
-      case AddressType.work:
+      case 'work':
         return 'Work';
-      case AddressType.other:
+      case 'other':
         return 'Other';
+      default:
+        return type.toUpperCase();
     }
   }
 
@@ -365,10 +498,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
         builder: (context) => const AddAddressScreen(),
       ),
     ).then((result) {
-      if (result != null) {
-        setState(() {
-          _addresses.add(result as AddressModel);
-        });
+      if (result == true) {
+        _loadAddresses(); // Reload addresses from backend
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Address added successfully!'),
@@ -387,13 +518,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
         builder: (context) => AddAddressScreen(address: address),
       ),
     ).then((result) {
-      if (result != null) {
-        setState(() {
-          final index = _addresses.indexWhere((a) => a.id == address.id);
-          if (index != -1) {
-            _addresses[index] = result as AddressModel;
-          }
-        });
+      if (result == true) {
+        _loadAddresses(); // Reload addresses from backend
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Address updated successfully!'),
@@ -409,24 +535,42 @@ class _AddressesScreenState extends State<AddressesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Address'),
-        content: Text('Are you sure you want to delete this address?\n\n${address.name}\n${address.address}'),
+        content: Text('Are you sure you want to delete this address?\n\n${address.name}\n${address.streetAddress}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _addresses.removeWhere((a) => a.id == address.id);
-              });
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Address deleted'),
-                  backgroundColor: AppColors.error,
-                ),
-              );
+              
+              try {
+                final token = await TokenService.getToken();
+                if (token == null) {
+                  throw Exception('Please log in to delete addresses');
+                }
+                
+                await AddressService.deleteAddress(
+                  token: token,
+                  addressId: address.id,
+                );
+                
+                _loadAddresses(); // Reload addresses from backend
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Address deleted successfully'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete address: ${e.toString()}'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
@@ -436,28 +580,34 @@ class _AddressesScreenState extends State<AddressesScreen> {
     );
   }
 
-  void _setAsDefault(AddressModel address) {
-    setState(() {
-      _addresses = _addresses.map((a) => AddressModel(
-        id: a.id,
-        name: a.name,
-        phone: a.phone,
-        address: a.address,
-        city: a.city,
-        state: a.state,
-        postalCode: a.postalCode,
-        country: a.country,
-        type: a.type,
-        isDefault: a.id == address.id,
-      )).toList();
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Default address updated'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+  void _setAsDefault(AddressModel address) async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to update addresses');
+      }
+      
+      await AddressService.updateAddress(
+        token: token,
+        addressId: address.id,
+        isDefault: true,
+      );
+      
+      _loadAddresses(); // Reload addresses from backend
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Default address updated'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update default address: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   void _showAddressOptions(AddressModel address) {
@@ -591,11 +741,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _postalCodeController = TextEditingController();
+  final _instructionsController = TextEditingController();
   
   CountryCode _selectedCountry = CountryCodes.countries.first;
-  AddressType _selectedType = AddressType.home;
+  String _selectedType = 'home';
   bool _setAsDefault = false;
   bool _isLoading = false;
+  double? _latitude;
+  double? _longitude;
 
   @override
   void initState() {
@@ -608,13 +761,16 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   void _loadAddressData() {
     final address = widget.address!;
     _nameController.text = address.name;
-    _phoneController.text = address.phone;
-    _addressController.text = address.address;
+    _phoneController.text = address.phoneNumber;
+    _addressController.text = address.streetAddress;
     _cityController.text = address.city;
     _stateController.text = address.state;
     _postalCodeController.text = address.postalCode;
-    _selectedType = address.type;
+    _instructionsController.text = address.instructions ?? '';
+    _selectedType = address.addressType;
     _setAsDefault = address.isDefault;
+    _latitude = address.latitude;
+    _longitude = address.longitude;
   }
 
   @override
@@ -625,6 +781,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     _cityController.dispose();
     _stateController.dispose();
     _postalCodeController.dispose();
+    _instructionsController.dispose();
     super.dispose();
   }
 
@@ -674,13 +831,23 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                       hint: 'Enter phone number',
                     ),
                     const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _addressController,
+                    AddressFormField(
                       label: 'Street Address',
-                      hint: 'Enter street address',
-                      icon: Icons.location_on_outlined,
-                      maxLines: 2,
+                      hint: 'Search for an address',
+                      controller: _addressController,
                       validator: (value) => value?.isEmpty ?? true ? 'Address is required' : null,
+                      onAddressSelected: (addressDetails) {
+                        if (addressDetails != null) {
+                          setState(() {
+                            _addressController.text = addressDetails.fullStreetAddress;
+                            _cityController.text = addressDetails.locality ?? '';
+                            _stateController.text = addressDetails.administrativeAreaLevel1 ?? '';
+                            _postalCodeController.text = addressDetails.postalCode ?? '';
+                            _latitude = addressDetails.latitude;
+                            _longitude = addressDetails.longitude;
+                          });
+                        }
+                      },
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -712,6 +879,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                       hint: 'Enter postal code',
                       icon: Icons.markunread_mailbox_outlined,
                       validator: (value) => value?.isEmpty ?? true ? 'Postal code is required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _instructionsController,
+                      label: 'Delivery Instructions (Optional)',
+                      hint: 'e.g., Leave at front door, Ring doorbell, etc.',
+                      icon: Icons.note_outlined,
+                      maxLines: 2,
                     ),
                     const SizedBox(height: 24),
                     CheckboxListTile(
@@ -788,7 +963,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         ),
         const SizedBox(height: 12),
         Row(
-          children: AddressType.values.map((type) {
+          children: ['home', 'work', 'other'].map((type) {
             final isSelected = _selectedType == type;
             return Expanded(
               child: InkWell(
@@ -899,26 +1074,53 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     HapticFeedback.lightImpact();
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to save addresses');
+      }
 
-      final newAddress = AddressModel(
-        id: widget.address?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text,
-        phone: _phoneController.text,
-        address: _addressController.text,
-        city: _cityController.text,
-        state: _stateController.text,
-        postalCode: _postalCodeController.text,
-        country: _selectedCountry.name,
-        type: _selectedType,
-        isDefault: _setAsDefault,
-      );
+      if (widget.address != null) {
+        // Update existing address
+        await AddressService.updateAddress(
+          token: token,
+          addressId: widget.address!.id,
+          name: _nameController.text,
+          phoneNumber: _phoneController.text,
+          streetAddress: _addressController.text,
+          city: _cityController.text,
+          state: _stateController.text,
+          country: _selectedCountry.name,
+          postalCode: _postalCodeController.text,
+          addressType: _selectedType,
+          isDefault: _setAsDefault,
+          latitude: _latitude,
+          longitude: _longitude,
+          instructions: _instructionsController.text.isNotEmpty ? _instructionsController.text : null,
+        );
+      } else {
+        // Create new address
+        await AddressService.createAddress(
+          token: token,
+          name: _nameController.text,
+          phoneNumber: _phoneController.text,
+          streetAddress: _addressController.text,
+          city: _cityController.text,
+          state: _stateController.text,
+          country: _selectedCountry.name,
+          postalCode: _postalCodeController.text,
+          addressType: _selectedType,
+          isDefault: _setAsDefault,
+          latitude: _latitude,
+          longitude: _longitude,
+          instructions: _instructionsController.text.isNotEmpty ? _instructionsController.text : null,
+        );
+      }
 
-      Navigator.pop(context, newAddress);
+      Navigator.pop(context, true); // Return true to indicate success
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save address. Please try again.'),
+        SnackBar(
+          content: Text('Failed to save address: ${e.toString()}'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -927,36 +1129,43 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     }
   }
 
-  Color _getAddressTypeColor(AddressType type) {
+  Color _getAddressTypeColor(String type) {
     switch (type) {
-      case AddressType.home:
+      case 'home':
         return AppColors.primary;
-      case AddressType.work:
-        return Colors.orange;
-      case AddressType.other:
-        return Colors.purple;
+      case 'work':
+        return AppColors.secondary;
+      case 'other':
+        return AppColors.accent;
+      default:
+        return AppColors.textSecondary;
     }
   }
 
-  IconData _getAddressTypeIcon(AddressType type) {
+  IconData _getAddressTypeIcon(String type) {
     switch (type) {
-      case AddressType.home:
-        return Icons.home;
-      case AddressType.work:
-        return Icons.business;
-      case AddressType.other:
-        return Icons.location_on;
+      case 'home':
+        return Icons.home_outlined;
+      case 'work':
+        return Icons.work_outline;
+      case 'other':
+        return Icons.location_on_outlined;
+      default:
+        return Icons.location_on_outlined;
     }
   }
 
-  String _getAddressTypeLabel(AddressType type) {
+  String _getAddressTypeLabel(String type) {
     switch (type) {
-      case AddressType.home:
+      case 'home':
         return 'Home';
-      case AddressType.work:
+      case 'work':
         return 'Work';
-      case AddressType.other:
+      case 'other':
+        return 'Other';
+      default:
         return 'Other';
     }
   }
+
 }

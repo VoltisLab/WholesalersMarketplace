@@ -7,6 +7,9 @@ import '../providers/auth_provider.dart';
 import '../widgets/platform_widgets.dart';
 import '../widgets/country_code_picker.dart';
 import '../data/country_codes.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -33,20 +36,127 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    debugPrint('🔄 PersonalInfoScreen: initState called');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('🔄 PersonalInfoScreen: addPostFrameCallback executing');
+      _loadUserData();
+    });
   }
 
-  void _loadUserData() {
-    final authProvider = context.read<AuthProvider>();
-    final user = authProvider.currentUser;
+  Future<void> _loadUserData() async {
+    debugPrint('🔄 PersonalInfoScreen: Starting to load user data...');
+    setState(() => _isLoading = true);
     
-    if (user != null) {
-      _firstNameController.text = user.name.split(' ').first;
-      if (user.name.split(' ').length > 1) {
-        _lastNameController.text = user.name.split(' ').skip(1).join(' ');
+    try {
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to view your profile');
       }
-      _emailController.text = user.email;
-      _phoneController.text = user.phone ?? '';
+      debugPrint('🔄 PersonalInfoScreen: Token obtained, fetching profile data...');
+
+      // Fetch complete profile data from backend
+      final profileData = await AuthService.viewMe(token);
+      debugPrint('🔄 PersonalInfoScreen: Profile data received: $profileData');
+      
+      if (profileData != null) {
+        // Populate form fields with backend data
+        _firstNameController.text = profileData['firstName'] ?? '';
+        _lastNameController.text = profileData['lastName'] ?? '';
+        _emailController.text = profileData['email'] ?? '';
+        
+        debugPrint('🔄 PersonalInfoScreen: Basic fields set');
+        
+        // Handle phone number (remove country code if present)
+        final phoneNumber = profileData['phoneNumber'] ?? '';
+        if (phoneNumber.isNotEmpty) {
+          // Extract country code and number
+          if (phoneNumber.startsWith('+')) {
+            final parts = phoneNumber.split(' ');
+            if (parts.length > 1) {
+              final countryCode = parts[0];
+              final number = parts[1];
+              
+              // Find matching country code
+              final country = CountryCodes.countries.firstWhere(
+                (c) => c.dialCode == countryCode,
+                orElse: () => CountryCodes.countries.first,
+              );
+              _selectedCountry = country;
+              _phoneController.text = number;
+            } else {
+              _phoneController.text = phoneNumber.substring(1); // Remove +
+            }
+          } else {
+            _phoneController.text = phoneNumber;
+          }
+        }
+        
+        // Handle gender
+        final gender = profileData['gender'] ?? '';
+        if (gender.isNotEmpty) {
+          switch (gender.toUpperCase()) {
+            case 'MALE':
+              _selectedGender = 'Male';
+              break;
+            case 'FEMALE':
+              _selectedGender = 'Female';
+              break;
+            case 'OTHER':
+              _selectedGender = 'Other';
+              break;
+            case 'PREFER_NOT_TO_SAY':
+              _selectedGender = 'Prefer not to say';
+              break;
+            default:
+              _selectedGender = 'Prefer not to say';
+          }
+        }
+        
+        // Handle date of birth
+        final dob = profileData['dob'] ?? '';
+        if (dob.isNotEmpty) {
+          try {
+            _selectedBirthDate = DateTime.parse(dob);
+          } catch (e) {
+            debugPrint('Error parsing date: $e');
+          }
+        }
+        
+        // Handle address information
+        _addressController.text = profileData['streetAddress'] ?? '';
+        _cityController.text = profileData['city'] ?? '';
+        _postalCodeController.text = profileData['postalCode'] ?? '';
+        
+        debugPrint('✅ PersonalInfoScreen: Profile data loaded successfully');
+        debugPrint('✅ PersonalInfoScreen: First name: ${_firstNameController.text}');
+        debugPrint('✅ PersonalInfoScreen: Last name: ${_lastNameController.text}');
+        debugPrint('✅ PersonalInfoScreen: Phone: ${_phoneController.text}');
+        debugPrint('✅ PersonalInfoScreen: Gender: $_selectedGender');
+        debugPrint('✅ PersonalInfoScreen: DOB: $_selectedBirthDate');
+        debugPrint('✅ PersonalInfoScreen: Address: ${_addressController.text}');
+        debugPrint('✅ PersonalInfoScreen: City: ${_cityController.text}');
+        debugPrint('✅ PersonalInfoScreen: Postal: ${_postalCodeController.text}');
+        
+        // Trigger UI update
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading profile data: $e');
+      // Fallback to basic user data from AuthProvider
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user != null) {
+        _firstNameController.text = user.name.split(' ').first;
+        if (user.name.split(' ').length > 1) {
+          _lastNameController.text = user.name.split(' ').skip(1).join(' ');
+        }
+        _emailController.text = user.email;
+        _phoneController.text = user.phone ?? '';
+      }
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -90,14 +200,20 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppConstants.paddingLarge),
-              child: Form(
-                key: _formKey,
-                child: Column(
+      body: _isLoading 
+        ? const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          )
+        : Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppConstants.paddingLarge),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Profile picture section
@@ -523,7 +639,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     label: 'Camera',
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon('Camera feature');
+                      _pickImageFromCamera();
                     },
                   ),
                   _buildPhotoOption(
@@ -531,7 +647,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     label: 'Gallery',
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon('Gallery feature');
+                      _pickImageFromGallery();
                     },
                   ),
                   _buildPhotoOption(
@@ -539,7 +655,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     label: 'Remove',
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoon('Remove photo feature');
+                      _removeProfilePhoto();
                     },
                   ),
                 ],
@@ -598,22 +714,65 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     HapticFeedback.lightImpact();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        PlatformWidgets.showSnackBar(
-          context,
-          message: 'Personal information updated successfully!',
-          type: SnackBarType.success,
-        );
-        Navigator.pop(context, true);
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to update your profile');
       }
+
+      // Prepare profile data
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      final phoneNumber = _phoneController.text.trim().isNotEmpty 
+          ? '${_selectedCountry.dialCode}${_phoneController.text.trim()}'
+          : null;
+      final gender = _selectedGender != 'Prefer not to say' ? _selectedGender.toUpperCase() : null;
+      final dateOfBirth = _selectedBirthDate != null 
+          ? _selectedBirthDate!.toIso8601String().split('T')[0]
+          : null;
+
+      // Update profile via GraphQL
+      final result = await AuthService.updateProfile(
+        token: token,
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
+        streetAddress: _addressController.text.trim(),
+        city: _cityController.text.trim(),
+        postalCode: _postalCodeController.text.trim(),
+      );
+
+      if (result != null) {
+        // Update local user data in AuthProvider
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.loadUserData();
+
+        if (mounted) {
+          PlatformWidgets.showSnackBar(
+            context,
+            message: 'Personal information updated successfully!',
+            type: SnackBarType.success,
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        throw Exception('Failed to update profile');
+      }
+
     } catch (e) {
       if (mounted) {
+        String errorMessage = 'Failed to update information. Please try again.';
+        if (e is AppError) {
+          errorMessage = e.userMessage;
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
         PlatformWidgets.showSnackBar(
           context,
-          message: 'Failed to update information. Please try again.',
+          message: errorMessage,
           type: SnackBarType.error,
         );
       }
@@ -621,6 +780,60 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      // This would integrate with image_picker package
+      // For now, show a message that this feature is being implemented
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Camera integration coming soon!',
+        type: SnackBarType.info,
+      );
+    } catch (e) {
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Failed to open camera: ${e.toString()}',
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      // This would integrate with image_picker package
+      // For now, show a message that this feature is being implemented
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Gallery integration coming soon!',
+        type: SnackBarType.info,
+      );
+    } catch (e) {
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Failed to open gallery: ${e.toString()}',
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  Future<void> _removeProfilePhoto() async {
+    try {
+      // This would remove the profile photo via backend
+      // For now, show a message that this feature is being implemented
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Remove photo feature coming soon!',
+        type: SnackBarType.info,
+      );
+    } catch (e) {
+      PlatformWidgets.showSnackBar(
+        context,
+        message: 'Failed to remove photo: ${e.toString()}',
+        type: SnackBarType.error,
+      );
     }
   }
 

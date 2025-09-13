@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/auth_provider.dart';
@@ -16,6 +18,8 @@ class ModernProfileScreen extends StatefulWidget {
 }
 
 class _ModernProfileScreenState extends State<ModernProfileScreen> {
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +49,46 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                     children: [
                       _buildQuickActions(context),
                       const SizedBox(height: 24),
+                      // Show Business section first for suppliers
+                      if (user?.accountType?.toLowerCase() == 'supplier' || user?.userType?.toLowerCase() == 'supplier') ...[
+                        _buildMenuSection('Business', [
+                          _buildMenuItem(
+                            icon: Icons.store_outlined,
+                            title: 'Supplier Dashboard',
+                            subtitle: 'Manage your business',
+                            onTap: () => Navigator.pushNamed(context, '/supplier-dashboard'),
+                            hasArrow: true,
+                          ),
+                          _buildMenuItem(
+                            icon: Icons.analytics_outlined,
+                            title: 'Sales Analytics',
+                            subtitle: 'View performance metrics',
+                            onTap: () => Navigator.pushNamed(context, '/sales-analytics'),
+                          ),
+                          _buildMenuItem(
+                            icon: Icons.people_outline,
+                            title: 'Customer Analytics',
+                            subtitle: 'Analyze customer behavior & insights',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CustomerAnalyticsScreen()),
+                            ),
+                          ),
+                        _buildMenuItem(
+                          icon: Icons.add_circle_outline,
+                          title: 'Create a Product',
+                          subtitle: 'Add new product to your inventory',
+                          onTap: () => Navigator.pushNamed(context, '/add-product'),
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.inventory_2_outlined,
+                          title: 'Inventory Management',
+                          subtitle: 'Manage your products',
+                          onTap: () => Navigator.pushNamed(context, '/inventory-management'),
+                        ),
+                        ]),
+                        const SizedBox(height: 24),
+                      ],
                       _buildMenuSection('Account', [
                         _buildMenuItem(
                           icon: Icons.person_outline,
@@ -78,34 +122,24 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                         ),
                       ]),
                       const SizedBox(height: 24),
-                      _buildMenuSection('Business', [
+                      _buildMenuSection('Security', [
                         _buildMenuItem(
-                          icon: Icons.store_outlined,
-                          title: 'Supplier Dashboard',
-                          subtitle: 'Manage your business',
-                          onTap: () => Navigator.pushNamed(context, '/supplier-dashboard'),
-                          hasArrow: true,
+                          icon: Icons.lock_outline,
+                          title: 'Reset Password',
+                          subtitle: 'Change your password',
+                          onTap: () => Navigator.pushNamed(context, '/reset-password'),
                         ),
                         _buildMenuItem(
-                          icon: Icons.analytics_outlined,
-                          title: 'Sales Analytics',
-                          subtitle: 'View performance metrics',
-                          onTap: () => Navigator.pushNamed(context, '/sales-analytics'),
+                          icon: Icons.security_outlined,
+                          title: 'Two-Factor Authentication',
+                          subtitle: 'Add extra security to your account',
+                          onTap: () => Navigator.pushNamed(context, '/two-factor-auth'),
                         ),
                         _buildMenuItem(
-                          icon: Icons.people_outline,
-                          title: 'Customer Analytics',
-                          subtitle: 'Analyze customer behavior & insights',
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const CustomerAnalyticsScreen()),
-                          ),
-                        ),
-                        _buildMenuItem(
-                          icon: Icons.inventory_2_outlined,
-                          title: 'Inventory Management',
-                          subtitle: 'Manage your products',
-                          onTap: () => Navigator.pushNamed(context, '/inventory-management'),
+                          icon: Icons.devices_outlined,
+                          title: 'Active Sessions',
+                          subtitle: 'Manage your logged-in devices',
+                          onTap: () => Navigator.pushNamed(context, '/active-sessions'),
                         ),
                       ]),
                       const SizedBox(height: 24),
@@ -200,14 +234,19 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                         child: CircleAvatar(
                           radius: 37,
                           backgroundColor: Colors.white,
-                          child: Text(
-                            (user?.name ?? user?['name'] ?? 'User').substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
+                          backgroundImage: _getProfileImage(user),
+                          child: _getProfileImage(user) == null
+                              ? Text(
+                                  ((user?.name ?? user?['name'] ?? 'User').isNotEmpty 
+                                      ? (user?.name ?? user?['name'] ?? 'User').substring(0, 1) 
+                                      : 'U').toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -263,24 +302,31 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                       width: 1,
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                  child: InkWell(
+                    onTap: () => _showAccountTypeInfo(context, user?.accountType ?? user?.userType ?? 'customer'),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                       Icon(
-                        _getAccountTypeIcon(user?.userType ?? user?['userType'] ?? 'customer'),
+                        _getAccountTypeIcon(user?.accountType ?? user?.userType ?? 'customer'),
                         size: 16,
                         color: Colors.white,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getAccountTypeLabel(user?.userType ?? user?['userType'] ?? 'customer'),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getAccountTypeLabel(user?.accountType ?? user?.userType ?? 'customer'),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -720,6 +766,89 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
     );
   }
 
+  void _showAccountTypeInfo(BuildContext context, String accountType) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${_getAccountTypeLabel(accountType)}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getAccountTypeDescription(accountType),
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Account Features:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ..._getAccountTypeFeatures(accountType).map((feature) => 
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check, size: 16, color: AppColors.success),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(feature)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getAccountTypeDescription(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'supplier':
+        return 'You have a Supplier account, which allows you to sell products to customers and manage your inventory.';
+      case 'admin':
+        return 'You have an Admin account with full system access and management capabilities.';
+      default:
+        return 'You have a Customer account, which allows you to browse and purchase products from suppliers.';
+    }
+  }
+
+  List<String> _getAccountTypeFeatures(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case 'supplier':
+        return [
+          'Sell products to customers',
+          'Manage inventory and stock',
+          'View sales analytics',
+          'Respond to customer reviews',
+          'Manage product listings',
+        ];
+      case 'admin':
+        return [
+          'Full system access',
+          'Manage all users',
+          'View system analytics',
+          'Moderate content',
+          'System configuration',
+        ];
+      default:
+        return [
+          'Browse and search products',
+          'Add items to cart and wishlist',
+          'Place orders',
+          'Track order history',
+          'Leave product reviews',
+        ];
+    }
+  }
+
   void _switchAccountType(BuildContext context, String newType) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
@@ -761,7 +890,7 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                   label: 'Camera',
                   onTap: () {
                     Navigator.pop(context);
-                    _showComingSoon('Camera feature');
+                    _pickImage(ImageSource.camera);
                   },
                 ),
                 _buildPhotoOption(
@@ -769,7 +898,7 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                   label: 'Gallery',
                   onTap: () {
                     Navigator.pop(context);
-                    _showComingSoon('Gallery feature');
+                    _pickImage(ImageSource.gallery);
                   },
                 ),
                 _buildPhotoOption(
@@ -777,12 +906,50 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
                   label: 'Remove',
                   onTap: () {
                     Navigator.pop(context);
-                    _showComingSoon('Remove photo feature');
+                    _removeImage();
                   },
                 ),
               ],
             ),
             const SizedBox(height: 20),
+            // Save button - only show if there's a selected image
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return _selectedImage != null
+                    ? SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: authProvider.isLoading
+                              ? null
+                              : () => _saveProfileImageToBackend(authProvider),
+                          icon: authProvider.isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Icon(Icons.cloud_upload),
+                          label: Text(
+                            authProvider.isLoading
+                                ? 'Saving...'
+                                : 'Save to Server',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
           ],
         ),
       ),
@@ -861,14 +1028,120 @@ class _ModernProfileScreenState extends State<ModernProfileScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              authProvider.signOut();
+              await authProvider.logout();
             },
             child: const Text('Sign Out'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        
+        // Update profile image locally only (don't save to backend yet)
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.updateProfileImage(image.path);
+        
+        // Show message that image is ready to save
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture selected! Tap "Save" to upload to server.'),
+            backgroundColor: AppColors.info,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+    });
+    
+    // Update profile image in AuthProvider
+    final authProvider = context.read<AuthProvider>();
+    authProvider.updateProfileImage(null);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile picture removed'),
+        backgroundColor: AppColors.info,
+      ),
+    );
+  }
+
+  ImageProvider? _getProfileImage(dynamic user) {
+    // Priority: Selected image > User model profile image > Network image
+    if (_selectedImage != null) {
+      return FileImage(_selectedImage!);
+    } else if (user?.profileImage != null && user!.profileImage!.isNotEmpty) {
+      // Check if it's a local file path or network URL
+      if (user.profileImage!.startsWith('http')) {
+        return NetworkImage(user.profileImage!);
+      } else {
+        return FileImage(File(user.profileImage!));
+      }
+    }
+    return null;
+  }
+
+  Future<void> _saveProfileImageToBackend(AuthProvider authProvider) async {
+    if (_selectedImage == null) return;
+
+    try {
+      // Show uploading message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Uploading profile picture to server...'),
+          backgroundColor: AppColors.info,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // Upload and save the profile image
+      await authProvider.updateProfileImage(_selectedImage!.path);
+      
+      // Clear the selected image since it's now saved
+      setState(() {
+        _selectedImage = null;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile picture uploaded and saved successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error uploading profile picture: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }

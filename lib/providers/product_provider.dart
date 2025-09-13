@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
+import '../services/product_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 class ProductProvider extends ChangeNotifier {
   List<ProductModel> _products = [];
@@ -61,17 +64,25 @@ class ProductProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      // Load all products from backend
+      final productsData = await ProductService.getAllProducts();
+      _products = productsData.map((json) => ProductModel.fromJson(json)).toList();
       
-      // Mock data
-      _products = _generateMockProducts();
-      _featuredProducts = _products.where((product) => product.isFeatured).toList();
-      _categories = ['All', ...{..._products.map((product) => product.category)}];
+      // Load featured products
+      final featuredData = await ProductService.getFeaturedProducts();
+      _featuredProducts = featuredData.map((json) => ProductModel.fromJson(json)).toList();
+      
+      // Load categories
+      final categoriesData = await ProductService.getProductCategories();
+      _categories = ['All', ...categoriesData.map((cat) => cat['name'] as String)];
       
       setLoading(false);
     } catch (e) {
-      setError('Failed to load products: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load products: ${e.toString()}');
+      }
       setLoading(false);
     }
   }
@@ -90,6 +101,42 @@ class ProductProvider extends ChangeNotifier {
 
   List<ProductModel> getProductsByCategory(String category) {
     return _products.where((product) => product.category == category).toList();
+  }
+
+  Future<void> searchProducts(String query) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final searchData = await ProductService.searchProducts(query: query);
+      _products = searchData.map((json) => ProductModel.fromJson(json)).toList();
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Search failed: ${e.toString()}');
+      }
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadProductsByCategory(String category) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final productsData = await ProductService.getAllProducts(category: category);
+      _products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load products: ${e.toString()}');
+      }
+      setLoading(false);
+    }
   }
 
   List<ProductModel> _generateMockProducts() {

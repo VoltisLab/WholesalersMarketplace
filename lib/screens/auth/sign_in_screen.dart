@@ -34,7 +34,7 @@ class _SignInScreenState extends State<SignInScreen> {
     try {
       final authProvider = context.read<AuthProvider>();
       
-      // Use mock authentication for demo
+      // Use real backend authentication
       await authProvider.signIn(_emailController.text, _passwordController.text);
       
       if (mounted) {
@@ -56,11 +56,25 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _signInWithDemo() {
     // Auto-fill demo credentials and sign in
-    _emailController.text = 'toziz@yahoo.com';
-    _passwordController.text = 'Password123!!!';
+    _emailController.text = 'supplier@example.com';
+    _passwordController.text = 'SupplierPass123!';
     
     // Automatically trigger sign in
     _signIn();
+  }
+
+  Future<void> _clearTokens() async {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.clearAllTokens();
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tokens cleared! Try logging in again.'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 
   @override
@@ -284,7 +298,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           : AppColors.greyBorder,
                     ),
                     label: Text(
-                      'Try Demo Account',
+                      'Try Supplier Demo',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -296,7 +310,27 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                
+                // Debug: Clear Tokens Button
+                SizedBox(
+                  height: 40,
+                  child: TextButton(
+                    onPressed: _isLoading ? null : _clearTokens,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                    ),
+                    child: const Text(
+                      'Clear Tokens (Debug)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
                 
                 // Divider
                 const Row(

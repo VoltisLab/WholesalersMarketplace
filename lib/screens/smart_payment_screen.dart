@@ -6,6 +6,11 @@ import '../constants/app_constants.dart';
 import '../widgets/platform_widgets.dart';
 import '../widgets/smart_card_input.dart';
 import '../utils/card_utils.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
+import '../providers/payment_provider.dart';
+import 'package:provider/provider.dart';
 
 class SmartPaymentScreen extends StatefulWidget {
   final double? amount;
@@ -110,37 +115,88 @@ class _SmartPaymentScreenState extends State<SmartPaymentScreen>
     HapticFeedback.heavyImpact();
 
     try {
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 3));
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to process payment');
+      }
 
-      _processingController.stop();
-      
-      // Show success animation
-      PlatformWidgets.showSnackBar(
-        context,
-        message: 'Payment processed successfully!',
-        type: SnackBarType.success,
+      // Parse card details
+      final cardNumber = _cardNumberController.text.replaceAll(' ', '');
+      final expiryParts = _expiryController.text.split('/');
+      final expiryMonth = int.parse(expiryParts[0]);
+      final expiryYear = int.parse('20${expiryParts[1]}');
+      final cvv = _cvvController.text;
+      final cardHolderName = _cardHolderController.text.trim();
+
+      // Determine payment type based on card number
+      final paymentType = _getPaymentTypeFromCardNumber(cardNumber);
+
+      // Add payment method via GraphQL
+      final paymentProvider = context.read<PaymentProvider>();
+      final success = await paymentProvider.addPaymentMethod(
+        paymentType: paymentType,
+        cardNumber: cardNumber,
+        expiryMonth: expiryMonth,
+        expiryYear: expiryYear,
+        cvv: cvv,
+        cardHolderName: cardHolderName,
+        isDefault: _saveCard,
       );
 
-      // Wait a moment then complete
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      if (widget.onPaymentComplete != null) {
-        widget.onPaymentComplete!();
+      if (success) {
+        _processingController.stop();
+        
+        // Show success animation
+        PlatformWidgets.showSnackBar(
+          context,
+          message: 'Payment method added successfully!',
+          type: SnackBarType.success,
+        );
+
+        // Wait a moment then complete
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (widget.onPaymentComplete != null) {
+          widget.onPaymentComplete!();
+        } else {
+          Navigator.pop(context, true);
+        }
       } else {
-        Navigator.pop(context, true);
+        throw Exception(paymentProvider.error ?? 'Failed to add payment method');
       }
+
     } catch (e) {
       _processingController.stop();
+      
+      String errorMessage = 'Payment failed. Please try again.';
+      if (e is AppError) {
+        errorMessage = e.userMessage;
+      } else {
+        errorMessage = 'Error: ${e.toString()}';
+      }
+      
       PlatformWidgets.showSnackBar(
         context,
-        message: 'Payment failed. Please try again.',
+        message: errorMessage,
         type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  String _getPaymentTypeFromCardNumber(String cardNumber) {
+    if (cardNumber.startsWith('4')) {
+      return 'Visa';
+    } else if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) {
+      return 'Mastercard';
+    } else if (cardNumber.startsWith('3')) {
+      return 'American Express';
+    } else {
+      return 'Unknown';
     }
   }
 

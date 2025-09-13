@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../services/analytics_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 class CustomerAnalyticsScreen extends StatefulWidget {
   const CustomerAnalyticsScreen({super.key});
@@ -13,9 +16,70 @@ class CustomerAnalyticsScreen extends StatefulWidget {
 class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
   String _selectedPeriod = 'Last 30 Days';
   final List<String> _periods = ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Last Year'];
+  
+  // Real data from backend
+  Map<String, dynamic>? _analyticsData;
+  List<Map<String, dynamic>> _customers = [];
+  bool _isLoading = false;
+  String? _error;
 
-  // Sample customer data
-  final List<Map<String, dynamic>> _customers = [
+  @override
+  void initState() {
+    super.initState();
+    _loadAnalytics();
+  }
+
+  Future<void> _loadAnalytics() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to view analytics');
+      }
+
+      final analytics = await AnalyticsService.getCustomerAnalytics(
+        token: token,
+        timeRange: _getTimeRangeCode(_selectedPeriod),
+      );
+
+      if (analytics != null) {
+        setState(() {
+          _analyticsData = analytics;
+          _customers = List<Map<String, dynamic>>.from(analytics['customers'] ?? []);
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load analytics data');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e is AppError ? e.userMessage : e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getTimeRangeCode(String period) {
+    switch (period) {
+      case 'Last 7 Days':
+        return '7d';
+      case 'Last 30 Days':
+        return '30d';
+      case 'Last 3 Months':
+        return '3m';
+      case 'Last Year':
+        return '1y';
+      default:
+        return '30d';
+    }
+  }
+
+  // Sample customer data (fallback)
+  final List<Map<String, dynamic>> _sampleCustomers = [
     {
       'id': 'customer_1',
       'name': 'Fashion Forward Retail',
@@ -123,6 +187,7 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
               setState(() {
                 _selectedPeriod = value;
               });
+              _loadAnalytics();
             },
             itemBuilder: (context) => _periods.map((period) => PopupMenuItem(
               value: period,
@@ -131,22 +196,75 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.paddingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPeriodSelector(),
-            const SizedBox(height: 24),
-            _buildOverviewCards(),
-            const SizedBox(height: 24),
-            _buildTopCustomers(),
-            const SizedBox(height: 24),
-            _buildCustomerInsights(),
-            const SizedBox(height: 24),
-            _buildCustomerList(),
-          ],
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
         ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading analytics',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadAnalytics,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppConstants.paddingMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPeriodSelector(),
+          const SizedBox(height: 24),
+          _buildOverviewCards(),
+          const SizedBox(height: 24),
+          _buildTopCustomers(),
+          const SizedBox(height: 24),
+          _buildCustomerInsights(),
+          const SizedBox(height: 24),
+          _buildCustomerList(),
+        ],
       ),
     );
   }
@@ -184,10 +302,15 @@ class _CustomerAnalyticsScreenState extends State<CustomerAnalyticsScreen> {
   }
 
   Widget _buildOverviewCards() {
-    final totalRevenue = _customers.fold(0.0, (sum, customer) => sum + customer['totalSpent']);
-    final totalOrders = _customers.fold(0, (sum, customer) => sum + (customer['orderCount'] as int));
-    final avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0.0;
-    final activeCustomers = _customers.where((c) => c['isActive']).length;
+    // Use real analytics data if available, otherwise calculate from customers
+    final totalRevenue = _analyticsData?['totalRevenue']?.toDouble() ?? 
+        _customers.fold(0.0, (sum, customer) => sum + (customer['totalSpent'] as double? ?? 0.0));
+    final totalOrders = _analyticsData?['totalOrders'] ?? 
+        _customers.fold(0, (sum, customer) => sum + (customer['orderCount'] as int? ?? 0));
+    final avgOrderValue = _analyticsData?['avgOrderValue']?.toDouble() ?? 
+        (totalOrders > 0 ? totalRevenue / totalOrders : 0.0);
+    final activeCustomers = _analyticsData?['activeCustomers'] ?? 
+        _customers.where((c) => c['isActive'] == true).length;
 
     return Column(
       children: [

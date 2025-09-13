@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import '../constants/app_colors.dart';
 import '../widgets/modal_dropdown.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
+import '../services/product_service.dart';
+import '../providers/enhanced_product_provider.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -925,7 +931,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  void _publishProduct() {
+  Future<void> _publishProduct() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -959,19 +965,128 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ),
     );
 
-    // Simulate product creation
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context); // Close loading dialog
-      Navigator.pop(context); // Close add product screen
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Product published successfully! 🎉'),
-          backgroundColor: AppColors.success,
-          duration: Duration(seconds: 3),
-        ),
+    try {
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to create products');
+      }
+
+      // Upload images first
+      final List<Map<String, String>> imageUrls = [];
+      for (final imageFile in _selectedImages) {
+        try {
+          // For now, we'll use a placeholder URL since image upload needs backend support
+          // In a real implementation, you'd upload to a service like AWS S3
+          imageUrls.add({
+            'url': 'https://via.placeholder.com/400x400?text=Product+Image',
+            'thumbnail': 'https://via.placeholder.com/200x200?text=Thumb'
+          });
+        } catch (e) {
+          debugPrint('Error uploading image: $e');
+          // Continue with other images
+        }
+      }
+
+      // Prepare product data
+      final productData = {
+        'name': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'price': double.parse(_priceController.text),
+        'discountPrice': _originalPriceController.text.isNotEmpty 
+            ? double.parse(_originalPriceController.text) 
+            : null,
+        'imagesUrl': imageUrls,
+        'category': _selectedCategory,
+        'subcategory': _selectedSize.isNotEmpty ? _selectedSize : null,
+        'stockQuantity': int.parse(_quantityController.text),
+        'tags': _selectedTags,
+        'specifications': {
+          'weight': _weightController.text.isNotEmpty ? _weightController.text : null,
+          'dimensions': _dimensionsController.text.isNotEmpty ? _dimensionsController.text : null,
+          'brand': _brandController.text.isNotEmpty ? _brandController.text : null,
+          'condition': _selectedCondition,
+          'isVintage': _isVintage,
+          'isSustainable': _isSustainable,
+          'isHandmade': _isHandmade,
+          'isNegotiable': _isNegotiable,
+          'shippingIncluded': _isShippingIncluded,
+          'shippingMethod': _shippingMethod,
+          'processingTime': _useCustomProcessingDays 
+              ? int.parse(_customProcessingDaysController.text)
+              : _processingTime,
+          'deliveryTime': _deliveryTimeController.text.isNotEmpty 
+              ? _deliveryTimeController.text 
+              : null,
+        },
+        'materials': _selectedTags.where((tag) => 
+            ['Cotton', 'Leather', 'Silk', 'Wool', 'Denim', 'Linen'].contains(tag)
+        ).toList(),
+        'careInstructions': _isVintage ? 'Handle with care. Vintage item.' : null,
+      };
+
+      // Create product via GraphQL
+      final result = await ProductService.createProduct(
+        token: token,
+        name: productData['name'] as String,
+        description: productData['description'] as String,
+        price: productData['price'] as double,
+        discount: productData['discountPrice'] as double?,
+        imagesUrl: imageUrls,
+        category: 1, // Default category ID - you may want to map this properly
+        brand: 1, // Default brand ID - you may want to map this properly
+        customBrand: _selectedBrand.isNotEmpty ? _selectedBrand : null,
+        size: 1, // Default size ID - you may want to map this properly
+        materials: 1, // Default materials ID - you may want to map this properly
+        color: 'Black', // Default color - you may want to add color selection
+        condition: _mapConditionToEnum(_selectedCondition),
+        style: 'CASUAL', // Default style - you may want to add style selection
+        isFeatured: false,
       );
-    });
+
+      if (result != null) {
+        // Refresh product list in provider
+        final productProvider = context.read<EnhancedProductProvider>();
+        await productProvider.loadProducts();
+
+        // Close loading dialog
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          Navigator.pop(context); // Close add product screen
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Product published successfully! 🎉'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Failed to create product');
+      }
+
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        String errorMessage = 'Failed to create product';
+        if (e is AppError) {
+          errorMessage = e.userMessage;
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _generateSku() {
@@ -993,6 +1108,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
         }
       });
       _customTagsController.clear();
+    }
+  }
+
+  String _mapConditionToEnum(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'new':
+        return 'BRAND_NEW_WITH_TAGS';
+      case 'like new':
+        return 'EXCELLENT_CONDITION';
+      case 'used/2nd hand':
+      case 'good':
+        return 'GOOD_CONDITION';
+      case 'fair':
+      case 'poor':
+        return 'HEAVILY_USED';
+      default:
+        return 'GOOD_CONDITION';
     }
   }
 

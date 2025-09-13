@@ -5,6 +5,7 @@ class UserModel {
   final String phone;
   final String? profileImage;
   final String userType;
+  final String? accountType;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isActive;
@@ -17,6 +18,7 @@ class UserModel {
     required this.phone,
     this.profileImage,
     required this.userType,
+    this.accountType,
     required this.createdAt,
     required this.updatedAt,
     this.isActive = true,
@@ -30,7 +32,8 @@ class UserModel {
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       profileImage: json['profile_image'],
-      userType: json['user_type'] ?? 'customer',
+      userType: json['user_type'] ?? json['accountType'] ?? 'customer',
+      accountType: json['accountType'],
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
       isActive: json['is_active'] ?? true,
@@ -48,6 +51,7 @@ class UserModel {
       'phone': phone,
       'profile_image': profileImage,
       'user_type': userType,
+      'accountType': accountType,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'is_active': isActive,
@@ -62,6 +66,7 @@ class UserModel {
     String? phone,
     String? profileImage,
     String? userType,
+    String? accountType,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
@@ -74,6 +79,7 @@ class UserModel {
       phone: phone ?? this.phone,
       profileImage: profileImage ?? this.profileImage,
       userType: userType ?? this.userType,
+      accountType: accountType ?? this.accountType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,

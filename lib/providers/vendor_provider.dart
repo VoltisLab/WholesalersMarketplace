@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
+import '../services/vendor_analytics_service.dart';
+import '../services/product_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 class VendorProvider extends ChangeNotifier {
   List<VendorModel> _vendors = [];
+  Map<String, dynamic>? _analytics;
+  List<Map<String, dynamic>> _orders = [];
+  List<Map<String, dynamic>> _products = [];
   bool _isLoading = false;
   String? _error;
 
   List<VendorModel> get vendors => _vendors;
+  Map<String, dynamic>? get analytics => _analytics;
+  List<Map<String, dynamic>> get orders => _orders;
+  List<Map<String, dynamic>> get products => _products;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -25,14 +35,95 @@ class VendorProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      _vendors = _generateMockVendors();
+      // Load vendors from backend
+      final vendorsData = await ProductService.getAllVendors();
+      _vendors = vendorsData.map((json) => VendorModel.fromJson(json)).toList();
       
       setLoading(false);
     } catch (e) {
-      setError('Failed to load vendors: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load vendors: ${e.toString()}');
+      }
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadVendorAnalytics({String? timeRange}) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to view analytics');
+      }
+
+      _analytics = await VendorAnalyticsService.getVendorAnalytics(
+        token: token,
+        timeRange: timeRange,
+      );
+      
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load analytics: ${e.toString()}');
+      }
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadVendorOrders({String? status}) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to view orders');
+      }
+
+      _orders = await VendorAnalyticsService.getVendorOrders(
+        token: token,
+        status: status,
+      );
+      
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load orders: ${e.toString()}');
+      }
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadVendorProducts({String? status}) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to view products');
+      }
+
+      _products = await VendorAnalyticsService.getVendorProducts(
+        token: token,
+        status: status,
+      );
+      
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load products: ${e.toString()}');
+      }
       setLoading(false);
     }
   }

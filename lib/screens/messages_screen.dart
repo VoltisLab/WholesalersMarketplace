@@ -4,8 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../providers/vendor_provider.dart';
-
-enum MessageFilter { all, unread, read, online }
+import '../providers/messaging_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -17,242 +16,59 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   final TextEditingController _messageController = TextEditingController();
   MessageFilter _currentFilter = MessageFilter.all;
-  final List<Map<String, dynamic>> _messages = [
+  String? _selectedConversationId;
+
+  // Sample data for development
+  List<Map<String, dynamic>> _sampleTransactions = [
+    {'date': DateTime.now().subtract(const Duration(days: 1))},
+    {'date': DateTime.now().subtract(const Duration(days: 2))},
+    {'date': DateTime.now().subtract(const Duration(days: 3))},
+  ];
+
+  List<Map<String, dynamic>> _conversations = [
     {
       'id': '1',
-      'senderId': 'vendor_1',
-      'senderName': 'Urban Streetwear Co.',
-      'senderAvatar': 'https://picsum.photos/40/40?random=1',
-      'message': 'Hey! Thanks for your interest in our Y2K Leather Bomber Jackets. We have them in stock in all sizes.',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 2)),
-      'isMe': false,
+      'name': 'John Doe',
+      'lastMessage': 'Thanks for the quick delivery!',
+      'timestamp': DateTime.now().subtract(const Duration(minutes: 5)),
+      'unreadCount': 2,
+      'isOnline': true,
+      'avatar': 'https://via.placeholder.com/50',
     },
     {
       'id': '2',
-      'senderId': 'me',
-      'senderName': 'You',
-      'senderAvatar': 'https://picsum.photos/40/40?random=100',
-      'message': 'Great! What\'s the wholesale price for a bulk order of 50 pieces?',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 1, minutes: 45)),
-      'isMe': true,
-    },
-    {
-      'id': '3',
-      'senderId': 'vendor_1',
-      'senderName': 'Urban Streetwear Co.',
-      'senderAvatar': 'https://picsum.photos/40/40?random=1',
-      'message': 'For 50 pieces, we can offer £180 per jacket. That includes free shipping and a 30-day return policy.',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 1, minutes: 30)),
-      'isMe': false,
-    },
-    {
-      'id': '4',
-      'senderId': 'me',
-      'senderName': 'You',
-      'senderAvatar': 'https://picsum.photos/40/40?random=100',
-      'message': 'That sounds reasonable. Can you send me the size chart and available colors?',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 45)),
-      'isMe': true,
-    },
-    {
-      'id': '5',
-      'senderId': 'vendor_1',
-      'senderName': 'Urban Streetwear Co.',
-      'senderAvatar': 'https://picsum.photos/40/40?random=1',
-      'message': 'Absolutely! I\'ll send you the complete catalog with measurements. We have Black, Brown, and Vintage Tan available.',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 30)),
-      'isMe': false,
+      'name': 'Jane Smith',
+      'lastMessage': 'Can you provide more details about the product?',
+      'timestamp': DateTime.now().subtract(const Duration(hours: 1)),
+      'unreadCount': 0,
+      'isOnline': false,
+      'avatar': 'https://via.placeholder.com/50',
     },
   ];
 
-  final List<Map<String, dynamic>> _conversations = [
+  List<Map<String, dynamic>> _messages = [
     {
-      'id': 'vendor_1',
-      'name': 'Urban Streetwear Co.',
-      'avatar': 'https://picsum.photos/50/50?random=1',
-      'lastMessage': 'Absolutely! I\'ll send you the complete catalog...',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 30)),
-      'unreadCount': 0,
-      'isOnline': true,
+      'id': '1',
+      'text': 'Hello! I\'m interested in your product.',
+      'isFromMe': false,
+      'timestamp': DateTime.now().subtract(const Duration(minutes: 10)),
     },
     {
-      'id': 'vendor_2',
-      'name': 'Vintage Denim House',
-      'avatar': 'https://picsum.photos/50/50?random=2',
-      'lastMessage': 'The Levi\'s 501 jeans are back in stock!',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 3)),
-      'unreadCount': 2,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_3',
-      'name': 'Athletic Gear Pro',
-      'avatar': 'https://picsum.photos/50/50?random=3',
-      'lastMessage': 'Thanks for the order! Shipping tomorrow.',
-      'timestamp': DateTime.now().subtract(const Duration(days: 1)),
-      'unreadCount': 0,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_4',
-      'name': 'Luxury Accessories Ltd',
-      'avatar': 'https://picsum.photos/50/50?random=4',
-      'lastMessage': 'New Burberry collection available',
-      'timestamp': DateTime.now().subtract(const Duration(days: 2)),
-      'unreadCount': 1,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_5',
-      'name': 'Retro Revival Fashion',
-      'avatar': 'https://picsum.photos/50/50?random=5',
-      'lastMessage': 'Y2K bomber jackets - 40% off this week only!',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 5)),
-      'unreadCount': 3,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_6',
-      'name': 'Second Chance Vintage',
-      'avatar': 'https://picsum.photos/50/50?random=6',
-      'lastMessage': 'Your order has been dispatched with tracking #TRK123456',
-      'timestamp': DateTime.now().subtract(const Duration(hours: 8)),
-      'unreadCount': 0,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_7',
-      'name': 'Designer Bags Direct',
-      'avatar': 'https://picsum.photos/50/50?random=7',
-      'lastMessage': 'Limited edition Gucci bags just arrived',
-      'timestamp': DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-      'unreadCount': 1,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_8',
-      'name': 'Sneaker Central',
-      'avatar': 'https://picsum.photos/50/50?random=8',
-      'lastMessage': 'Jordan 1s restock happening tomorrow at 10 AM',
-      'timestamp': DateTime.now().subtract(const Duration(days: 1, hours: 6)),
-      'unreadCount': 0,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_9',
-      'name': 'Fashion Forward',
-      'avatar': 'https://picsum.photos/50/50?random=9',
-      'lastMessage': 'Can we schedule a call to discuss bulk pricing?',
-      'timestamp': DateTime.now().subtract(const Duration(days: 2, hours: 3)),
-      'unreadCount': 2,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_10',
-      'name': 'Trendy Threads Co.',
-      'avatar': 'https://picsum.photos/50/50?random=10',
-      'lastMessage': 'New summer collection launching next week',
-      'timestamp': DateTime.now().subtract(const Duration(days: 3)),
-      'unreadCount': 0,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_11',
-      'name': 'Elite Footwear',
-      'avatar': 'https://picsum.photos/50/50?random=11',
-      'lastMessage': 'Nike Air Max 90s - all sizes available',
-      'timestamp': DateTime.now().subtract(const Duration(days: 3, hours: 4)),
-      'unreadCount': 1,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_12',
-      'name': 'Chic Boutique',
-      'avatar': 'https://picsum.photos/50/50?random=12',
-      'lastMessage': 'Thank you for your recent purchase!',
-      'timestamp': DateTime.now().subtract(const Duration(days: 4)),
-      'unreadCount': 0,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_13',
-      'name': 'Urban Outfitters Wholesale',
-      'avatar': 'https://picsum.photos/50/50?random=13',
-      'lastMessage': 'Bulk discount available for orders over £5,000',
-      'timestamp': DateTime.now().subtract(const Duration(days: 5)),
-      'unreadCount': 3,
-      'isOnline': true,
-    },
-    {
-      'id': 'vendor_14',
-      'name': 'Vintage Finds',
-      'avatar': 'https://picsum.photos/50/50?random=14',
-      'lastMessage': 'Authentic 90s band tees just in stock',
-      'timestamp': DateTime.now().subtract(const Duration(days: 6)),
-      'unreadCount': 0,
-      'isOnline': false,
-    },
-    {
-      'id': 'vendor_15',
-      'name': 'Luxury Streetwear',
-      'avatar': 'https://picsum.photos/50/50?random=15',
-      'lastMessage': 'Supreme drop this Friday - be ready!',
-      'timestamp': DateTime.now().subtract(const Duration(days: 7)),
-      'unreadCount': 2,
-      'isOnline': true,
+      'id': '2',
+      'text': 'Hi! I\'d be happy to help. What would you like to know?',
+      'isFromMe': true,
+      'timestamp': DateTime.now().subtract(const Duration(minutes: 8)),
     },
   ];
 
-  String? _selectedConversationId;
-
-  // Sample transaction data for relationship details
-  final List<Map<String, dynamic>> _sampleTransactions = [
-    {
-      'id': 'txn_001',
-      'date': DateTime.now().subtract(const Duration(days: 15)),
-      'type': 'Order',
-      'amount': 1250.00,
-      'status': 'Completed',
-      'items': ['Y2K Leather Bomber Jacket x2', 'Vintage Denim Jeans x3'],
-      'orderId': 'ORD-2024-001',
-    },
-    {
-      'id': 'txn_002',
-      'date': DateTime.now().subtract(const Duration(days: 45)),
-      'type': 'Order',
-      'amount': 890.50,
-      'status': 'Completed',
-      'items': ['Retro Sneakers x4', 'Streetwear Hoodies x2'],
-      'orderId': 'ORD-2024-002',
-    },
-    {
-      'id': 'txn_003',
-      'date': DateTime.now().subtract(const Duration(days: 78)),
-      'type': 'Refund',
-      'amount': -150.00,
-      'status': 'Processed',
-      'items': ['Defective Item Return'],
-      'orderId': 'REF-2024-001',
-    },
-    {
-      'id': 'txn_004',
-      'date': DateTime.now().subtract(const Duration(days: 120)),
-      'type': 'Order',
-      'amount': 2100.75,
-      'status': 'Completed',
-      'items': ['Bulk T-Shirts x50', 'Accessories x20'],
-      'orderId': 'ORD-2024-003',
-    },
-    {
-      'id': 'txn_005',
-      'date': DateTime.now().subtract(const Duration(days: 180)),
-      'type': 'Order',
-      'amount': 675.25,
-      'status': 'Completed',
-      'items': ['Designer Bags x3', 'Luxury Watches x1'],
-      'orderId': 'ORD-2024-004',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load conversations when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MessagingProvider>().loadConversations();
+    });
+  }
 
   @override
   void dispose() {
@@ -261,17 +77,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   List<Map<String, dynamic>> get _filteredConversations {
-    switch (_currentFilter) {
-      case MessageFilter.unread:
-        return _conversations.where((c) => c['unreadCount'] > 0).toList();
-      case MessageFilter.read:
-        return _conversations.where((c) => c['unreadCount'] == 0).toList();
-      case MessageFilter.online:
-        return _conversations.where((c) => c['isOnline'] == true).toList();
-      case MessageFilter.all:
-      default:
-        return _conversations;
-    }
+    final messagingProvider = context.read<MessagingProvider>();
+    return messagingProvider.getFilteredConversations(_currentFilter);
   }
 
   String _getFilterDisplayName(MessageFilter filter) {
@@ -288,50 +95,30 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   int _getFilterCount(MessageFilter filter) {
-    switch (filter) {
-      case MessageFilter.unread:
-        return _conversations.where((c) => c['unreadCount'] > 0).length;
-      case MessageFilter.read:
-        return _conversations.where((c) => c['unreadCount'] == 0).length;
-      case MessageFilter.online:
-        return _conversations.where((c) => c['isOnline'] == true).length;
-      case MessageFilter.all:
-      default:
-        return _conversations.length;
-    }
+    final messagingProvider = context.read<MessagingProvider>();
+    return messagingProvider.getFilteredConversations(filter).length;
   }
 
   void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+    if (_messageController.text.trim().isEmpty || _selectedConversationId == null) return;
 
-    setState(() {
-      _messages.add({
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'senderId': 'me',
-        'senderName': 'You',
-        'senderAvatar': 'https://picsum.photos/40/40?random=100',
-        'message': _messageController.text.trim(),
-        'timestamp': DateTime.now(),
-        'isMe': true,
-      });
-    });
+    final messagingProvider = context.read<MessagingProvider>();
+    messagingProvider.sendMessage(
+      _selectedConversationId!,
+      _messageController.text.trim(),
+    );
 
     _messageController.clear();
   }
 
   void _showRelationshipDetails(Map<String, dynamic> conversation) {
     print('_showRelationshipDetails called for: ${conversation['name']}');
-    final totalSpent = _sampleTransactions
-        .where((txn) => txn['type'] == 'Order')
-        .fold(0.0, (sum, txn) => sum + (txn['amount'] as double));
-    
-    final totalRefunds = _sampleTransactions
-        .where((txn) => txn['type'] == 'Refund')
-        .fold(0.0, (sum, txn) => sum + (txn['amount'] as double).abs());
-    
+    // TODO: Load real transaction data from backend
+    final totalSpent = 0.0;
+    final totalRefunds = 0.0;
     final netSpent = totalSpent - totalRefunds;
-    final orderCount = _sampleTransactions.where((txn) => txn['type'] == 'Order').length;
-    final relationshipDays = DateTime.now().difference(_sampleTransactions.last['date']).inDays;
+    final orderCount = 0;
+    final relationshipDays = 0; // TODO: Calculate from real data
 
     showModalBottomSheet(
       context: context,
@@ -561,7 +348,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ? Column(
               children: [
                 _buildFilterTabs(),
-                Expanded(child: _buildConversationsList()),
+                Expanded(
+                  child: Consumer<MessagingProvider>(
+                    builder: (context, messagingProvider, child) {
+                      if (messagingProvider.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (messagingProvider.error != null) {
+                        return Center(
+                          child: Text('Error: ${messagingProvider.error}'),
+                        );
+                      }
+                      return _buildConversationsList();
+                    },
+                  ),
+                ),
               ],
             )
           : _buildChatView(),
@@ -597,7 +398,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   PreferredSizeWidget _buildChatAppBar() {
-    final conversation = _conversations.firstWhere(
+    final messagingProvider = context.read<MessagingProvider>();
+    final conversation = messagingProvider.conversations.firstWhere(
       (c) => c['id'] == _selectedConversationId,
     );
 
@@ -805,6 +607,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
             setState(() {
               _selectedConversationId = conversation['id'];
             });
+            // Load messages for this conversation
+            context.read<MessagingProvider>().loadMessages(conversation['id']);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(
@@ -974,12 +778,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(AppConstants.paddingMedium),
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final message = _messages[index];
-              return _buildMessageBubble(message);
+          child: Consumer<MessagingProvider>(
+            builder: (context, messagingProvider, child) {
+              return ListView.builder(
+                padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                itemCount: messagingProvider.messages.length,
+                itemBuilder: (context, index) {
+                  final message = messagingProvider.messages[index];
+                  return _buildMessageBubble(message);
+                },
+              );
             },
           ),
         ),

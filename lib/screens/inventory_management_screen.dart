@@ -751,12 +751,8 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
 
   void _addNewProduct() {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add product feature coming soon!'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+    // Navigate to product creation screen
+    Navigator.pushNamed(context, '/add-product');
   }
 
   void _editProduct(InventoryItem item) {

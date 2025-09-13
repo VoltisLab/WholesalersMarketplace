@@ -56,7 +56,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           const EnhancedSearchScreen(),
           const EnhancedVendorListScreen(),
           const CartScreen(),
-          authProvider.isSupplier ? const VendorDashboardScreen() : const ModernProfileScreen(),
+          const ModernProfileScreen(),
         ],
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -129,6 +129,95 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   Widget _buildTrendingProducts() {
     return Consumer<EnhancedProductProvider>(
       builder: (context, productProvider, child) {
+        if (productProvider.isLoading && productProvider.products.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: Text(
+                  'Trending Now',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 380,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                  itemCount: 4,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: 180,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+        
+        if (productProvider.error != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: Text(
+                  'Trending Now',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppColors.error.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Failed to load products',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        
         final trendingProducts = productProvider.products.take(8).toList();
         
         return Column(
@@ -479,7 +568,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   Widget _buildCategoryShowcase() {
     return Consumer<EnhancedProductProvider>(
       builder: (context, productProvider, child) {
-        final categories = ['Dresses', 'Outerwear', 'Bags', 'Shoes', 'Accessories', 'Tops'];
+        final categories = productProvider.categories;
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,9 +901,9 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
           activeIcon: const Icon(Icons.shopping_cart_rounded),
           label: 'Cart',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(authProvider.isSupplier ? Icons.dashboard_rounded : Icons.person_rounded),
-          activeIcon: Icon(authProvider.isSupplier ? Icons.dashboard_rounded : Icons.person_rounded),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.person_rounded),
+          activeIcon: Icon(Icons.person_rounded),
           label: 'Account',
         ),
       ],

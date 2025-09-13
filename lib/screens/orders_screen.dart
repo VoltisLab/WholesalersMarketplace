@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../providers/order_provider.dart';
+import '../services/order_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
 
 enum OrderStatus { all, pending, processing, shipped, delivered, cancelled }
 
@@ -25,6 +30,11 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
       setState(() {
         // This will trigger a rebuild when tab changes
       });
+    });
+    
+    // Load orders when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrderProvider>().loadOrders();
     });
   }
 
@@ -53,23 +63,86 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
           preferredSize: const Size.fromHeight(48),
           child: _buildTabBar(),
         ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrdersListView(),
-                _buildOrdersListView(), // Pending
-                _buildOrdersListView(), // Processing
-                _buildOrdersListView(), // Shipped
-                _buildOrdersListView(), // Delivered
-                _buildOrdersListView(), // Cancelled
-              ],
-            ),
+        actions: [
+          Consumer<OrderProvider>(
+            builder: (context, orderProvider, child) {
+              return IconButton(
+                onPressed: () => orderProvider.refreshOrders(),
+                icon: orderProvider.isLoading 
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh),
+              );
+            },
           ),
         ],
+      ),
+      body: Consumer<OrderProvider>(
+        builder: (context, orderProvider, child) {
+          if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          
+          if (orderProvider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.withOpacity(0.6),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    orderProvider.error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => orderProvider.refreshOrders(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          return Column(
+            children: [
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOrdersListView(), // All
+                    _buildOrdersListView(), // Pending
+                    _buildOrdersListView(), // Processing
+                    _buildOrdersListView(), // Shipped
+                    _buildOrdersListView(), // Delivered
+                    _buildOrdersListView(), // Cancelled
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -131,20 +204,53 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
   }
 
   Widget _buildOrdersListView() {
-    final filteredOrders = _getFilteredOrders();
-    
-    if (filteredOrders.isEmpty) {
-      return _buildEmptyState();
-    }
+    return Consumer<OrderProvider>(
+      builder: (context, orderProvider, child) {
+        // Get the current tab index to determine filter
+        final currentTab = _tabController.index;
+        String? statusFilter;
+        
+        switch (currentTab) {
+          case 1:
+            statusFilter = 'pending';
+            break;
+          case 2:
+            statusFilter = 'processing';
+            break;
+          case 3:
+            statusFilter = 'shipped';
+            break;
+          case 4:
+            statusFilter = 'delivered';
+            break;
+          case 5:
+            statusFilter = 'cancelled';
+            break;
+          default:
+            statusFilter = null; // All orders
+        }
+        
+        // Filter orders based on current tab
+        final filteredOrders = statusFilter == null 
+          ? orderProvider.orders
+          : orderProvider.orders.where((order) => 
+              (order['status'] ?? '').toLowerCase() == (statusFilter ?? '').toLowerCase()
+            ).toList();
+        
+        if (filteredOrders.isEmpty) {
+          return _buildEmptyState();
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredOrders.length,
-      itemBuilder: (context, index) {
-        final order = filteredOrders[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: _buildOrderCard(order),
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredOrders.length,
+          itemBuilder: (context, index) {
+            final order = filteredOrders[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: _buildOrderCard(order),
+            );
+          },
         );
       },
     );
@@ -220,9 +326,12 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
   }
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
-    final status = order['status'] as String;
+    final status = order['status'] as String? ?? 'pending';
     final statusColor = _getStatusColor(status);
-    final products = order['products'] as List<Map<String, dynamic>>;
+    final items = order['items'] as List<Map<String, dynamic>>? ?? [];
+    final orderNumber = order['order_number'] as String? ?? order['id'] as String? ?? 'N/A';
+    final totalAmount = order['total_amount'] as double? ?? order['total'] as double? ?? 0.0;
+    final createdAt = order['created_at'] as String? ?? order['date'] as String? ?? '';
     
     return InkWell(
       onTap: () {
@@ -254,7 +363,7 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
               child: Row(
                 children: [
                   Text(
-                    'Order #${order['id']}',
+                    'Order #$orderNumber',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -284,8 +393,8 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  ...products.take(2).map((product) => _buildProductItem(product)).toList(),
-                  if (products.length > 2)
+                  ...items.take(2).map((item) => _buildProductItem(item)).toList(),
+                  if (items.length > 2)
                     Container(
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -295,7 +404,7 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                       ),
                       child: Center(
                         child: Text(
-                          '+${products.length - 2} more items',
+                          '+${items.length - 2} more items',
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -313,22 +422,71 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                 color: AppColors.surface,
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Text(
-                    'Total: £${order['total'].toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: AppColors.primary,
+                  Row(
+                    children: [
+                      Text(
+                        'Total: £${totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                  // Add action buttons based on order status
+                  if (status == 'pending' || status == 'processing')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showCancelOrderDialog(order),
+                              icon: const Icon(Icons.cancel_outlined, size: 16),
+                              label: const Text('Cancel Order'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                                side: const BorderSide(color: AppColors.error),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
+                  if (status == 'shipped' || status == 'in_transit' || status == 'out_for_delivery')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _trackOrder(order),
+                              icon: const Icon(Icons.local_shipping, size: 16),
+                              label: const Text('Track Order'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -504,50 +662,28 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
     }
   }
 
-  List<Map<String, dynamic>> _getFilteredOrders() {
-    List<Map<String, dynamic>> orders = _getDemoOrders();
+  String _formatDate(String dateString) {
+    if (dateString.isEmpty) return 'Unknown date';
     
-    if (_selectedStatus != OrderStatus.all) {
-      orders = orders.where((order) => 
-        order['status'].toLowerCase() == _selectedStatus.name.toLowerCase()
-      ).toList();
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+      
+      if (difference.inDays == 0) {
+        return 'Today';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateString; // Return original string if parsing fails
     }
-    
-    return orders;
   }
 
-  List<Map<String, dynamic>> _getDemoOrders() {
-    return [
-      {
-        'id': 'WB2024001',
-        'status': 'delivered',
-        'date': 'Dec 15, 2024',
-        'total': 156.99,
-        'products': [
-          {
-            'name': 'Premium Cotton T-Shirt Bundle',
-            'quantity': 3,
-            'price': 45.99,
-            'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop&crop=center',
-          },
-        ],
-      },
-      {
-        'id': 'WB2024002',
-        'status': 'shipped',
-        'date': 'Dec 18, 2024',
-        'total': 234.50,
-        'products': [
-          {
-            'name': 'Winter Wool Coat',
-            'quantity': 2,
-            'price': 120.00,
-            'image': 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5e?w=300&h=300&fit=crop&crop=center',
-          },
-        ],
-      },
-    ];
-  }
 
   void _showOrderDetails(Map<String, dynamic> order) {
     showModalBottomSheet(
@@ -610,6 +746,240 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
         ),
       ),
     );
+  }
+
+  void _showCancelOrderDialog(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Order'),
+        content: Text('Are you sure you want to cancel order #${order['id']}? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep Order'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _cancelOrder(order);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cancel Order'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelOrder(Map<String, dynamic> order) async {
+    try {
+      final orderProvider = context.read<OrderProvider>();
+      final success = await orderProvider.cancelOrder(order['id']);
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order #${order['id']} has been cancelled'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel order: ${orderProvider.error ?? 'Unknown error'}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cancelling order: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _trackOrder(Map<String, dynamic> order) async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to track orders');
+      }
+
+      final orderId = order['id'] as String;
+      final trackingData = await OrderService.trackOrder(
+        token: token,
+        orderId: orderId,
+      );
+
+      if (trackingData != null) {
+        _showTrackingDialog(order, trackingData);
+      } else {
+        throw Exception('No tracking information available');
+      }
+    } catch (e) {
+      String errorMessage = 'Failed to load tracking information';
+      if (e is AppError) {
+        errorMessage = e.userMessage;
+      } else {
+        errorMessage = 'Error: ${e.toString()}';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _showTrackingDialog(Map<String, dynamic> order, Map<String, dynamic> trackingData) {
+    final orderNumber = order['order_number'] as String? ?? order['id'] as String? ?? 'N/A';
+    final statusHistory = trackingData['statusHistory'] as List<dynamic>? ?? [];
+    final trackingNumber = trackingData['trackingNumber'] as String? ?? 'N/A';
+    final estimatedDelivery = trackingData['estimatedDelivery'] as String?;
+    final currentLocation = trackingData['currentLocation'] as String?;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Track Order #$orderNumber'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (trackingNumber != 'N/A') ...[
+                Text(
+                  'Tracking Number: $trackingNumber',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (currentLocation != null) ...[
+                Text(
+                  'Current Location: $currentLocation',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (estimatedDelivery != null) ...[
+                Text(
+                  'Estimated Delivery: $estimatedDelivery',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (statusHistory.isNotEmpty) ...[
+                const Text(
+                  'Status History:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...statusHistory.map((status) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              status['status'] as String? ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                            if (status['timestamp'] != null)
+                              Text(
+                                _formatTrackingTime(status['timestamp'] as String),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            if (status['notes'] != null)
+                              Text(
+                                status['notes'] as String,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ] else ...[
+                const Text(
+                  'No tracking information available yet.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTrackingTime(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inMinutes < 1) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays}d ago';
+      } else {
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      }
+    } catch (e) {
+      return timestamp;
+    }
+  }
+
+  List<Map<String, dynamic>> _getFilteredOrders() {
+    // This method should filter orders based on current tab
+    // For now, return all orders - this can be enhanced later
+    return Provider.of<OrderProvider>(context, listen: false).orders;
   }
 
 }

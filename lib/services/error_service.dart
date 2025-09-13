@@ -35,6 +35,13 @@ enum ErrorCode {
   graphqlQueryError('GQL_003', 'GraphQL query failed'),
   graphqlMutationError('GQL_004', 'GraphQL mutation failed'),
   
+  // Resource Errors (RES_xxx)
+  productNotFound('RES_001', 'Product not found'),
+  orderNotFound('RES_002', 'Order not found'),
+  vendorNotFound('RES_003', 'Vendor not found'),
+  cartItemNotFound('RES_004', 'Cart item not found'),
+  wishlistItemNotFound('RES_005', 'Wishlist item not found'),
+  
   // Unknown Error
   unknown('UNK_001', 'An unexpected error occurred');
 

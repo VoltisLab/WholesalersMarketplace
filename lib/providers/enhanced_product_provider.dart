@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/product_model.dart';
+import '../services/product_service.dart';
+import '../services/error_service.dart';
 
 class EnhancedProductProvider extends ChangeNotifier {
   List<ProductModel> _products = [];
@@ -65,17 +67,33 @@ class EnhancedProductProvider extends ChangeNotifier {
     });
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      debugPrint('🔄 Loading products from backend...');
       
-      // Generate 1000 products (20 per vendor for 50 vendors)
-      _products = _generateMockProducts();
-      _featuredProducts = _products.where((product) => product.isFeatured).toList();
-      _categories = ['All', ...{..._products.map((product) => product.category)}];
+      // Load products from backend API
+      final productsData = await ProductService.getAllProducts(
+        first: 100, // Load first 100 products
+        sortBy: 'created_at',
+      );
       
+      // Convert API data to ProductModel objects
+      _products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+      
+      // Load featured products separately
+      final featuredData = await ProductService.getFeaturedProducts(limit: 20);
+      _featuredProducts = featuredData.map((json) => ProductModel.fromJson(json)).toList();
+      
+      // Load categories from backend
+      final categoriesData = await ProductService.getProductCategories();
+      _categories = ['All', ...categoriesData.map((cat) => cat['name'] as String)];
+      
+      debugPrint('✅ Loaded ${_products.length} products, ${_featuredProducts.length} featured, ${_categories.length} categories');
       setLoading(false);
     } catch (e) {
-      setError('Failed to load products: ${e.toString()}');
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load products: ${e.toString()}');
+      }
       setLoading(false);
     }
   }
@@ -94,6 +112,62 @@ class EnhancedProductProvider extends ChangeNotifier {
 
   List<ProductModel> getProductsByCategory(String category) {
     return _products.where((product) => product.category == category).toList();
+  }
+
+  Future<void> searchProducts(String query) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      debugPrint('🔄 Searching products: $query');
+      
+      // Search products using backend API
+      final productsData = await ProductService.searchProducts(
+        query: query,
+        first: 50,
+      );
+      
+      // Convert API data to ProductModel objects
+      _products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+      
+      debugPrint('✅ Found ${_products.length} products for query: $query');
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to search products: ${e.toString()}');
+      }
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadProductsByCategory(String category) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      debugPrint('🔄 Loading products for category: $category');
+      
+      // Load products by category using backend API
+      final productsData = await ProductService.getAllProducts(
+        category: category,
+        first: 50,
+      );
+      
+      // Convert API data to ProductModel objects
+      _products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+      
+      debugPrint('✅ Loaded ${_products.length} products for category: $category');
+      setLoading(false);
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage);
+      } else {
+        setError('Failed to load products by category: ${e.toString()}');
+      }
+      setLoading(false);
+    }
   }
 
   List<ProductModel> _generateMockProducts() {

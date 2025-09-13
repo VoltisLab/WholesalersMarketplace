@@ -8,6 +8,11 @@ import '../providers/vendor_provider.dart';
 import '../widgets/product_card.dart';
 import '../widgets/vendor_card.dart';
 import '../services/image_search_service.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
+import '../services/product_service.dart';
+import '../models/product_model.dart';
 
 class EnhancedSearchScreen extends StatefulWidget {
   const EnhancedSearchScreen({super.key});
@@ -24,6 +29,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   String _searchQuery = '';
   List<String> _filteredSuggestions = [];
   bool _showSuggestions = false;
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+  String? _searchError;
   
   void scrollToTop() {
     _scrollController.animateTo(
@@ -134,6 +142,49 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
       _showSuggestions = false;
     });
     _searchFocusNode.unfocus();
+    _performSearch(suggestion);
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _searchError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _searchError = null;
+    });
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to search products');
+      }
+
+      final results = await ProductService.searchProducts(
+        query: query.trim(),
+        category: null,
+        minPrice: null,
+        maxPrice: null,
+        sortBy: 'relevance',
+        first: 50,
+      );
+
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
+
+    } catch (e) {
+      setState(() {
+        _searchError = e is AppError ? e.userMessage : e.toString();
+        _isSearching = false;
+      });
+    }
   }
 
   @override
@@ -203,6 +254,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
         controller: _searchController,
         focusNode: _searchFocusNode,
         onChanged: _onSearchChanged,
+        onSubmitted: _performSearch,
         decoration: InputDecoration(
           hintText: 'Search products...',
           hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7)),
@@ -578,39 +630,77 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   }
 
   Widget _buildProductsTab() {
-    return Consumer<EnhancedProductProvider>(
-      builder: (context, productProvider, child) {
-        final products = productProvider.products
-            .where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+    if (_isSearching) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-        if (products.isEmpty) {
-          return _buildNoResults();
-        }
-
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.all(AppConstants.paddingMedium),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.54,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => ProductCard(
-                    product: products[index],
-                    onTap: () {},
-                  ),
-                  childCount: products.length,
+    if (_searchError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Search Error',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                _searchError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _performSearch(_searchQuery),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_searchResults.isEmpty) {
+      return _buildNoResults();
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(AppConstants.paddingMedium),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.54,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
             ),
-          ],
-        );
-      },
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildProductCardFromMap(_searchResults[index]),
+              childCount: _searchResults.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -674,6 +764,60 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProductCardFromMap(Map<String, dynamic> productData) {
+    // Convert Map to ProductModel for ProductCard
+    final product = ProductModel(
+      id: productData['id'] ?? '',
+      name: productData['name'] ?? 'Unknown Product',
+      description: productData['description'] ?? '',
+      price: (productData['price'] ?? 0.0).toDouble(),
+      discountPrice: productData['discountPrice']?.toDouble(),
+      images: List<String>.from(productData['imagesUrl'] ?? []),
+      category: productData['category'] ?? '',
+      subcategory: productData['subcategory'] ?? '',
+      stockQuantity: productData['stockQuantity'] ?? 0,
+      rating: (productData['rating'] ?? 0.0).toDouble(),
+      reviewCount: productData['reviewCount'] ?? 0,
+      tags: List<String>.from(productData['tags'] ?? []),
+      isFeatured: productData['isFeatured'] ?? false,
+      createdAt: productData['createdAt'] != null 
+          ? DateTime.parse(productData['createdAt']) 
+          : DateTime.now(),
+      updatedAt: productData['updatedAt'] != null 
+          ? DateTime.parse(productData['updatedAt']) 
+          : DateTime.now(),
+      vendor: VendorModel(
+        id: productData['vendor']?['id'] ?? '',
+        name: productData['vendor']?['businessName'] ?? 'Unknown Vendor',
+        description: productData['vendor']?['description'] ?? '',
+        email: productData['vendor']?['email'] ?? '',
+        phone: productData['vendor']?['phone'] ?? '',
+        logo: productData['vendor']?['logo'] ?? productData['vendor']?['imageUrl'] ?? '',
+        address: AddressModel(
+          id: 'temp',
+          street: '',
+          city: productData['vendor']?['location'] ?? '',
+          state: '',
+          zipCode: '',
+          country: '',
+        ),
+        rating: (productData['vendor']?['rating'] ?? 0.0).toDouble(),
+        isVerified: productData['vendor']?['isVerified'] ?? false,
+        createdAt: productData['vendor']?['createdAt'] != null 
+            ? DateTime.parse(productData['vendor']?['createdAt']) 
+            : DateTime.now(),
+      ),
+    );
+
+    return ProductCard(
+      product: product,
+      onTap: () {
+        // Navigate to product detail
+        Navigator.pushNamed(context, '/product-detail', arguments: product.id);
+      },
     );
   }
 

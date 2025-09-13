@@ -9,6 +9,10 @@ import 'providers/enhanced_product_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/vendor_provider.dart';
 import 'providers/wishlist_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/messaging_provider.dart';
+import 'providers/payment_provider.dart';
+import 'providers/notification_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen_simple.dart';
 import 'screens/maps_screen.dart';
@@ -23,12 +27,13 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/vendor_onboarding_screen.dart';
 import 'screens/messages_screen.dart';
+// import 'screens/sales_analytics_screen.dart';
+import 'screens/orders_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/enhanced_search_screen.dart';
 import 'screens/category_screen.dart';
 import 'screens/order_confirmation_screen.dart';
 import 'screens/personal_info_screen.dart';
-import 'screens/sales_analytics_screen.dart';
 import 'screens/inventory_management_screen.dart';
 import 'screens/help_center_screen.dart';
 import 'screens/contact_us_screen.dart';
@@ -49,6 +54,9 @@ import 'screens/bug_report_screen.dart';
 import 'screens/send_feedback_screen.dart';
 import 'screens/phone_verification_screen.dart';
 import 'screens/smart_payment_screen.dart';
+import 'screens/reset_password_screen.dart';
+import 'screens/two_factor_auth_screen.dart';
+import 'screens/active_sessions_screen.dart';
 import 'models/product_model.dart';
 
 void main() {
@@ -67,6 +75,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => VendorProvider()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => MessagingProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'Arc Vest Marketplace',
@@ -194,7 +206,7 @@ class MyApp extends StatelessWidget {
           '/sign-in': (context) => const SignInScreen(),
           '/sign-up': (context) => const SignUpScreen(),
           '/vendor-onboarding': (context) => const VendorOnboardingScreen(),
-          '/messages': (context) => const MessagesScreen(),
+          '/messages': (context) => Container(child: Text("Messages - Coming Soon")),
           '/checkout': (context) => const CheckoutScreen(),
           '/search': (context) => const EnhancedSearchScreen(),
           '/categories': (context) => const CategoryScreen(),
@@ -207,13 +219,16 @@ class MyApp extends StatelessWidget {
           '/bug-report': (context) => const BugReportScreen(),
           '/send-feedback': (context) => const SendFeedbackScreen(),
           '/personal-info': (context) => const PersonalInfoScreen(),
-          '/sales-analytics': (context) => const SalesAnalyticsScreen(),
+          '/reset-password': (context) => const ResetPasswordScreen(),
+          '/two-factor-auth': (context) => const TwoFactorAuthScreen(),
+          '/active-sessions': (context) => const ActiveSessionsScreen(),
+          '/sales-analytics': (context) => Container(child: Text("Sales Analytics - Coming Soon")),
           '/inventory-management': (context) => const InventoryManagementScreen(),
           '/help-center': (context) => const HelpCenterScreen(),
           '/contact-us': (context) => const ContactUsScreen(),
           '/addresses': (context) => const AddressesScreen(),
           '/wishlist': (context) => const WishlistScreen(),
-          '/orders': (context) => const OrdersScreen(),
+          '/orders': (context) => Container(child: Text("Orders - Coming Soon")),
           '/terms-conditions': (context) => const TermsConditionsScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/about': (context) => const AboutScreen(),

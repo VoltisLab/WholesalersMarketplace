@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../providers/vendor_provider.dart';
+import '../providers/order_provider.dart';
+import '../providers/enhanced_product_provider.dart';
 
 enum AnalyticsPeriod { today, week, month, quarter, year }
 
@@ -14,6 +18,36 @@ class SalesAnalyticsScreen extends StatefulWidget {
 
 class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
   AnalyticsPeriod _selectedPeriod = AnalyticsPeriod.month;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load analytics when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAnalytics();
+    });
+  }
+
+  void _loadAnalytics() {
+    final timeRange = _getTimeRangeString(_selectedPeriod);
+    context.read<VendorProvider>().loadVendorAnalytics(timeRange: timeRange);
+    context.read<OrderProvider>().loadOrders();
+  }
+
+  String _getTimeRangeString(AnalyticsPeriod period) {
+    switch (period) {
+      case AnalyticsPeriod.today:
+        return '1d';
+      case AnalyticsPeriod.week:
+        return '7d';
+      case AnalyticsPeriod.month:
+        return '30d';
+      case AnalyticsPeriod.quarter:
+        return '90d';
+      case AnalyticsPeriod.year:
+        return '365d';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +159,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                 setState(() {
                   _selectedPeriod = period;
                 });
+                _loadAnalytics();
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
@@ -151,9 +186,47 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
   }
 
   Widget _buildKPICards() {
-    final kpis = _getKPIData();
+    return Consumer<VendorProvider>(
+      builder: (context, vendorProvider, child) {
+        if (vendorProvider.isLoading && vendorProvider.analytics == null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        final analytics = vendorProvider.analytics;
+        final kpis = _getKPIDataFromAnalytics(analytics);
     
-    return Padding(
+        return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
         shrinkWrap: true,
@@ -611,35 +684,79 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
     }
   }
 
-  List<Map<String, dynamic>> _getKPIData() {
+  List<Map<String, dynamic>> _getKPIDataFromAnalytics(Map<String, dynamic>? analytics) {
+    if (analytics == null) {
+      return _getDefaultKPIData();
+    }
+
+    final totalRevenue = analytics['totalRevenue']?.toString() ?? '0';
+    final totalOrders = analytics['totalOrders']?.toString() ?? '0';
+    final totalProducts = analytics['totalProducts']?.toString() ?? '0';
+    final avgOrderValue = analytics['averageOrderValue']?.toString() ?? '0';
+    final revenueChange = analytics['revenueChange']?.toString() ?? '+0%';
+    final ordersChange = analytics['ordersChange']?.toString() ?? '+0%';
+
     return [
       {
         'label': 'Total Revenue',
-        'value': '£12,450',
+        'value': '£$totalRevenue',
         'icon': Icons.attach_money,
         'color': Colors.green,
-        'trend': 'up',
+        'trend': revenueChange.startsWith('+') ? 'up' : 'down',
       },
       {
         'label': 'Orders',
-        'value': '156',
+        'value': totalOrders,
         'icon': Icons.shopping_bag,
         'color': AppColors.primary,
-        'trend': 'up',
+        'trend': ordersChange.startsWith('+') ? 'up' : 'down',
       },
       {
         'label': 'Products Sold',
-        'value': '342',
+        'value': totalProducts,
         'icon': Icons.inventory,
         'color': Colors.orange,
         'trend': 'up',
       },
       {
         'label': 'Avg Order Value',
-        'value': '£79.80',
+        'value': '£$avgOrderValue',
         'icon': Icons.trending_up,
         'color': Colors.purple,
-        'trend': 'down',
+        'trend': 'up',
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _getDefaultKPIData() {
+    return [
+      {
+        'label': 'Total Revenue',
+        'value': '£0',
+        'icon': Icons.attach_money,
+        'color': Colors.green,
+        'trend': 'up',
+      },
+      {
+        'label': 'Orders',
+        'value': '0',
+        'icon': Icons.shopping_bag,
+        'color': AppColors.primary,
+        'trend': 'up',
+      },
+      {
+        'label': 'Products Sold',
+        'value': '0',
+        'icon': Icons.inventory,
+        'color': Colors.orange,
+        'trend': 'up',
+      },
+      {
+        'label': 'Avg Order Value',
+        'value': '£0',
+        'icon': Icons.trending_up,
+        'color': Colors.purple,
+        'trend': 'up',
       },
     ];
   }

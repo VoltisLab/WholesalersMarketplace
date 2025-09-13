@@ -4,6 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
+import '../services/support_service.dart';
 
 class BugReportScreen extends StatefulWidget {
   const BugReportScreen({super.key});
@@ -791,36 +795,95 @@ class _BugReportScreenState extends State<BugReportScreen> {
     });
   }
 
-  void _submitBugReport() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isSubmitting = true);
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() => _isSubmitting = false);
-      
+  Future<void> _submitBugReport() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+    HapticFeedback.lightImpact();
+
+    try {
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to submit bug report');
+      }
+
+      // Prepare bug report data
+      final bugReportData = {
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'stepsToReproduce': _stepsController.text.trim(),
+        'expectedBehavior': _expectedController.text.trim(),
+        'actualBehavior': _actualController.text.trim(),
+        'bugType': _selectedBugType,
+        'severity': _selectedSeverity,
+        'frequency': _selectedFrequency,
+        'deviceInfo': 'iOS/Android - Version info would be added here',
+        'appVersion': '1.0.0', // This would be dynamic in a real app
+      };
+
+      // Submit bug report via GraphQL
+      final result = await SupportService.createBugReport(
+        token: token,
+        title: bugReportData['title'] as String,
+        description: bugReportData['description'] as String,
+        stepsToReproduce: bugReportData['stepsToReproduce'] as String,
+        expectedBehavior: bugReportData['expectedBehavior'] as String,
+        actualBehavior: bugReportData['actualBehavior'] as String,
+        bugType: bugReportData['bugType'] as String,
+        severity: bugReportData['severity'] as String,
+        frequency: bugReportData['frequency'] as String,
+        deviceInfo: {'device': bugReportData['deviceInfo'] as String},
+        appVersion: bugReportData['appVersion'] as String,
+      );
+
+      if (result != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bug report submitted successfully! We\'ll investigate and get back to you.'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          
+          // Clear form
+          _titleController.clear();
+          _descriptionController.clear();
+          _stepsController.clear();
+          _expectedController.clear();
+          _actualController.clear();
+          setState(() {
+            _selectedBugType = 'App Crash';
+            _selectedSeverity = 'Medium';
+            _selectedFrequency = 'Sometimes';
+            _attachedImages.clear();
+          });
+        }
+      } else {
+        throw Exception('Failed to submit bug report');
+      }
+
+    } catch (e) {
       if (mounted) {
+        String errorMessage = 'Failed to submit bug report. Please try again.';
+        if (e is AppError) {
+          errorMessage = e.userMessage;
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bug report submitted successfully! We\'ll investigate and get back to you.'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
           ),
         );
-        
-        // Clear form
-        _titleController.clear();
-        _descriptionController.clear();
-        _stepsController.clear();
-        _expectedController.clear();
-        _actualController.clear();
-        setState(() {
-          _selectedBugType = 'App Crash';
-          _selectedSeverity = 'Medium';
-          _selectedFrequency = 'Sometimes';
-          _attachedImages.clear();
-        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }

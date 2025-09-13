@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/graphql_service.dart';
 import '../services/token_service.dart';
+import '../services/image_upload_service.dart';
 import '../services/error_service.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -61,6 +63,7 @@ class AuthProvider extends ChangeNotifier {
             email: userData['email'] ?? email,
             phone: '', // Will be updated from profile
             userType: result['user']?['accountType']?.toLowerCase() ?? 'customer',
+            accountType: result['user']?['accountType'],
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             profileImage: null,
@@ -124,6 +127,7 @@ class AuthProvider extends ChangeNotifier {
             email: userData['email'] ?? email,
             phone: phone ?? '',
             userType: userType.toLowerCase(),
+            accountType: userData['accountType'],
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             profileImage: null,
@@ -202,43 +206,171 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateProfileImage(String? imagePath) async {
+    if (_currentUser != null) {
+      // Update local state immediately for UI responsiveness
+      final updatedUser = UserModel(
+        id: _currentUser!.id,
+        name: _currentUser!.name,
+        email: _currentUser!.email,
+        phone: _currentUser!.phone,
+        userType: _currentUser!.userType,
+        createdAt: _currentUser!.createdAt,
+        updatedAt: DateTime.now(),
+        profileImage: imagePath,
+        isActive: _currentUser!.isActive,
+        defaultAddress: _currentUser!.defaultAddress,
+      );
+      
+      _currentUser = updatedUser;
+      notifyListeners();
+      
+      // Save to local storage
+      await TokenService.saveUserData({
+        'id': _currentUser!.id,
+        'firstName': _currentUser!.name.split(' ').first,
+        'lastName': _currentUser!.name.split(' ').skip(1).join(' '),
+        'email': _currentUser!.email,
+        'phone': _currentUser!.phone,
+        'accountType': _currentUser!.userType.toUpperCase(),
+        'profileImage': imagePath,
+      });
+    }
+  }
+
+  Future<bool> saveProfileImageToBackend(String? imagePath) async {
+    if (_currentUser == null || imagePath == null) return false;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) {
+        setError('No authentication token found');
+        setLoading(false);
+        return false;
+      }
+
+      // Upload image to server
+      String? uploadedImageUrl;
+      if (imagePath != null) {
+        final imageFile = File(imagePath);
+        if (await imageFile.exists()) {
+          // Try to upload to server first
+          uploadedImageUrl = await ImageUploadService.uploadImage(imageFile);
+          
+          // If server upload fails, use mock upload for now
+          if (uploadedImageUrl == null) {
+            print('⚠️ Server upload failed, using mock upload');
+            uploadedImageUrl = await ImageUploadService.uploadImageMock(imageFile);
+          }
+        }
+      }
+      
+      // Update the user model with the uploaded image URL
+      _currentUser = UserModel(
+        id: _currentUser!.id,
+        name: _currentUser!.name,
+        email: _currentUser!.email,
+        phone: _currentUser!.phone,
+        userType: _currentUser!.userType,
+        createdAt: _currentUser!.createdAt,
+        updatedAt: DateTime.now(),
+        profileImage: uploadedImageUrl ?? imagePath, // Use uploaded URL or fallback to local path
+        isActive: _currentUser!.isActive,
+        defaultAddress: _currentUser!.defaultAddress,
+      );
+      
+      // Save updated user data to local storage
+      await TokenService.saveUserData({
+        'id': _currentUser!.id,
+        'firstName': _currentUser!.name.split(' ').first,
+        'lastName': _currentUser!.name.split(' ').skip(1).join(' '),
+        'email': _currentUser!.email,
+        'phone': _currentUser!.phone,
+        'accountType': _currentUser!.userType.toUpperCase(),
+        'profileImage': _currentUser!.profileImage,
+      });
+      
+      notifyListeners();
+      setLoading(false);
+      return true;
+    } catch (e) {
+      if (e is AppError) {
+        setError(e.userMessage, errorCode: e.trackingCode);
+      } else {
+        setError('Profile image update failed: ${e.toString()}');
+      }
+      setLoading(false);
+      return false;
+    }
+  }
+
   // New auth methods for the auth screens
   Future<void> signIn(String email, String password) async {
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      debugPrint('🔄 Attempting login for: $email');
+      // Use real backend authentication
+      final result = await AuthService.login(
+        email: email,
+        password: password,
+      );
       
-      // Mock authentication - in real app, validate with backend
-      if (email == 'toziz@yahoo.com' && password == 'Password123!!!') {
-        _currentUser = UserModel(
-          id: 'toziz',
-          name: 'Toziz User',
-          email: email,
-          phone: '+1234567890',
-          userType: 'customer',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          profileImage: 'https://via.placeholder.com/150',
+      debugPrint('🔍 Login result: $result');
+
+      if (result != null && result['token'] != null) {
+        // Save tokens
+        await TokenService.saveTokens(
+          token: result['token'],
+          refreshToken: result['refreshToken'],
         );
+
+        // Get user profile
+        final userResult = await AuthService.viewMe(result['token']);
+        if (userResult != null) {
+          // Convert GraphQL response to UserModel format
+          _currentUser = UserModel(
+            id: userResult['id']?.toString() ?? 'unknown',
+            name: '${userResult['firstName'] ?? ''} ${userResult['lastName'] ?? ''}'.trim(),
+            email: userResult['email'] ?? email,
+            phone: userResult['phoneNumber'] ?? '',
+            userType: userResult['accountType']?.toLowerCase() ?? 'customer',
+            accountType: userResult['accountType'],
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        } else {
+          // Fallback if profile fetch fails
+          _currentUser = UserModel(
+            id: result['user']?['id'] ?? 'unknown',
+            name: result['user']?['name'] ?? 'User',
+            email: email,
+            phone: result['user']?['phone'] ?? '',
+            userType: result['user']?['userType'] ?? 'customer',
+            accountType: result['user']?['accountType'],
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            profileImage: result['user']?['profileImage'],
+          );
+        }
+        
+        notifyListeners();
       } else {
-        // For demo purposes, accept any valid email/password
-        _currentUser = UserModel(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: 'User',
-          email: email,
-          phone: '',
-          userType: 'customer',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+        throw Exception('Login failed: Invalid response from server');
       }
       
       setLoading(false);
     } catch (e) {
-      setError('Sign in failed: ${e.toString()}');
+      debugPrint('❌ Login error: $e');
+      if (e is AppError) {
+        setError(e.userMessage, errorCode: e.errorCode.code);
+      } else {
+        setError('Sign in failed: ${e.toString()}');
+      }
       setLoading(false);
       rethrow;
     }
@@ -304,9 +436,70 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> validateToken(String token) async {
+    try {
+      final userData = await AuthService.viewMe(token);
+      
+      if (userData != null) {
+        _currentUser = UserModel(
+          id: userData['id']?.toString() ?? '',
+          name: '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim(),
+          email: userData['email'] ?? '',
+          phone: userData['phone'] ?? '',
+          userType: userData['accountType']?.toLowerCase() ?? 'customer',
+          accountType: userData['accountType'],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          profileImage: userData['profileImage'],
+        );
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Token validation error: $e');
+      return false;
+    }
+  }
+
+  Future<void> loadUserData() async {
+    try {
+      final token = await TokenService.getToken();
+      if (token == null) return;
+
+      final userData = await AuthService.viewMe(token);
+      if (userData != null) {
+        _currentUser = UserModel(
+          id: userData['id']?.toString() ?? '',
+          name: '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim(),
+          email: userData['email'] ?? '',
+          phone: userData['phone'] ?? '',
+          userType: userData['accountType']?.toLowerCase() ?? 'customer',
+          accountType: userData['accountType'],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          profileImage: userData['profileImage'],
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+    }
+  }
+
   void signOut() {
     _currentUser = null;
     notifyListeners();
+  }
+
+  // Debug method to clear all stored tokens
+  Future<void> clearAllTokens() async {
+    await TokenService.clearTokens();
+    _currentUser = null;
+    _error = null;
+    _lastErrorCode = null;
+    notifyListeners();
+    debugPrint('✅ All tokens cleared');
   }
 
   // Mock login for demo purposes

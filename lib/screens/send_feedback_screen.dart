@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
+import '../services/graphql_service.dart';
+import '../services/token_service.dart';
+import '../services/error_service.dart';
+import '../services/support_service.dart';
 
 class SendFeedbackScreen extends StatefulWidget {
   const SendFeedbackScreen({super.key});
@@ -738,36 +742,92 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> with TickerProv
     );
   }
 
-  void _submitFeedback() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isSubmitting = true);
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() => _isSubmitting = false);
-      
+  Future<void> _submitFeedback() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+    HapticFeedback.lightImpact();
+
+    try {
+      // Get authentication token
+      final token = await TokenService.getToken();
+      if (token == null) {
+        throw Exception('Please log in to submit feedback');
+      }
+
+      // Prepare feedback data
+      final feedbackData = {
+        'title': _titleController.text.trim(),
+        'message': _feedbackController.text.trim(),
+        'email': _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : null,
+        'feedbackType': _selectedFeedbackType,
+        'overallRating': _overallRating.toInt(),
+        'easeOfUseRating': _easeOfUseRating.toInt(),
+        'featuresRating': _featuresRating.toInt(),
+        'performanceRating': _performanceRating.toInt(),
+        'isAnonymous': _isAnonymous,
+      };
+
+      // Submit feedback via GraphQL
+      final result = await SupportService.createFeedback(
+        token: token,
+        title: feedbackData['title'] as String,
+        message: feedbackData['message'] as String,
+        feedbackType: feedbackData['feedbackType'] as String,
+        overallRating: feedbackData['overallRating'] as int,
+        easeOfUseRating: feedbackData['easeOfUseRating'] as int,
+        featuresRating: feedbackData['featuresRating'] as int,
+        performanceRating: feedbackData['performanceRating'] as int,
+        isAnonymous: feedbackData['isAnonymous'] as bool,
+      );
+
+      if (result != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Thank you for your feedback! We appreciate you taking the time to help us improve.'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          
+          // Clear form
+          _titleController.clear();
+          _feedbackController.clear();
+          _emailController.clear();
+          setState(() {
+            _selectedFeedbackType = 'General Feedback';
+            _overallRating = 4.0;
+            _easeOfUseRating = 4.0;
+            _featuresRating = 4.0;
+            _performanceRating = 4.0;
+            _isAnonymous = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to submit feedback');
+      }
+
+    } catch (e) {
       if (mounted) {
+        String errorMessage = 'Failed to submit feedback. Please try again.';
+        if (e is AppError) {
+          errorMessage = e.userMessage;
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Thank you for your feedback! We appreciate you taking the time to help us improve.'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 4),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
           ),
         );
-        
-        // Clear form
-        _titleController.clear();
-        _feedbackController.clear();
-        _emailController.clear();
-        setState(() {
-          _selectedFeedbackType = 'General Feedback';
-          _overallRating = 4.0;
-          _easeOfUseRating = 4.0;
-          _featuresRating = 4.0;
-          _performanceRating = 4.0;
-          _isAnonymous = false;
-        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }
