@@ -10,17 +10,24 @@ import '../providers/wishlist_provider.dart';
 import '../services/share_service.dart';
 import '../screens/product_detail_screen.dart';
 import '../utils/page_transitions.dart';
+import '../widgets/duplicate_product_dialog.dart';
+import '../services/duplicate_product_service.dart';
+import '../services/error_service.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final bool isCompact;
   final VoidCallback? onTap;
+  final bool showDuplicateButton;
+  final VoidCallback? onDuplicate;
 
   const ProductCard({
     super.key,
     required this.product,
     this.isCompact = false,
     this.onTap,
+    this.showDuplicateButton = false,
+    this.onDuplicate,
   });
 
   @override
@@ -45,9 +52,11 @@ class ProductCard extends StatelessWidget {
           );
         },
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             _buildProductImage(),
             Expanded(
               child: Padding(
@@ -99,6 +108,14 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+            if (showDuplicateButton)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: _buildDuplicateButton(context),
+              ),
           ],
         ),
       ),
@@ -450,5 +467,71 @@ class ProductCard extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _buildDuplicateButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: () => _showDuplicateDialog(context),
+        icon: const Icon(
+          Icons.copy_all,
+          color: AppColors.primary,
+          size: 20,
+        ),
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(
+          minWidth: 36,
+          minHeight: 36,
+        ),
+      ),
+    );
+  }
+
+  void _showDuplicateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => DuplicateProductDialog(
+        product: product,
+        onSuccess: () {
+          onDuplicate?.call();
+        },
+      ),
+    );
+  }
+
+  Future<void> _quickDuplicate(BuildContext context) async {
+    try {
+      final result = await DuplicateProductService.quickDuplicate(int.parse(product.id));
+      
+      if (result != null && result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Product duplicated successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        onDuplicate?.call();
+      } else {
+        throw Exception(result?['message'] ?? 'Failed to duplicate product');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e is AppError ? e.userMessage : e.toString()),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }

@@ -21,16 +21,51 @@ class ProductService {
       if (minPrice != null) filters['min_price'] = minPrice;
       if (maxPrice != null) filters['max_price'] = maxPrice;
       
+      // Use simple query for search to avoid backend pagination issues
+      final String query = search != null 
+        ? '''
+          query AllProducts(\$search: String) {
+            allProducts(search: \$search) {
+              id
+              name
+              description
+              price
+              discountPrice
+              imagesUrl
+              category {
+                id
+                name
+              }
+              brand {
+                id
+                name
+              }
+              size {
+                id
+                name
+              }
+              seller {
+                id
+                firstName
+                lastName
+              }
+            }
+          }
+        '''
+        : GraphQLQueries.allProducts;
+      
       final QueryResult result = await GraphQLService.client.query(
         QueryOptions(
-          document: gql(GraphQLQueries.allProducts),
-          variables: {
-            'filters': filters.isNotEmpty ? filters : null,
-            'search': search,
-            'sort': sortBy, // Backend expects 'sort' not 'sortBy'
-            'pageCount': 50,
-            'pageNumber': 1,
-          },
+          document: gql(query),
+          variables: search != null 
+            ? {'search': search}
+            : {
+                'filters': filters.isNotEmpty ? filters : null,
+                'search': search,
+                'sort': sortBy,
+                'pageCount': 50,
+                'pageNumber': 1,
+              },
         ),
       );
 
@@ -86,35 +121,46 @@ class ProductService {
     try {
       debugPrint('🔄 Fetching product: $productId');
       
+      // Product queries no longer require authentication
       final QueryResult result = await GraphQLService.client.query(
         QueryOptions(
           document: gql(GraphQLQueries.productById),
-          variables: {'id': productId},
+          variables: {
+            'id': int.parse(productId),
+          },
         ),
       );
 
       if (result.hasException) {
         final exception = result.exception!;
         
+        // Detailed GraphQL error handling
         if (exception.graphqlErrors.isNotEmpty) {
           final graphqlError = exception.graphqlErrors.first;
-          throw createError(ErrorCode.graphqlQueryError, details: graphqlError.message);
+          debugPrint('❌ GraphQL Error: ${graphqlError.message}');
+          
+          if (graphqlError.message.contains('not found') || graphqlError.message.contains('does not exist')) {
+            throw createError(ErrorCode.productNotFound, details: 'Product not found');
+          }
+          
+          throw createError(
+            ErrorCode.graphqlQueryError,
+            details: 'GraphQL Error: ${graphqlError.message}',
+          );
         }
         
-        if (exception.linkException != null) {
-          throw createError(ErrorCode.networkConnectionFailed, details: 'Product endpoint unreachable');
-        }
-        
-        throw createError(ErrorCode.unknown, details: exception.toString());
+        throw createError(
+          ErrorCode.graphqlQueryError,
+          details: 'GraphQL query failed: ${exception.toString()}',
+        );
       }
 
-      final product = result.data?['productById'];
-      
+      final product = result.data?['product'];
       if (product == null) {
         throw createError(ErrorCode.productNotFound, details: 'Product not found');
       }
 
-      debugPrint('✅ Product fetched successfully');
+      debugPrint('✅ Product fetched successfully: ${product['name']}');
       return product;
       
     } catch (e) {

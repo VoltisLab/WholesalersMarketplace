@@ -5,6 +5,7 @@ import '../constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 import '../providers/enhanced_product_provider.dart';
 import '../providers/vendor_provider.dart';
+import '../providers/recently_added_provider.dart';
 import '../services/token_service.dart';
 import '../services/graphql_service.dart';
 import '../models/user_model.dart';
@@ -62,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await Future.wait([
       context.read<EnhancedProductProvider>().loadProducts(),
       context.read<VendorProvider>().loadVendors(),
+      context.read<RecentlyAddedProvider>().loadRecentlyAddedProducts(limit: 6),
     ]);
     
     // Wait for animation to complete

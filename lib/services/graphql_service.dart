@@ -4,7 +4,7 @@ import 'error_service.dart';
 import 'token_service.dart';
 
 class GraphQLService {
-  static const String _endpoint = 'http://localhost:8000/wms/graphql/';
+  static const String _endpoint = 'http://127.0.0.1:8000/wms/graphql/';
   
   static GraphQLClient get client {
     final HttpLink httpLink = HttpLink(
@@ -230,6 +230,7 @@ class GraphQLQueries {
           name
           description
           price
+          imagesUrl
           category {
             id
             name
@@ -883,40 +884,49 @@ class GraphQLQueries {
   ''';
 
   static const String productById = '''
-    query ProductById(\$id: ID!) {
-      productById(id: \$id) {
+    query ProductById(\$id: Int!) {
+      product(id: \$id) {
         id
         name
         description
         price
         discountPrice
         imagesUrl
-        category
-        subcategory
-        stockQuantity
-        rating
-        reviewCount
-        tags
+        condition
+        style
+        parcelSize
+        color
+        hashtags
+        views
+        likes
+        status
         isFeatured
-        isActive
         createdAt
         updatedAt
-        vendor {
+        category {
+          id
+          name
+        }
+        brand {
+          id
+          name
+        }
+        size {
+          id
+          name
+        }
+        seller {
           id
           firstName
           lastName
-          businessName
-          rating
-          reviewCount
-          isVerified
+          username
           email
-          phone
         }
-        specifications
-        dimensions
-        weight
-        materials
-        careInstructions
+        materials {
+          id
+          name
+        }
+        userLiked
       }
     }
   ''';

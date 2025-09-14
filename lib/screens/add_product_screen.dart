@@ -9,11 +9,19 @@ import '../services/graphql_service.dart';
 import '../services/token_service.dart';
 import '../services/error_service.dart';
 import '../services/product_service.dart';
-import '../services/aws_s3_service.dart';
+import '../services/image_upload_service.dart';
 import '../providers/enhanced_product_provider.dart';
+import '../models/product_model.dart';
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  final ProductModel? originalProduct;
+  final bool isDuplicate;
+  
+  const AddProductScreen({
+    super.key,
+    this.originalProduct,
+    this.isDuplicate = false,
+  });
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -89,8 +97,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🔄 AddProductScreen initState - isDuplicate: ${widget.isDuplicate}');
+    debugPrint('🔄 AddProductScreen initState - originalProduct: ${widget.originalProduct?.name}');
+    
     _generateSku();
     _loadCategories();
+    
+    // Pre-fill form if duplicating a product
+    if (widget.isDuplicate && widget.originalProduct != null) {
+      debugPrint('🔄 Calling _prefillForm with product: ${widget.originalProduct!.name}');
+      _prefillForm(widget.originalProduct!);
+    } else {
+      debugPrint('🔄 Not calling _prefillForm - isDuplicate: ${widget.isDuplicate}, originalProduct: ${widget.originalProduct != null}');
+    }
   }
 
   @override
@@ -120,9 +139,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
           icon: const Icon(Icons.close, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Add Product',
-          style: TextStyle(
+        title: Text(
+          widget.isDuplicate ? 'Duplicate Product' : 'Add Product',
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1089,30 +1108,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
         });
         
         try {
-          // Upload to AWS S3 with progress callback
-          final imageUrl = await AwsS3Service.uploadImage(
-            imageFile, 
-            folder: 'products',
-            onProgress: (progress) {
-              // Calculate overall progress: (completed images + current image progress) / total images
-              final overallProgress = (i + progress) / _selectedImages.length;
-              // Update more frequently for better user feedback (every 5%)
-              if ((overallProgress - _uploadProgress).abs() > 0.05 || overallProgress >= 1.0) {
-                if (mounted) {
-                  setState(() {
-                    _uploadProgress = overallProgress;
-                  });
-                }
-              }
-            },
-          );
+          // Upload to local backend
+          final imageUrl = await ImageUploadService.uploadImage(imageFile);
+          
+          // Simulate progress for UI
+          if (mounted) {
+            setState(() {
+              _uploadProgress = (i + 1) / _selectedImages.length;
+            });
+          }
           
           if (imageUrl != null) {
             imageUrls.add({
               'url': imageUrl,
               'thumbnail': imageUrl // S3 URLs can be used directly
             });
-            debugPrint('✅ Image uploaded to S3: $imageUrl');
+            debugPrint('✅ Image uploaded to server: $imageUrl');
           } else {
             debugPrint('❌ Failed to upload image: ${imageFile.path}');
             // Continue with other images
@@ -1267,6 +1278,219 @@ class _AddProductScreenState extends State<AddProductScreen> {
     setState(() {
       _generatedSku = 'SKU-$random';
     });
+  }
+
+  void _prefillForm(ProductModel product) {
+    debugPrint('🔄 Pre-filling form with product: ${product.name}');
+    debugPrint('🔄 Product specifications: ${product.specifications}');
+    debugPrint('🔄 Product tags: ${product.tags}');
+
+    // Pre-fill basic information
+    _titleController.text = '${product.name} (Copy)';
+    _descriptionController.text = product.description;
+    _priceController.text = product.finalPrice.toStringAsFixed(2);
+    _originalPriceController.text = product.price.toStringAsFixed(2);
+    _quantityController.text = product.stockQuantity.toString();
+
+    // Pre-fill category
+    _selectedCategory = product.category;
+
+    // Pre-fill size
+    _selectedSize = product.subcategory;
+
+    // Pre-fill condition from specifications with proper enum key mapping
+    final condition = product.specifications['Condition']?.toString() ?? 'NEW';
+    debugPrint('🔄 Original condition: $condition');
+    _selectedCondition = _mapConditionToEnumKey(condition);
+    debugPrint('🔄 Mapped condition: $_selectedCondition');
+
+    // Pre-fill brand from specifications
+    final brand = product.specifications['Brand']?.toString() ?? '';
+    if (brand.isNotEmpty) {
+      _selectedBrand = brand;
+      _brandController.text = brand;
+    }
+
+    // Pre-fill tags
+    _selectedTags = List<String>.from(product.tags);
+
+    // Pre-fill special features based on tags
+    _isVintage = product.tags.any((tag) => tag.toLowerCase().contains('vintage'));
+    _isSustainable = product.tags.any((tag) => tag.toLowerCase().contains('sustainable'));
+    _isHandmade = product.tags.any((tag) => tag.toLowerCase().contains('handmade'));
+
+    // Pre-fill materials from specifications
+    final materials = product.specifications['Materials']?.toString() ?? '';
+    if (materials.isNotEmpty) {
+      final materialList = materials.split(', ').map((m) => m.trim()).toList();
+      _selectedTags.addAll(materialList.where((m) =>
+        ['Cotton', 'Leather', 'Silk', 'Wool', 'Denim', 'Linen'].contains(m)
+      ));
+    }
+
+    // Pre-fill colors from specifications
+    final colors = product.specifications['Color']?.toString() ?? '';
+    if (colors.isNotEmpty) {
+      final colorList = colors.split(', ').map((c) => c.trim()).toList();
+      _selectedTags.addAll(colorList);
+    }
+
+    // Pre-fill style from specifications
+    final style = product.specifications['Style']?.toString() ?? '';
+    if (style.isNotEmpty) {
+      _selectedTags.add(style);
+    }
+
+    // Remove duplicates from tags
+    _selectedTags = _selectedTags.toSet().toList();
+
+    // Pre-fill custom tags
+    _customTagsController.text = _selectedTags.join(', ');
+
+  }
+
+  // Helper methods to map display values to enum keys
+  String _mapConditionToEnumKey(String displayValue) {
+    switch (displayValue) {
+      case 'Brand New with Tags':
+        return 'BRAND_NEW_WITH_TAGS';
+      case 'Brand New without Tags':
+        return 'BRAND_NEW_WITHOUT_TAGS';
+      case 'Excellent Condition':
+        return 'EXCELLENT_CONDITION';
+      case 'Good Condition':
+        return 'GOOD_CONDITION';
+      case 'Heavily Used':
+        return 'HEAVILY_USED';
+      default:
+        return displayValue; // Return as-is if no mapping found
+    }
+  }
+
+  String _mapStyleToEnumKey(String displayValue) {
+    switch (displayValue) {
+      case 'Casual':
+        return 'CASUAL';
+      case 'Workwear':
+        return 'WORKWEAR';
+      case 'Workout':
+        return 'WORKOUT';
+      case 'Party Dress':
+        return 'PARTY_DRESS';
+      case 'Party Outfit':
+        return 'PARTY_OUTFIT';
+      case 'Formal Wear':
+        return 'FORMAL_WEAR';
+      case 'Evening Wear':
+        return 'EVENING_WEAR';
+      case 'Wedding Guest':
+        return 'WEDDING_GUEST';
+      case 'Loungewear':
+        return 'LOUNGEWEAR';
+      case 'Vacation/Resort Wear':
+        return 'VACATION_RESORT_WEAR';
+      case 'Festival Wear':
+        return 'FESTIVAL_WEAR';
+      case 'Activewear':
+        return 'ACTIVEWEAR';
+      case 'Nightwear':
+        return 'NIGHTWEAR';
+      case 'Vintage':
+        return 'VINTAGE';
+      case 'Y2K':
+        return 'Y2K';
+      case 'Boho':
+        return 'BOHO';
+      case 'Minimalist':
+        return 'MINIMALIST';
+      case 'Grunge':
+        return 'GRUNGE';
+      case 'Chic':
+        return 'CHIC';
+      case 'Streetwear':
+        return 'STREETWEAR';
+      case 'Preppy':
+        return 'PREPPY';
+      case 'Retro':
+        return 'RETRO';
+      case 'Cottagecore':
+        return 'COTTAGECORE';
+      case 'Glam':
+        return 'GLAM';
+      case 'Summer Styles':
+        return 'SUMMER_STYLES';
+      case 'Winter Essentials':
+        return 'WINTER_ESSENTIALS';
+      case 'Spring Florals':
+        return 'SPRING_FLORALS';
+      case 'Autumn Layers':
+        return 'AUTUMN_LAYERS';
+      case 'Rainy Day Wear':
+        return 'RAINY_DAY_WEAR';
+      case 'Denim & Jeans':
+        return 'DENIM_JEANS';
+      case 'Dresses & Gowns':
+        return 'DRESSES_GOWNS';
+      case 'Jackets & Coats':
+        return 'JACKETS_COATS';
+      case 'Knitwear & Sweaters':
+        return 'KNITWEAR_SWEATERS';
+      case 'Skirts & Shorts':
+        return 'SKIRTS_SHORTS';
+      case 'Suits & Blazers':
+        return 'SUITS_BLAZERS';
+      case 'Tops & Blouses':
+        return 'TOPS_BLOUSES';
+      case 'Shoes & Footwear':
+        return 'SHOES_FOOTWEAR';
+      case 'Travel-Friendly':
+        return 'TRAVEL_FRIENDLY';
+      case 'Maternity Wear':
+        return 'MATERNITY_WEAR';
+      case 'Athleisure':
+        return 'ATHLEISURE';
+      case 'Eco-Friendly/Upcycled':
+        return 'ECO_FRIENDLY';
+      case 'Festival-Ready':
+        return 'FESTIVAL_READY';
+      case 'Date Night':
+        return 'DATE_NIGHT';
+      case 'Ethnic Wear':
+        return 'ETHNIC_WEAR';
+      case 'Office Party Outfit':
+        return 'OFFICE_PARTY_OUTFIT';
+      case 'Cocktail Attire':
+        return 'COCKTAIL_ATTIRE';
+      case 'Prom Dresses':
+        return 'PROM_DRESSES';
+      case 'Music Concert Wear':
+        return 'MUSIC_CONCERT_WEAR';
+      case 'Oversized':
+        return 'OVERSIZED';
+      case 'Slim Fit':
+        return 'SLIM_FIT';
+      case 'Relaxed Fit':
+        return 'RELAXED_FIT';
+      case 'Christmas':
+        return 'CHRISTMAS';
+      case 'School Uniforms':
+        return 'SCHOOL_UNIFORMS';
+      default:
+        return displayValue; // Return as-is if no mapping found
+    }
+  }
+
+  String _mapParcelSizeToEnumKey(String displayValue) {
+    switch (displayValue) {
+      case 'Small':
+        return 'SMALL';
+      case 'Medium':
+        return 'MEDIUM';
+      case 'Large':
+        return 'LARGE';
+      default:
+        return displayValue; // Return as-is if no mapping found
+    }
   }
 
   Future<void> _loadCategories() async {

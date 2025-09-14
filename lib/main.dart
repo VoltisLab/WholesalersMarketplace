@@ -15,6 +15,7 @@ import 'providers/order_provider.dart';
 import 'providers/messaging_provider.dart';
 import 'providers/payment_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/recently_added_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen_simple.dart';
 import 'screens/maps_screen.dart';
@@ -65,8 +66,12 @@ import 'models/product_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Load environment variables (optional)
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('⚠️ .env file not found, using default values');
+  }
   
   runApp(const MyApp());
 }
@@ -87,6 +92,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MessagingProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => RecentlyAddedProvider()),
       ],
       child: MaterialApp(
         title: 'Arc Vest Marketplace',
@@ -211,7 +217,6 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ModernProfileScreen(),
           '/my-shop': (context) => const MyShopScreen(),
           '/supplier-dashboard': (context) => const VendorDashboardScreen(),
-          '/add-product': (context) => const AddProductScreen(),
           '/sign-in': (context) => const SignInScreen(),
           '/sign-up': (context) => const SignUpScreen(),
           '/vendor-onboarding': (context) => const VendorOnboardingScreen(),
@@ -253,6 +258,23 @@ class MyApp extends StatelessWidget {
               final vendor = settings.arguments as VendorModel;
               return MaterialPageRoute(
                 builder: (context) => VendorShopScreen(vendor: vendor),
+              );
+            case '/add-product':
+              final args = settings.arguments as Map<String, dynamic>?;
+              debugPrint('🔄 Route /add-product - args: $args');
+              if (args != null && args['isDuplicate'] == true) {
+                final originalProduct = args['originalProduct'] as ProductModel?;
+                debugPrint('🔄 Creating AddProductScreen with duplicate - product: ${originalProduct?.name}');
+                return MaterialPageRoute(
+                  builder: (context) => AddProductScreen(
+                    originalProduct: originalProduct,
+                    isDuplicate: true,
+                  ),
+                );
+              }
+              debugPrint('🔄 Creating AddProductScreen without duplicate');
+              return MaterialPageRoute(
+                builder: (context) => const AddProductScreen(),
               );
             default:
               return null;

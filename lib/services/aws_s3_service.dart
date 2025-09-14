@@ -9,10 +9,10 @@ class AwsS3Service {
   static const String _service = 's3';
   static const String _algorithm = 'AWS4-HMAC-SHA256';
   
-  // AWS credentials - should be loaded from environment variables
-  static String get _accessKeyId => dotenv.env['AWS_ACCESS_KEY_ID'] ?? '';
-  static String get _secretAccessKey => dotenv.env['AWS_SECRET_ACCESS_KEY'] ?? '';
-  static String get _bucketName => dotenv.env['AWS_S3_BUCKET_NAME'] ?? 'whosaleb2b';
+  // AWS credentials - using placeholder values for development
+  static const String _accessKeyId = 'placeholder_access_key';
+  static const String _secretAccessKey = 'placeholder_secret_key';
+  static const String _bucketName = 'whosaleb2b';
   
   // Common AWS regions to try
   static const List<String> _commonRegions = [

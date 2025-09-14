@@ -160,18 +160,17 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
     });
 
     try {
-      final token = await TokenService.getToken();
-      if (token == null) {
-        throw Exception('Please log in to search products');
-      }
-
+      debugPrint('🔍 Starting search for: "${query.trim()}"');
       final results = await ProductService.searchProducts(
         query: query.trim(),
         category: null,
         minPrice: null,
         maxPrice: null,
-        sortBy: 'relevance',
+        sortBy: 'NEWEST',
       );
+
+      debugPrint('🔍 Search results count: ${results.length}');
+      debugPrint('🔍 First result: ${results.isNotEmpty ? results.first : "No results"}');
 
       setState(() {
         _searchResults = results;
@@ -767,49 +766,8 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> with Ticker
   }
 
   Widget _buildProductCardFromMap(Map<String, dynamic> productData) {
-    // Convert Map to ProductModel for ProductCard
-    final product = ProductModel(
-      id: productData['id'] ?? '',
-      name: productData['name'] ?? 'Unknown Product',
-      description: productData['description'] ?? '',
-      price: (productData['price'] ?? 0.0).toDouble(),
-      discountPrice: productData['discountPrice']?.toDouble(),
-      images: List<String>.from(productData['imagesUrl'] ?? []),
-      category: productData['category'] ?? '',
-      subcategory: productData['subcategory'] ?? '',
-      stockQuantity: productData['stockQuantity'] ?? 0,
-      rating: (productData['rating'] ?? 0.0).toDouble(),
-      reviewCount: productData['reviewCount'] ?? 0,
-      tags: List<String>.from(productData['tags'] ?? []),
-      isFeatured: productData['isFeatured'] ?? false,
-      createdAt: productData['createdAt'] != null 
-          ? DateTime.parse(productData['createdAt']) 
-          : DateTime.now(),
-      updatedAt: productData['updatedAt'] != null 
-          ? DateTime.parse(productData['updatedAt']) 
-          : DateTime.now(),
-      vendor: VendorModel(
-        id: productData['vendor']?['id'] ?? '',
-        name: productData['vendor']?['businessName'] ?? 'Unknown Vendor',
-        description: productData['vendor']?['description'] ?? '',
-        email: productData['vendor']?['email'] ?? '',
-        phone: productData['vendor']?['phone'] ?? '',
-        logo: productData['vendor']?['logo'] ?? productData['vendor']?['imageUrl'] ?? '',
-        address: AddressModel(
-          id: 'temp',
-          street: '',
-          city: productData['vendor']?['location'] ?? '',
-          state: '',
-          zipCode: '',
-          country: '',
-        ),
-        rating: (productData['vendor']?['rating'] ?? 0.0).toDouble(),
-        isVerified: productData['vendor']?['isVerified'] ?? false,
-        createdAt: productData['vendor']?['createdAt'] != null 
-            ? DateTime.parse(productData['vendor']?['createdAt']) 
-            : DateTime.now(),
-      ),
-    );
+    // Convert Map to ProductModel for ProductCard using fromJson method
+    final product = ProductModel.fromJson(productData);
 
     return ProductCard(
       product: product,

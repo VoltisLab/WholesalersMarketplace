@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 import '../services/shop_service.dart';
@@ -7,6 +9,7 @@ import '../services/token_service.dart';
 import '../services/error_service.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/loading_indicator.dart';
+import 'shop_settings_screen.dart';
 
 class MyShopScreen extends StatefulWidget {
   const MyShopScreen({super.key});
@@ -80,10 +83,15 @@ class _MyShopScreenState extends State<MyShopScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navigate to shop settings
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Shop settings coming soon!')),
-              );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ShopSettingsScreen(),
+                ),
+              ).then((_) {
+                // Refresh shop data after returning from settings
+                _loadShopData();
+              });
             },
           ),
           IconButton(
@@ -225,7 +233,7 @@ class _MyShopScreenState extends State<MyShopScreen> {
             ),
             _buildStatCard(
               'Revenue',
-              '\$${(shopStats?['totalRevenue'] ?? 0.0).toStringAsFixed(2)}',
+              '£${(shopStats?['totalRevenue'] ?? 0.0).toStringAsFixed(2)}',
               Icons.attach_money,
               Colors.orange,
             ),
@@ -377,8 +385,8 @@ class _MyShopScreenState extends State<MyShopScreen> {
   Widget _buildProductCard(Map<String, dynamic> product) {
     return GestureDetector(
       onTap: () {
-        // Navigate to product details or edit page
-        Navigator.pushNamed(context, '/product-detail', arguments: product);
+        // Navigate to product details
+        Navigator.pushNamed(context, '/product-detail', arguments: product['id']);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -403,9 +411,9 @@ class _MyShopScreenState extends State<MyShopScreen> {
               color: AppColors.background,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.image,
-              color: AppColors.textSecondary,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: _buildProductImage(product),
             ),
           ),
           const SizedBox(width: 16),
@@ -423,7 +431,7 @@ class _MyShopScreenState extends State<MyShopScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${(product['price'] ?? 0.0).toStringAsFixed(2)}',
+                  '£${(product['price'] ?? 0.0).toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -478,6 +486,69 @@ class _MyShopScreenState extends State<MyShopScreen> {
         ],
       ),
     ),
+    );
+  }
+
+  Widget _buildProductImage(Map<String, dynamic> product) {
+    // Debug: Print product data to see what we're getting
+    print('🖼️ Product data: ${product.keys.toList()}');
+    print('🖼️ Images field: ${product['images']}');
+    print('🖼️ ImagesUrl field: ${product['imagesUrl']}');
+    
+    // Parse images from backend - handle both List and JSON string formats
+    String? imageUrl;
+    
+    if (product['images'] is List) {
+      final images = product['images'] as List<dynamic>;
+      if (images.isNotEmpty && images.first is Map) {
+        imageUrl = images.first['url'] as String?;
+      }
+    } else if (product['imagesUrl'] is String) {
+      // Parse JSON string from backend
+      try {
+        final List<dynamic> parsedImages = jsonDecode(product['imagesUrl']);
+        if (parsedImages.isNotEmpty && parsedImages.first is Map) {
+          imageUrl = parsedImages.first['url'] as String?;
+        }
+      } catch (e) {
+        print('🖼️ Error parsing imagesUrl JSON: $e');
+      }
+    } else if (product['imageUrl'] is String) {
+      imageUrl = product['imageUrl'] as String?;
+    }
+    
+    print('🖼️ Final imageUrl: $imageUrl');
+    
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        width: 80,
+        height: 80,
+        placeholder: (context, url) => Container(
+          color: AppColors.background,
+          child: const Icon(
+            Icons.image,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: AppColors.background,
+          child: const Icon(
+            Icons.broken_image,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+    }
+    
+    // Fallback to placeholder if no image
+    return Container(
+      color: AppColors.background,
+      child: const Icon(
+        Icons.image,
+        color: AppColors.textSecondary,
+      ),
     );
   }
 }

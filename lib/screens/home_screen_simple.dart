@@ -9,6 +9,7 @@ import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/vendor_provider.dart';
 import '../providers/enhanced_product_provider.dart';
+import '../providers/recently_added_provider.dart';
 import '../widgets/product_card.dart';
 import '../models/product_model.dart';
 import '../utils/page_transitions.dart';
@@ -687,9 +688,153 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
   }
 
   Widget _buildRecentlyAdded() {
-    return Consumer<EnhancedProductProvider>(
-      builder: (context, productProvider, child) {
-        final recentProducts = productProvider.products.skip(20).take(6).toList();
+    return Consumer<RecentlyAddedProvider>(
+      builder: (context, recentlyAddedProvider, child) {
+        // Load recently added products if not already loaded
+        if (recentlyAddedProvider.products.isEmpty && !recentlyAddedProvider.isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            recentlyAddedProvider.loadRecentlyAddedProducts(limit: 6);
+          });
+        }
+        
+        if (recentlyAddedProvider.isLoading) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: Text(
+                  'Recently Added',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.52,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 18,
+                  ),
+                  itemCount: 6,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+        
+        if (recentlyAddedProvider.error != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: Text(
+                  'Recently Added',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppColors.error.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Failed to load recently added products',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          recentlyAddedProvider.loadRecentlyAddedProducts(limit: 6);
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        
+        final recentProducts = recentlyAddedProvider.products;
+        
+        if (recentProducts.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                child: Text(
+                  'Recently Added',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMedium),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No recently added products',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,7 +858,7 @@ class _HomeScreenSimpleState extends State<HomeScreenSimple> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.52, // Final adjustment to eliminate remaining overflow
+                  childAspectRatio: 0.52,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 18,
                 ),
